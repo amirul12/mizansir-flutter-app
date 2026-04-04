@@ -22,6 +22,8 @@ import '../../features/profile/presentation/bloc/profile_bloc.dart';
 import '../../features/profile/presentation/bloc/profile_event.dart';
 import '../../features/profile/presentation/bloc/dashboard_bloc.dart';
 import '../../features/profile/presentation/bloc/dashboard_event.dart';
+import '../../features/home/presentation/pages/home_shell_page.dart';
+import '../presentation/pages/splash_page.dart';
 import '../di/injection_container.dart' as di;
 
 /// App router configuration
@@ -30,7 +32,9 @@ class AppRouter {
   AppRouter._();
 
   // Route names (for navigation)
+  static const String splash = 'splash';
   static const String home = 'home';
+  static const String appShell = 'app_shell';
   static const String login = 'login';
   static const String register = 'register';
   static const String courses = 'courses';
@@ -45,7 +49,9 @@ class AppRouter {
   static const String dashboard = 'dashboard';
 
   // Route paths
+  static const String splashPath = '/splash';
   static const String homePath = '/';
+  static const String appShellPath = '/home';
   static const String loginPath = '/login';
   static const String registerPath = '/register';
   static const String coursesPath = '/courses';
@@ -63,18 +69,35 @@ class AppRouter {
   // GoRouter configuration
   static GoRouter get router {
     return GoRouter(
-      initialLocation: homePath,
+      initialLocation: splashPath,
       debugLogDiagnostics: true,
       errorBuilder: (context, state) => _ErrorPage(error: state.error),
       routes: [
-        // Home Route - Checks auth and redirects accordingly
+        // Splash Route - Initial screen that checks auth status
+        GoRoute(
+          path: splashPath,
+          name: splash,
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<AuthBloc>(),
+            child: const SplashPage(),
+          ),
+        ),
+
+        // Home Route - Landing page for non-authenticated users
         GoRoute(
           path: homePath,
           name: home,
           builder: (context, state) => BlocProvider(
-            create: (context) => di.sl<AuthBloc>()..add(GetCurrentUserEvent()),
+            create: (context) => di.sl<AuthBloc>(),
             child: const _HomePage(),
           ),
+        ),
+
+        // App Shell Route - Main authenticated experience
+        GoRoute(
+          path: appShellPath,
+          name: appShell,
+          builder: (context, state) => const HomeShellPage(),
         ),
 
         // Authentication Routes
@@ -186,137 +209,116 @@ class AppRouter {
 
 // ========== Placeholder Pages ==========
 
-/// Home Page - Shows login/register if not auth, redirects to courses if auth
+/// Home Page - Landing page for non-authenticated users
 class _HomePage extends StatelessWidget {
   const _HomePage();
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthAuthenticated) {
-          // User is logged in, redirect to courses
-          context.go('/courses');
-        }
-      },
-      child: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          // Show loading while checking auth
-          if (state is AuthLoading) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
-
-          // If authenticated, will redirect via listener
-          // If not authenticated or error, show login/register screen
-          return Scaffold(
-            appBar: AppBar(title: const Text('PrivateTutor')),
-            body: Center(
-              child: SingleChildScrollView(
+    return Scaffold(
+      appBar: AppBar(title: const Text('PrivateTutor')),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
                 padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.school_outlined,
-                        size: 80,
-                        color: Colors.blue,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    const Text(
-                      'Welcome to PrivateTutor',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Your Online Learning Platform',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Please login or register to continue',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[500],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 48),
-
-                    // Login button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => context.go('/login'),
-                        icon: const Icon(Icons.login),
-                        label: const Text('Login'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          textStyle: const TextStyle(fontSize: 18),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Register button
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => context.go('/register'),
-                        icon: const Icon(Icons.person_add),
-                        label: const Text('Create Account'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          textStyle: const TextStyle(fontSize: 18),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 48),
-
-                    // Features preview
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildFeature(
-                          Icons.video_library,
-                          'Video Courses',
-                          Colors.blue,
-                        ),
-                        _buildFeature(
-                          Icons.quiz,
-                          'Quizzes',
-                          Colors.green,
-                        ),
-                        _buildFeature(
-                          Icons.verified,
-                          'Certificates',
-                          Colors.orange,
-                        ),
-                      ],
-                    ),
-                  ],
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.school_outlined,
+                  size: 80,
+                  color: Colors.blue,
                 ),
               ),
-            ),
-          );
-        },
+              const SizedBox(height: 32),
+              const Text(
+                'Welcome to PrivateTutor',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Your Online Learning Platform',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Please login or register to continue',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[500],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 48),
+
+              // Login button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => context.go('/login'),
+                  icon: const Icon(Icons.login),
+                  label: const Text('Login'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Register button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => context.go('/register'),
+                  icon: const Icon(Icons.person_add),
+                  label: const Text('Create Account'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    textStyle: const TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 48),
+
+              // Features preview
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildFeature(
+                    Icons.video_library,
+                    'Video Courses',
+                    Colors.blue,
+                  ),
+                  _buildFeature(
+                    Icons.quiz,
+                    'Quizzes',
+                    Colors.green,
+                  ),
+                  _buildFeature(
+                    Icons.verified,
+                    'Certificates',
+                    Colors.orange,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

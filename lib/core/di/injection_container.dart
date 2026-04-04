@@ -1,7 +1,6 @@
 // File: lib/core/di/injection_container.dart
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../services/api_service.dart';
 import '../services/token_service.dart';
 import '../services/storage_service.dart';
@@ -58,6 +57,8 @@ import '../../features/profile/domain/usecases/get_dashboard_usecase.dart';
 import '../../features/profile/domain/usecases/get_activity_usecase.dart';
 import '../../features/profile/presentation/bloc/profile_bloc.dart';
 import '../../features/profile/presentation/bloc/dashboard_bloc.dart';
+// Home Shell Imports
+import '../../features/home/presentation/bloc/home_shell_cubit.dart';
 
 /// Global service locator instance
 final sl = GetIt.instance;
@@ -71,6 +72,7 @@ Future<void> init() async {
   await _initCourseBrowsing();
   await _initEnrollment();
   await _initProfile();
+  await _initHome();
 }
 
 /// Initialize core services
@@ -389,5 +391,15 @@ Future<void> _initProfile() async {
       getDashboardUseCase: sl(),
       getActivityUseCase: sl(),
     ),
+  );
+}
+
+/// Initialize home shell feature (Phase 6.5 - App Shell)
+Future<void> _initHome() async {
+  // ==================== Cubit ====================
+
+  // Home Shell Cubit - Factory (new instance each time)
+  sl.registerFactory<HomeShellCubit>(
+    () => HomeShellCubit(),
   );
 }
