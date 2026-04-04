@@ -47,8 +47,8 @@ class _LoginPageState extends State<LoginPage> {
         child: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthLoginSuccess) {
-              // Navigate to home on successful login
-              context.go('/');
+              // Navigate directly to courses on successful login
+              context.go('/courses');
             } else if (state is AuthError) {
               // Show error snackbar
               ScaffoldMessenger.of(context).showSnackBar(

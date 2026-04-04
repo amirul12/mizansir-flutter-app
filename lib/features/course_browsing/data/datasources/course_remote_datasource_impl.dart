@@ -1,5 +1,6 @@
 // File: lib/features/course_browsing/data/datasources/course_remote_datasource_impl.dart
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../../../core/errors/exceptions.dart';
 import '../models/course_model.dart';
@@ -34,6 +35,11 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         params,
       );
 
+      // DEBUG: Print API Request
+      debugPrint('🔵 GET COURSES REQUEST');
+      debugPrint('URL: $uri');
+      debugPrint('Headers: {"Content-Type": "application/json"}');
+
       final response = await client.get(
         uri,
         headers: {'Content-Type': 'application/json'},
@@ -41,19 +47,28 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         const Duration(seconds: 30),
       );
 
+      // DEBUG: Print API Response
+      debugPrint('🟢 GET COURSES RESPONSE');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
+
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         if (jsonData['data'] is List) {
+          debugPrint('✅ Successfully parsed ${jsonData['data'].length} courses');
           return (jsonData['data'] as List)
               .map((course) => CourseModel.fromJson(course))
               .toList();
         }
         throw ServerException(message: 'Invalid data format received');
       } else if (response.statusCode == 401) {
+        debugPrint('❌ Unauthorized: 401');
         throw UnauthorizedException();
       } else if (response.statusCode == 404) {
+        debugPrint('❌ Not Found: 404');
         throw const NotFoundException(message: 'Courses not found');
       } else {
+        debugPrint('❌ Error: ${response.statusCode}');
         throw ServerException(
           message: 'Failed to load courses',
           statusCode: response.statusCode,
@@ -62,6 +77,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     } on AppException {
       rethrow;
     } catch (e) {
+      debugPrint('❌ Exception: $e');
       throw ServerException(message: e.toString());
     }
   }
@@ -75,12 +91,21 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         {'limit': limit.toString()},
       );
 
+      // DEBUG: Print API Request
+      debugPrint('🔵 GET FEATURED COURSES REQUEST');
+      debugPrint('URL: $uri');
+
       final response = await client.get(
         uri,
         headers: {'Content-Type': 'application/json'},
       ).timeout(
         const Duration(seconds: 30),
       );
+
+      // DEBUG: Print API Response
+      debugPrint('🟢 GET FEATURED COURSES RESPONSE');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -113,12 +138,21 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         '/v1/courses/$courseId',
       );
 
+      // DEBUG: Print API Request
+      debugPrint('🔵 GET COURSE DETAILS REQUEST');
+      debugPrint('URL: $uri');
+
       final response = await client.get(
         uri,
         headers: {'Content-Type': 'application/json'},
       ).timeout(
         const Duration(seconds: 30),
       );
+
+      // DEBUG: Print API Response
+      debugPrint('🟢 GET COURSE DETAILS RESPONSE');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -160,12 +194,21 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         },
       );
 
+      // DEBUG: Print API Request
+      debugPrint('🔵 SEARCH COURSES REQUEST');
+      debugPrint('URL: $uri');
+
       final response = await client.get(
         uri,
         headers: {'Content-Type': 'application/json'},
       ).timeout(
         const Duration(seconds: 30),
       );
+
+      // DEBUG: Print API Response
+      debugPrint('🟢 SEARCH COURSES RESPONSE');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -198,12 +241,21 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         '/v1/courses/categories',
       );
 
+      // DEBUG: Print API Request
+      debugPrint('🔵 GET CATEGORIES REQUEST');
+      debugPrint('URL: $uri');
+
       final response = await client.get(
         uri,
         headers: {'Content-Type': 'application/json'},
       ).timeout(
         const Duration(seconds: 30),
       );
+
+      // DEBUG: Print API Response
+      debugPrint('🟢 GET CATEGORIES RESPONSE');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
@@ -236,12 +288,21 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         '/v1/courses/$courseId/lessons',
       );
 
+      // DEBUG: Print API Request
+      debugPrint('🔵 GET PREVIEW LESSONS REQUEST');
+      debugPrint('URL: $uri');
+
       final response = await client.get(
         uri,
         headers: {'Content-Type': 'application/json'},
       ).timeout(
         const Duration(seconds: 30),
       );
+
+      // DEBUG: Print API Response
+      debugPrint('🟢 GET PREVIEW LESSONS RESPONSE');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);

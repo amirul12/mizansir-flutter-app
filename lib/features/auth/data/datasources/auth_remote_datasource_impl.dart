@@ -1,5 +1,6 @@
 // File: lib/features/auth/data/datasources/auth_remote_datasource_impl.dart
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/services/token_service.dart';
@@ -74,15 +75,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String deviceName,
   }) async {
     try {
+      final url = Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.loginEndpoint)}');
+      final body = jsonEncode({
+        'email': email,
+        'password': password,
+        'device_name': deviceName,
+      });
+
+      // DEBUG: Print Login Request
+      debugPrint('🟡 LOGIN REQUEST');
+      debugPrint('URL: $url');
+      debugPrint('Body: $body');
+
       final response = await client.post(
-        Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.loginEndpoint)}'),
+        url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-          'device_name': deviceName,
-        }),
+        body: body,
       );
+
+      // DEBUG: Print Login Response
+      debugPrint('🟢 LOGIN RESPONSE');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
@@ -94,10 +108,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           refreshToken: data['refresh_token'] as String?,
         );
 
+        debugPrint('✅ Login successful! Token saved.');
         return AuthResponseModel.fromJson(data);
       } else if (response.statusCode == 401) {
+        debugPrint('❌ Unauthorized: 401');
         throw const UnauthorizedException(message: 'Invalid email or password');
       } else {
+        debugPrint('❌ Login failed: ${response.statusCode}');
         throw ServerException(
           message: 'Login failed',
           statusCode: response.statusCode,
@@ -108,6 +125,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on ServerException {
       rethrow;
     } catch (e) {
+      debugPrint('❌ Login exception: $e');
       throw NetworkException(message: e.toString());
     }
   }
@@ -116,19 +134,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<AuthUserModel> getCurrentUser() async {
     try {
       final token = await tokenService.getAuthHeader();
+      final url = Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.getUserEndpoint)}');
+
+      // DEBUG: Print Get User Request
+      debugPrint('🟡 GET CURRENT USER REQUEST');
+      debugPrint('URL: $url');
+      debugPrint('Authorization: $token');
+
       final response = await client.get(
-        Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.getUserEndpoint)}'),
+        url,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': token,
         },
       );
 
+      // DEBUG: Print Get User Response
+      debugPrint('🟢 GET CURRENT USER RESPONSE');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
+
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-        final user = jsonData['data'] as Map<String, dynamic>;
-        return AuthUserModel.fromJson(user);
+        debugPrint('✅ User data loaded successfully');
+        return AuthUserModel.fromJson(jsonData['data'] as Map<String, dynamic>);
       } else if (response.statusCode == 401) {
+        debugPrint('❌ Unauthorized: 401');
         throw const UnauthorizedException();
       } else {
         throw ServerException(
