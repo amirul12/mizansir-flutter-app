@@ -145,14 +145,48 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
 
       debugPrint('🟢 GET COURSE LESSONS RESPONSE');
       debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
+        if (jsonData['data'] is Map) {
+          final data = jsonData['data'] as Map<String, dynamic>;
+
+          // Handle modules structure
+          // API returns: { course, enrollment, modules: [...], progress, navigation }
+          if (data['modules'] is List) {
+            final modules = data['modules'] as List;
+            final List<LessonModel> allLessons = [];
+
+            // Flatten lessons from all modules
+            for (var module in modules) {
+              if (module is Map && module['lessons'] is List) {
+                final lessons = module['lessons'] as List;
+                for (var lesson in lessons) {
+                  if (lesson is Map) {
+                    // Add module_name and course_id to lesson data
+                    final lessonMap = lesson as Map<String, dynamic>;
+                    lessonMap['module_name'] = module['module_name'];
+                    lessonMap['course_id'] = courseId;
+                    allLessons.add(LessonModel.fromJson(lessonMap));
+                  }
+                }
+              }
+            }
+
+            debugPrint('✅ Successfully parsed ${allLessons.length} lessons from modules');
+            debugPrint('📊 Lessons with YouTube: ${allLessons.where((l) => l.youtubeVideoId != null).length}');
+            return allLessons;
+          }
+        }
+
+        // Fallback: if data is a simple list
         if (jsonData['data'] is List) {
           return (jsonData['data'] as List)
               .map((lesson) => LessonModel.fromJson(lesson))
               .toList();
         }
+
         throw ServerException(message: 'Invalid data format received');
       } else if (response.statusCode == 401) {
         throw const UnauthorizedException();
@@ -165,6 +199,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
     } on AppException {
       rethrow;
     } catch (e) {
+      debugPrint('❌ Exception: $e');
       throw ServerException(message: e.toString());
     }
   }

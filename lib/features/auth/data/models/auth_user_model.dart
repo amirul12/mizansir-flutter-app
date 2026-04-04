@@ -11,6 +11,10 @@ class AuthUserModel extends Equatable {
   final String? avatar;
   final String? collegeName;
   final String? address;
+  final String? role;
+  final bool isAdmin;
+  final bool isStudent;
+  final DateTime? emailVerifiedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -22,6 +26,10 @@ class AuthUserModel extends Equatable {
     this.avatar,
     this.collegeName,
     this.address,
+    this.role,
+    this.isAdmin = false,
+    this.isStudent = false,
+    this.emailVerifiedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -29,15 +37,25 @@ class AuthUserModel extends Equatable {
   /// Convert from JSON
   factory AuthUserModel.fromJson(Map<String, dynamic> json) {
     return AuthUserModel(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      email: json['email'] as String,
-      phone: json['phone'] as String?,
-      avatar: json['avatar'] as String?,
-      collegeName: json['college_name'] as String?,
-      address: json['address'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
+      id: json['id'] is int ? json['id'] as int : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      phone: json['phone']?.toString(),
+      avatar: json['avatar']?.toString(),
+      collegeName: json['college_name']?.toString(),
+      address: json['address']?.toString(),
+      role: json['role']?.toString(),
+      isAdmin: json['is_admin'] is bool ? json['is_admin'] as bool : false,
+      isStudent: json['is_student'] is bool ? json['is_student'] as bool : false,
+      emailVerifiedAt: json['email_verified_at'] != null
+          ? DateTime.tryParse(json['email_verified_at'].toString())
+          : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'] as String? ?? json['created_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null
+          ? DateTime.tryParse(json['updated_at'] as String? ?? json['updated_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 
@@ -51,6 +69,10 @@ class AuthUserModel extends Equatable {
       'avatar': avatar,
       'college_name': collegeName,
       'address': address,
+      'role': role,
+      'is_admin': isAdmin,
+      'is_student': isStudent,
+      'email_verified_at': emailVerifiedAt?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -66,6 +88,10 @@ class AuthUserModel extends Equatable {
       avatar: avatar,
       collegeName: collegeName,
       address: address,
+      role: role,
+      isAdmin: isAdmin,
+      isStudent: isStudent,
+      emailVerifiedAt: emailVerifiedAt,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );
@@ -81,6 +107,10 @@ class AuthUserModel extends Equatable {
       avatar: entity.avatar,
       collegeName: entity.collegeName,
       address: entity.address,
+      role: entity.role,
+      isAdmin: entity.isAdmin,
+      isStudent: entity.isStudent,
+      emailVerifiedAt: entity.emailVerifiedAt,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
@@ -95,6 +125,10 @@ class AuthUserModel extends Equatable {
         avatar,
         collegeName,
         address,
+        role,
+        isAdmin,
+        isStudent,
+        emailVerifiedAt,
         createdAt,
         updatedAt,
       ];

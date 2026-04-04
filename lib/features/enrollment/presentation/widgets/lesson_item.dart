@@ -42,6 +42,41 @@ class LessonItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
+            // Show YouTube indicator and module info
+            if (lesson.hasYoutubeVideo || lesson.hasDescription)
+              Row(
+                children: [
+                  if (lesson.hasYoutubeVideo) ...[
+                    Icon(
+                      Icons.play_circle,
+                      size: 14,
+                      color: Colors.red[600],
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Video Lesson',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.red[600],
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                  if (lesson.hasDescription && lesson.description != lesson.title)
+                    Expanded(
+                      child: Text(
+                        lesson.description!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.grey[600],
+                            ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                ],
+              ),
+            const SizedBox(height: 4),
+            // Duration and progress
             Row(
               children: [
                 Icon(

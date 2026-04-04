@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 import '../bloc/enrollment_bloc.dart';
 import '../bloc/enrollment_event.dart';
 import '../bloc/enrollment_state.dart';
@@ -13,11 +15,7 @@ class LessonPlayerPage extends StatefulWidget {
   final String courseId;
   final String? lessonId;
 
-  const LessonPlayerPage({
-    super.key,
-    required this.courseId,
-    this.lessonId,
-  });
+  const LessonPlayerPage({super.key, required this.courseId, this.lessonId});
 
   @override
   State<LessonPlayerPage> createState() => _LessonPlayerPageState();
@@ -41,17 +39,15 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
   }
 
   void _loadData() {
-    // Load lessons for this course
     context.read<EnrollmentBloc>().add(
-          LoadCourseLessonsEvent(courseId: widget.courseId),
-        );
+      LoadCourseLessonsEvent(courseId: widget.courseId),
+    );
   }
 
   void _selectLesson(Lesson lesson) {
     setState(() {
       _currentLesson = lesson;
 
-      // Initialize YouTube player if lesson has YouTube video
       if (lesson.hasYoutubeVideo) {
         _youtubeController?.dispose();
         _youtubeController = YoutubePlayerController(
@@ -60,6 +56,11 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
             autoPlay: true,
             mute: false,
             enableCaption: true,
+            hideControls: false,
+            controlsVisibleAtStart: true,
+            forceHD: false,
+            loop: false,
+            isLive: false,
           ),
         );
       } else {
@@ -94,12 +95,12 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
   void _markLessonComplete() {
     if (_currentLesson != null && !_currentLesson!.isCompleted) {
       context.read<EnrollmentBloc>().add(
-            MarkLessonCompleteEvent(
-              courseId: widget.courseId,
-              lessonId: _currentLesson!.id,
-              watchTimeSeconds: _currentLesson!.duration * 60, // Assuming watched full lesson
-              progressPercentage: 100,
-            ),
+        MarkLessonCompleteEvent(
+          courseId: widget.courseId,
+          lessonId: _currentLesson!.id,
+          watchTimeSeconds: _currentLesson!.duration * 60,
+          progressPercentage: 100,
+        ),
       );
     }
   }
@@ -109,18 +110,20 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Lesson Player'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: BlocListener<EnrollmentBloc, EnrollmentState>(
         listener: (context, state) {
           if (state is LessonCompleted) {
-            // Show success message
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Lesson marked as complete!'),
                 backgroundColor: Colors.green,
               ),
             );
-            // Reload lessons to get updated state
             _loadData();
           }
         },
@@ -137,14 +140,12 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
             if (state is CourseLessonsLoaded) {
               _lessons = state.lessons;
               if (_currentLesson == null && _lessons.isNotEmpty) {
-                // Select first lesson or specified lesson
                 if (widget.lessonId != null) {
                   _currentLesson = _lessons.firstWhere(
                     (l) => l.id == widget.lessonId,
                     orElse: () => _lessons.first,
                   );
                 } else {
-                  // Find first incomplete lesson, or first lesson
                   _currentLesson = _lessons.firstWhere(
                     (l) => !l.isCompleted,
                     orElse: () => _lessons.first,
@@ -154,7 +155,6 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
               return _buildContent(context);
             }
 
-            // Initial state
             return const Center(child: CircularProgressIndicator());
           },
         ),
@@ -173,259 +173,275 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
 
     return Column(
       children: [
-        // Video player area
-        Expanded(
-          flex: 3,
-          child: _buildVideoPlayer(context),
-        ),
-
-        // Lesson list
-        Expanded(
-          flex: 2,
-          child: _buildLessonsList(context),
-        ),
+        _buildVideoPlayer(context),
+        Expanded(child: _buildLessonInfo(context)),
       ],
     );
   }
 
   Widget _buildVideoPlayer(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+    final studentEmail = authState is AuthAuthenticated
+        ? authState.user.email
+        : 'student@example.com';
+
     return Container(
       color: Colors.black,
-      child: Stack(
-        children: [
-          // Video player or content placeholder
-          Center(
-            child: _currentLesson!.hasYoutubeVideo && _youtubeController != null
-                ? YoutubePlayer(
-                    controller: _youtubeController!,
-                    showVideoProgressIndicator: true,
-                    progressIndicatorColor: Colors.amber,
-                    progressColors: const ProgressBarColors(
-                      playedColor: Colors.amber,
-                      handleColor: Colors.amberAccent,
-                    ),
-                    onEnded: (_) {
-                      // Auto-play next lesson when video ends
-                      if (_currentLesson!.progressPercentage == null ||
-                          _currentLesson!.progressPercentage! < 100) {
-                        _markLessonComplete();
-                      }
-                    },
-                  )
-                : _currentLesson!.hasVideo
-                    ? Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.play_circle_outline,
-                            size: 80,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Video Player',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _currentLesson!.videoUrl!,
-                            style: TextStyle(
-                              color: Colors.grey[400],
-                              fontSize: 12,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.article_outlined,
-                            size: 80,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Lesson Content',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ],
-                      ),
-          ),
-
-          // Top controls
-          Positioned(
-            top: 16,
-            left: 16,
-            right: 16,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: _currentLesson!.hasYoutubeVideo && _youtubeController != null
+          ? Stack(
               children: [
-                // Lesson title overlay
-                Expanded(
+                Center(
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: YoutubePlayer(
+                      controller: _youtubeController!,
+                      showVideoProgressIndicator: true,
+                      progressIndicatorColor: Colors.amber,
+                      progressColors: const ProgressBarColors(
+                        playedColor: Colors.amber,
+                        handleColor: Colors.amberAccent,
+                        backgroundColor: Colors.white24,
+                      ),
+                      onEnded: (_) {
+                        if (_currentLesson!.progressPercentage == null ||
+                            _currentLesson!.progressPercentage! < 100) {
+                          _markLessonComplete();
+                          Future.delayed(const Duration(seconds: 2), () {
+                            if (mounted) {
+                              _playNextLesson();
+                            }
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 16,
+                  right: 16,
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(8),
+                      color: Colors.black.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      _currentLesson!.title,
+                      studentEmail,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
               ],
-            ),
-          ),
-
-          // Bottom controls
-          Positioned(
-            bottom: 16,
-            left: 16,
-            right: 16,
-            child: Column(
+            )
+          : _currentLesson!.hasVideo
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Progress bar
-                if (_currentLesson!.progressPercentage != null)
-                  Column(
-                    children: [
-                      LinearProgressIndicator(
-                        value: _currentLesson!.progressPercentage! / 100,
-                        backgroundColor: Colors.white24,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                          Colors.green,
-                        ),
-                        minHeight: 4,
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                  ),
-
-                // Control buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    // Previous lesson
-                    IconButton(
-                      icon: const Icon(Icons.skip_previous, color: Colors.white),
-                      iconSize: 32,
-                      onPressed: _playPreviousLesson,
-                    ),
-
-                    // Mark complete button
-                    if (!_currentLesson!.isCompleted)
-                      ElevatedButton.icon(
-                        onPressed: _markLessonComplete,
-                        icon: const Icon(Icons.check, size: 18),
-                        label: const Text('Mark Complete'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                        ),
-                      )
-                    else
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.check, size: 18, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text(
-                              'Completed',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    // Next lesson
-                    IconButton(
-                      icon: const Icon(Icons.skip_next, color: Colors.white),
-                      iconSize: 32,
-                      onPressed: _playNextLesson,
-                    ),
-                  ],
+                Icon(Icons.play_circle_outline, size: 80, color: Colors.white),
+                const SizedBox(height: 16),
+                Text(
+                  'Video Player',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _currentLesson!.videoUrl!,
+                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            )
+          : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.article_outlined, size: 80, color: Colors.white),
+                const SizedBox(height: 16),
+                Text(
+                  'Lesson Content',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _buildLessonsList(BuildContext context) {
+  Widget _buildLessonInfo(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey[300]!),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      color: Colors.white,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _currentLesson!.title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+
+            if (_currentLesson!.hasDescription) ...[
+              const SizedBox(height: 8),
+              Text(
+                _currentLesson!.description!,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+              ),
+            ],
+
+            const SizedBox(height: 16),
+
+            Row(
               children: [
+                Icon(Icons.access_time, size: 20, color: Colors.grey[600]),
+                const SizedBox(width: 8),
                 Text(
-                  'Course Lessons',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  _currentLesson!.formattedDuration,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                 ),
-                Text(
-                  '${_lessons.length} lessons',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                const SizedBox(width: 16),
+                if (_currentLesson!.progressPercentage != null)
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        LinearProgressIndicator(
+                          value: _currentLesson!.progressPercentage! / 100,
+                          backgroundColor: Colors.grey[300],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _currentLesson!.isCompleted
+                                ? Colors.green
+                                : Colors.amber,
+                          ),
+                          minHeight: 4,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${_currentLesson!.progressPercentage}% complete',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: _currentLesson!.isCompleted
+                                    ? Colors.green
+                                    : Colors.grey[600],
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _playPreviousLesson,
+                    icon: const Icon(Icons.skip_previous),
+                    label: const Text('Previous'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                if (!_currentLesson!.isCompleted)
+                  Expanded(
+                    flex: 2,
+                    child: ElevatedButton.icon(
+                      onPressed: _markLessonComplete,
+                      icon: const Icon(Icons.check, size: 18),
+                      label: const Text('Mark Complete'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    flex: 2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.check, size: 18, color: Colors.white),
+                          SizedBox(width: 8),
+                          Text(
+                            'Completed',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _playNextLesson,
+                    icon: const Icon(Icons.skip_next),
+                    label: const Text('Next'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
 
-          // Lessons list
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.only(bottom: 16),
-              itemCount: _lessons.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final lesson = _lessons[index];
-                return LessonItem(
-                  lesson: lesson,
-                  isSelected: _currentLesson?.id == lesson.id,
-                  onTap: () => _selectLesson(lesson),
-                );
-              },
+            const SizedBox(height: 24),
+
+            Text(
+              'Course Lessons',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              '${_lessons.length} lessons',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+            ),
+
+            const SizedBox(height: 16),
+
+            Container(
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: _lessons.length,
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final lesson = _lessons[index];
+                  return LessonItem(
+                    lesson: lesson,
+                    isSelected: _currentLesson?.id == lesson.id,
+                    onTap: () => _selectLesson(lesson),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -437,11 +453,7 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red[300],
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
               'Error Loading Lessons',
@@ -480,9 +492,9 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
             const SizedBox(height: 16),
             Text(
               message,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
           ],

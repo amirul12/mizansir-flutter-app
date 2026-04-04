@@ -39,6 +39,13 @@ class ApiConstants {
   static const String enrollmentsPath = '/enrollments';
   static const String enrollmentStatsEndpoint = '$enrollmentsPath/stats';
 
+  // Endpoints - My Courses (Enrolled Courses)
+  static const String myCoursesPath = '/my-courses';
+  static const String myCoursesEndpoint = myCoursesPath;
+  static const String myCourseLessonsEndpoint = myCoursesPath; // /my-courses/{courseId}/lessons
+  static const String myCourseLessonDetailsEndpoint = myCoursesPath; // /my-courses/{courseId}/lessons/{lessonId}
+  static const String myCourseLessonCompleteEndpoint = '/complete'; // /my-courses/{courseId}/lessons/{lessonId}/complete
+
   // Endpoints - User
   static const String userPath = '/user';
   static const String profileEndpoint = '$userPath/profile';

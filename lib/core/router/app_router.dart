@@ -44,6 +44,7 @@ class AppRouter {
   static const String myCourses = 'my_courses';
   static const String courseProgress = 'course_progress';
   static const String lessonPlayer = 'lesson_player';
+  static const String lessonPlayerSpecific = 'lesson_player_specific';
   static const String enrollments = 'enrollments';
   static const String profile = 'profile';
   static const String dashboard = 'dashboard';
@@ -162,16 +163,49 @@ class AppRouter {
           builder: (context, state) => const _MyCoursesPage(),
         ),
 
-        // Lesson Player Route
+        // Lesson Player Route (all lessons)
         GoRoute(
           path: lessonPlayerPath,
           name: lessonPlayer,
           builder: (context, state) {
             final courseId = state.pathParameters['courseId']!;
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create: (context) => di.sl<AuthBloc>(),
+                ),
+                BlocProvider(
+                  create: (context) => di.sl<EnrollmentBloc>(),
+                ),
+              ],
+              child: LessonPlayerPage(
+                courseId: courseId,
+                lessonId: null,
+              ),
+            );
+          },
+        ),
+
+        // Lesson Player Route (specific lesson)
+        GoRoute(
+          path: lessonPlayerWithPath,
+          name: lessonPlayerSpecific,
+          builder: (context, state) {
+            final courseId = state.pathParameters['courseId']!;
             final lessonId = state.pathParameters['lessonId']!;
-            return _LessonPlayerPage(
-              courseId: courseId,
-              lessonId: lessonId,
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create: (context) => di.sl<AuthBloc>(),
+                ),
+                BlocProvider(
+                  create: (context) => di.sl<EnrollmentBloc>(),
+                ),
+              ],
+              child: LessonPlayerPage(
+                courseId: courseId,
+                lessonId: lessonId,
+              ),
             );
           },
         ),
@@ -355,27 +389,6 @@ class _MyCoursesPage extends StatelessWidget {
       appBar: AppBar(title: const Text('My Courses')),
       body: const Center(
         child: Text('My Courses Page - Coming Soon'),
-      ),
-    );
-  }
-}
-
-/// Lesson Player Page Placeholder
-class _LessonPlayerPage extends StatelessWidget {
-  final String courseId;
-  final String lessonId;
-
-  const _LessonPlayerPage({
-    required this.courseId,
-    required this.lessonId,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Lesson Player')),
-      body: Center(
-        child: Text('Lesson: $lessonId - Course: $courseId - Coming Soon'),
       ),
     );
   }

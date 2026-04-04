@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/services/token_service.dart';
 import '../../../../core/errors/exceptions.dart';
@@ -239,6 +240,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw const TokenException();
       }
 
+      // DEBUG: Print Refresh Token Request
+      debugPrint('🔵 REFRESH TOKEN REQUEST');
+      debugPrint('URL: $baseUrl${ApiConstants.buildEndpoint(ApiConstants.refreshTokenEndpoint)}');
+
       final response = await client.post(
         Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.refreshTokenEndpoint)}'),
         headers: {
@@ -247,17 +252,43 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         },
       );
 
+      // DEBUG: Print Refresh Token Response
+      debugPrint('🟢 REFRESH TOKEN RESPONSE');
+      debugPrint('Status Code: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-        final token = jsonData['data']['token'] as String;
-        await tokenService.saveAccessToken(token);
-        return token;
+        final data = jsonData['data'] as Map<String, dynamic>;
+
+        // Extract new token
+        final newToken = data['token'] as String;
+        await tokenService.saveAccessToken(newToken);
+
+        // Extract and cache user data
+        if (data['user'] is Map) {
+          final userMap = data['user'] as Map<String, dynamic>;
+          final userModel = AuthUserModel.fromJson(userMap);
+
+          // Cache the updated user data locally
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('cached_user', jsonEncode(userModel.toJson()));
+
+          debugPrint('✅ Token refreshed and user data cached');
+          debugPrint('📊 User: ${userModel.name} (is_student: ${userModel.isStudent})');
+        }
+
+        return newToken;
+      } else if (response.statusCode == 401) {
+        debugPrint('❌ Token refresh failed: 401 Unauthorized');
+        throw const TokenException(message: 'Token refresh failed');
       } else {
+        debugPrint('❌ Token refresh failed: ${response.statusCode}');
         throw const TokenException();
       }
     } on TokenException {
       rethrow;
     } catch (e) {
+      debugPrint('❌ Token refresh exception: $e');
       throw NetworkException(message: e.toString());
     }
   }

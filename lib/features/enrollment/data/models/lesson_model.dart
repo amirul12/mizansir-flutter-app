@@ -48,13 +48,15 @@ class LessonModel extends Equatable {
       courseId: json['course_id']?.toString() ?? '',
       title: json['title'] ?? '',
       description: json['description'],
-      duration: json['duration'] is num ? (json['duration'] as num).toInt() : 0,
+      duration: json['duration_minutes'] is num
+          ? (json['duration_minutes'] as num).toInt()
+          : (json['duration'] is num ? (json['duration'] as num).toInt() : 0),
       order: json['order'] is num ? (json['order'] as num).toInt() : 0,
       videoUrl: json['video_url'],
-      thumbnailUrl: json['thumbnail_url'],
+      thumbnailUrl: json['thumbnail'] ?? json['thumbnail_url'],
       youtubeEmbedUrl: json['youtube_embed_url'],
       youtubeVideoId: json['youtube_video_id'],
-      isFree: json['is_free'] ?? false,
+      isFree: json['is_free'] ?? json['is_preview'] ?? false,
       isCompleted: json['is_completed'] ?? false,
       watchTimeSeconds: json['watch_time_seconds'] is num
           ? (json['watch_time_seconds'] as num).toInt()

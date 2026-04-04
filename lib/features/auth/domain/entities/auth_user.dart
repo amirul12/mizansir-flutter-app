@@ -10,6 +10,10 @@ class AuthUser extends Equatable {
   final String? avatar;
   final String? collegeName;
   final String? address;
+  final String? role;
+  final bool isAdmin;
+  final bool isStudent;
+  final DateTime? emailVerifiedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -21,6 +25,10 @@ class AuthUser extends Equatable {
     this.avatar,
     this.collegeName,
     this.address,
+    this.role,
+    this.isAdmin = false,
+    this.isStudent = false,
+    this.emailVerifiedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -34,6 +42,10 @@ class AuthUser extends Equatable {
         avatar,
         collegeName,
         address,
+        role,
+        isAdmin,
+        isStudent,
+        emailVerifiedAt,
         createdAt,
         updatedAt,
       ];

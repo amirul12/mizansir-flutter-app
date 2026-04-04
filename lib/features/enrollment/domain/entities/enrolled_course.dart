@@ -15,6 +15,7 @@ class EnrolledCourse extends Equatable {
   final int completedLessons;
   final double progressPercentage;
   final int totalWatchTimeMinutes;
+  final String? nextLessonId; // ID of the next lesson to continue
   final Enrollment? enrollment;
   final List<Lesson> lessons;
   final DateTime enrolledAt;
@@ -33,6 +34,7 @@ class EnrolledCourse extends Equatable {
     required this.completedLessons,
     required this.progressPercentage,
     required this.totalWatchTimeMinutes,
+    this.nextLessonId,
     this.enrollment,
     this.lessons = const [],
     required this.enrolledAt,
@@ -94,6 +96,7 @@ class EnrolledCourse extends Equatable {
         completedLessons,
         progressPercentage,
         totalWatchTimeMinutes,
+        nextLessonId,
         enrollment,
         lessons,
         enrolledAt,

@@ -39,7 +39,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     result.fold(
       (failure) => emit(const AuthUnauthenticated()),
-      (user) => emit(AuthAuthenticated(user)),
+      (user) {
+        // Check if user is a student
+        if (user.isStudent) {
+          emit(AuthAuthenticated(user));
+        } else {
+          // Not a student - logout and show error
+          logoutUseCase(NoParams());
+          emit(const AuthError('Access denied. Only students can access this app.'));
+        }
+      },
     );
   }
 
@@ -62,7 +71,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     result.fold(
       (failure) => emit(AuthError(_getErrorMessage(failure))),
-      (user) => emit(const AuthLoginSuccess('Login successful')),
+      (user) {
+        // Check if user is a student
+        if (user.isStudent) {
+          emit(const AuthLoginSuccess('Login successful'));
+        } else {
+          // Not a student - logout and show error
+          logoutUseCase(NoParams());
+          emit(const AuthError('Access denied. Only students can access this app.'));
+        }
+      },
     );
   }
 
@@ -84,7 +102,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     result.fold(
       (failure) => emit(AuthError(_getErrorMessage(failure))),
-      (user) => emit(const AuthRegisterSuccess('Registration successful')),
+      (user) {
+        // Check if user is a student
+        if (user.isStudent) {
+          emit(const AuthRegisterSuccess('Registration successful'));
+        } else {
+          // Not a student - logout and show error
+          logoutUseCase(NoParams());
+          emit(const AuthError('Access denied. Only students can access this app.'));
+        }
+      },
     );
   }
 
@@ -110,7 +137,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     result.fold(
       (failure) => emit(AuthError(_getErrorMessage(failure))),
-      (user) => emit(AuthAuthenticated(user)),
+      (user) {
+        // Check if user is a student
+        if (user.isStudent) {
+          emit(AuthAuthenticated(user));
+        } else {
+          // Not a student - logout and show error
+          logoutUseCase(NoParams());
+          emit(const AuthError('Access denied. Only students can access this app.'));
+        }
+      },
     );
   }
 
@@ -122,7 +158,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     result.fold(
       (failure) => emit(const AuthUnauthenticated()),
-      (user) => emit(AuthAuthenticated(user)),
+      (user) {
+        // Check if user is a student
+        if (user.isStudent) {
+          emit(AuthAuthenticated(user));
+        } else {
+          // Not a student - logout and show error
+          logoutUseCase(NoParams());
+          emit(const AuthUnauthenticated());
+        }
+      },
     );
   }
 

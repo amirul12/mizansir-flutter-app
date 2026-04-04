@@ -36,8 +36,8 @@ class AuthRepositoryImpl implements AuthRepository {
         phone: phone,
       );
 
-      // Cache user locally
-      await localDataSource.cacheUser({'id': user.id, 'name': user.name});
+      // Cache complete user data locally
+      await localDataSource.cacheUser(user.toJson());
       await localDataSource.saveAuthState(true);
 
       return Right(user.toEntity());
@@ -67,11 +67,8 @@ class AuthRepositoryImpl implements AuthRepository {
         deviceName: deviceName,
       );
 
-      // Cache user locally
-      await localDataSource.cacheUser({
-        'id': authResponse.user.id,
-        'name': authResponse.user.name,
-      });
+      // Cache complete user data locally
+      await localDataSource.cacheUser(authResponse.user.toJson());
       await localDataSource.saveAuthState(true);
 
       return Right(authResponse.user.toEntity());

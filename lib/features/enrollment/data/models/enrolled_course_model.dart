@@ -16,6 +16,7 @@ class EnrolledCourseModel extends Equatable {
   final int completedLessons;
   final double progressPercentage;
   final int totalWatchTimeMinutes;
+  final String? nextLessonId; // ID of the next lesson to continue
   final EnrollmentModel? enrollment;
   final List<LessonModel> lessons;
   final DateTime enrolledAt;
@@ -34,6 +35,7 @@ class EnrolledCourseModel extends Equatable {
     required this.completedLessons,
     required this.progressPercentage,
     required this.totalWatchTimeMinutes,
+    this.nextLessonId,
     this.enrollment,
     this.lessons = const [],
     required this.enrolledAt,
@@ -51,16 +53,21 @@ class EnrolledCourseModel extends Equatable {
           .toList();
     }
 
+    // Handle nested structure from API response
+    // API returns: { id, course: { id, title, description, ... }, status, enrolled_at, expires_at, ... }
+    final course = json['course'] is Map ? json['course'] as Map<String, dynamic> : json;
+    final courseId = course['id']?.toString() ?? json['course_id']?.toString() ?? '';
+
     return EnrolledCourseModel(
-      id: json['id']?.toString() ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      thumbnail: json['thumbnail'],
+      id: courseId,
+      title: course['title'] ?? json['title'] ?? '',
+      description: course['description'] ?? json['description'] ?? '',
+      thumbnail: course['thumbnail'] ?? json['thumbnail'],
       status: json['status'] ?? 'active',
-      level: json['level'],
+      level: course['level'] ?? json['level'],
       totalLessons: json['total_lessons'] is num
           ? (json['total_lessons'] as num).toInt()
-          : 0,
+          : (course['total_lessons'] is num ? (course['total_lessons'] as num).toInt() : 0),
       completedLessons: json['completed_lessons'] is num
           ? (json['completed_lessons'] as num).toInt()
           : 0,
@@ -70,16 +77,25 @@ class EnrolledCourseModel extends Equatable {
       totalWatchTimeMinutes: json['total_watch_time_minutes'] is num
           ? (json['total_watch_time_minutes'] as num).toInt()
           : 0,
+      nextLessonId: json['progress'] is Map
+          ? json['progress']['next_lesson_id']?.toString()
+          : null,
       enrollment: json['enrollment'] != null
           ? EnrollmentModel.fromJson(json['enrollment'] as Map<String, dynamic>)
-          : null,
+          : null, // Don't create enrollment from my-courses response structure
       lessons: lessonsList,
-      enrolledAt: DateTime.tryParse(json['enrolled_at'] ?? '') ?? DateTime.now(),
+      enrolledAt: json['enrolled_at'] != null
+          ? DateTime.tryParse(json['enrolled_at']) ?? DateTime.now()
+          : DateTime.tryParse(course['created_at'] ?? '') ?? DateTime.now(),
       expiresAt: json['expires_at'] != null
           ? DateTime.tryParse(json['expires_at'])
           : null,
-      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updated_at'] ?? '') ?? DateTime.now(),
+      createdAt: course['created_at'] != null
+          ? DateTime.tryParse(course['created_at'] ?? '') ?? DateTime.now()
+          : DateTime.now(),
+      updatedAt: course['updated_at'] != null
+          ? DateTime.tryParse(course['updated_at'] ?? '') ?? DateTime.now()
+          : DateTime.now(),
     );
   }
 
@@ -95,6 +111,7 @@ class EnrolledCourseModel extends Equatable {
       completedLessons: completedLessons,
       progressPercentage: progressPercentage,
       totalWatchTimeMinutes: totalWatchTimeMinutes,
+      nextLessonId: nextLessonId,
       enrollment: enrollment?.toEntity(),
       lessons: lessons.map((lesson) => lesson.toEntity()).toList(),
       enrolledAt: enrolledAt,
@@ -116,6 +133,7 @@ class EnrolledCourseModel extends Equatable {
         completedLessons,
         progressPercentage,
         totalWatchTimeMinutes,
+        nextLessonId,
         enrollment,
         lessons,
         enrolledAt,

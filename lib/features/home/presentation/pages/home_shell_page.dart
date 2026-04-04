@@ -357,8 +357,12 @@ class _MyLearningTabPage extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // Navigate to course details/lessons
-            context.go('/my-courses/${course.id}');
+            // Navigate to next lesson if available, otherwise show all lessons
+            if (course.nextLessonId != null) {
+              context.go('/my-courses/${course.id}/lessons/${course.nextLessonId}');
+            } else {
+              context.go('/my-courses/${course.id}/lessons');
+            }
           },
           borderRadius: BorderRadius.circular(16),
           child: Padding(
@@ -468,7 +472,12 @@ class _MyLearningTabPage extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      context.go('/my-courses/${course.id}/lessons');
+                      // Navigate to next lesson if available, otherwise show all lessons
+                      if (course.nextLessonId != null) {
+                        context.go('/my-courses/${course.id}/lessons/${course.nextLessonId}');
+                      } else {
+                        context.go('/my-courses/${course.id}/lessons');
+                      }
                     },
                     icon: const Icon(Icons.play_arrow),
                     label: const Text('Continue Learning'),

@@ -48,6 +48,7 @@ class _LoginPageState extends State<LoginPage> {
           listener: (context, state) {
             if (state is AuthLoginSuccess) {
               // Navigate to home shell (dashboard) on successful login
+              
               context.go('/home');
             } else if (state is AuthError) {
               // Show error snackbar
