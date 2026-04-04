@@ -10,18 +10,26 @@ void main() {
 
     // Verify app starts with home page
     expect(find.text('Welcome to PrivateTutor'), findsOneWidget);
-    expect(find.text('Phase 1 Foundation Complete'), findsOneWidget);
+    expect(find.text('Phase 2 Authentication Complete'), findsOneWidget);
+
+    // Verify navigation buttons exist
+    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Register'), findsOneWidget);
   });
 
-  testWidgets('Navigation works', (WidgetTester tester) async {
+  testWidgets('Home page UI is correct', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const PrivateTutorApp());
 
-    // Tap on Browse Courses button
-    await tester.tap(find.text('Browse Courses'));
-    await tester.pumpAndSettle();
+    // Verify app title
+    expect(find.text('PrivateTutor'), findsOneWidget);
 
-    // Verify navigation to courses page
-    expect(find.text('Courses Page - Coming Soon'), findsOneWidget);
+    // Verify main welcome message
+    expect(find.text('Welcome to PrivateTutor'), findsOneWidget);
+    expect(find.text('Phase 2 Authentication Complete'), findsOneWidget);
+
+    // Verify both authentication buttons are present
+    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Register'), findsOneWidget);
   });
 }

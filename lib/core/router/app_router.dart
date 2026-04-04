@@ -1,8 +1,11 @@
 // File: lib/core/router/app_router.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../di/injection_container.dart' as di;
 
 /// App router configuration
 class AppRouter {
@@ -51,12 +54,18 @@ class AppRouter {
         GoRoute(
           path: loginPath,
           name: login,
-          builder: (context, state) => const LoginPage(),
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<AuthBloc>(),
+            child: const LoginPage(),
+          ),
         ),
         GoRoute(
           path: registerPath,
           name: register,
-          builder: (context, state) => const RegisterPage(),
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<AuthBloc>(),
+            child: const RegisterPage(),
+          ),
         ),
 
         // Course Routes
@@ -139,11 +148,16 @@ class _HomePage extends StatelessWidget {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            const Text('Phase 1 Foundation Complete'),
+            const Text('Phase 2 Authentication Complete'),
             const SizedBox(height: 32),
             ElevatedButton(
-              onPressed: () => context.go('/courses'),
-              child: const Text('Browse Courses'),
+              onPressed: () => context.go('/login'),
+              child: const Text('Login'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => context.go('/register'),
+              child: const Text('Register'),
             ),
           ],
         ),
