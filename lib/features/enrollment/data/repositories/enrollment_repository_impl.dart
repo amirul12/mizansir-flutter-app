@@ -67,10 +67,24 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
   }
 
   @override
-  Future<Either<Failure, Lesson>> getLessonDetails(String courseId, String lessonId) async {
+  Future<Either<Failure, Map<String, Lesson?>>> getLessonDetails({
+    required String courseId,
+    required String lessonId,
+  }) async {
     try {
-      final lessonModel = await remoteDataSource.getLessonDetails(courseId, lessonId);
-      return Right(lessonModel.toEntity());
+      final lessonsMap = await remoteDataSource.getLessonDetails(
+        courseId: courseId,
+        lessonId: lessonId,
+      );
+
+      // Convert models to entities
+      final result = <String, Lesson?>{
+        'lesson': lessonsMap['lesson']?.toEntity(),
+        'nextLesson': lessonsMap['nextLesson']?.toEntity(),
+        'previousLesson': lessonsMap['previousLesson']?.toEntity(),
+      };
+
+      return Right(result);
     } on ServerException {
       return Left(ServerFailure());
     } on NetworkException {

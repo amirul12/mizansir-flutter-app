@@ -14,8 +14,8 @@ import '../../features/course_browsing/presentation/pages/categories_page.dart';
 import '../../features/course_browsing/presentation/bloc/course_bloc.dart';
 import '../../features/enrollment/presentation/bloc/enrollment_bloc.dart';
 import '../../features/enrollment/presentation/pages/my_courses_page.dart';
-import '../../features/enrollment/presentation/pages/lesson_player_page.dart';
-import '../../features/enrollment/presentation/pages/course_progress_page.dart';
+import '../../features/enrollment/presentation/pages/course_lessons_page.dart';
+import '../../features/enrollment/presentation/pages/student_lesson_player_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/dashboard_page.dart';
 import '../../features/profile/presentation/bloc/profile_bloc.dart';
@@ -163,30 +163,20 @@ class AppRouter {
           builder: (context, state) => const _MyCoursesPage(),
         ),
 
-        // Lesson Player Route (all lessons)
+        // Course Lessons List Route
         GoRoute(
           path: lessonPlayerPath,
           name: lessonPlayer,
           builder: (context, state) {
             final courseId = state.pathParameters['courseId']!;
-            return MultiBlocProvider(
-              providers: [
-                BlocProvider(
-                  create: (context) => di.sl<AuthBloc>(),
-                ),
-                BlocProvider(
-                  create: (context) => di.sl<EnrollmentBloc>(),
-                ),
-              ],
-              child: LessonPlayerPage(
-                courseId: courseId,
-                lessonId: null,
-              ),
+            return BlocProvider(
+              create: (context) => di.sl<EnrollmentBloc>(),
+              child: CourseLessonsPage(courseId: courseId),
             );
           },
         ),
 
-        // Lesson Player Route (specific lesson)
+        // Single Lesson Player Route (Student Player)
         GoRoute(
           path: lessonPlayerWithPath,
           name: lessonPlayerSpecific,
@@ -202,7 +192,7 @@ class AppRouter {
                   create: (context) => di.sl<EnrollmentBloc>(),
                 ),
               ],
-              child: LessonPlayerPage(
+              child: StudentLessonPlayerPage(
                 courseId: courseId,
                 lessonId: lessonId,
               ),

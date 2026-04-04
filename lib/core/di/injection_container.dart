@@ -38,6 +38,7 @@ import '../../features/enrollment/domain/usecases/get_enrolled_course_details_us
 import '../../features/enrollment/domain/usecases/get_course_lessons_usecase.dart';
 import '../../features/enrollment/domain/usecases/get_course_progress_usecase.dart';
 import '../../features/enrollment/domain/usecases/mark_lesson_complete_usecase.dart';
+import '../../features/enrollment/domain/usecases/get_lesson_details_usecase.dart';
 import '../../features/enrollment/presentation/bloc/enrollment_bloc.dart';
 // Profile & Dashboard Imports
 import '../../features/profile/data/datasources/profile_remote_datasource.dart';
@@ -307,6 +308,11 @@ Future<void> _initEnrollment() async {
     () => MarkLessonCompleteUseCase(sl()),
   );
 
+  // Get Lesson Details Use Case
+  sl.registerLazySingleton<GetLessonDetailsUseCase>(
+    () => GetLessonDetailsUseCase(sl()),
+  );
+
   // ==================== BLoC ====================
 
   // Enrollment BLoC - registered as factory since it should be fresh for each scope
@@ -317,6 +323,7 @@ Future<void> _initEnrollment() async {
       getCourseLessonsUseCase: sl(),
       getCourseProgressUseCase: sl(),
       markLessonCompleteUseCase: sl(),
+      getLessonDetailsUseCase: sl(),
     ),
   );
 }

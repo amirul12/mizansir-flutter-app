@@ -205,7 +205,10 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
   }
 
   @override
-  Future<LessonModel> getLessonDetails(String courseId, String lessonId) async {
+  Future<Map<String, LessonModel?>> getLessonDetails({
+    required String courseId,
+    required String lessonId,
+  }) async {
     try {
       final token = await tokenService.getAuthHeader();
       final uri = Uri.parse('$baseUrl/v1/my-courses/$courseId/lessons/$lessonId');
@@ -221,10 +224,44 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         },
       ).timeout(const Duration(seconds: 30));
 
+      debugPrint('🟢 GET LESSON DETAILS RESPONSE');
+      debugPrint('Status Code: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         if (jsonData['data'] is Map) {
-          return LessonModel.fromJson(jsonData['data']);
+          final data = jsonData['data'] as Map<String, dynamic>;
+
+          // Parse current lesson
+          final lesson = LessonModel.fromJson(data);
+
+          // Parse navigation
+          LessonModel? nextLesson;
+          LessonModel? previousLesson;
+
+          if (data['navigation'] is Map) {
+            final navigation = data['navigation'] as Map<String, dynamic>;
+
+            // Parse next lesson
+            if (navigation['next_lesson'] is Map) {
+              nextLesson = LessonModel.fromJson(navigation['next_lesson']);
+            }
+
+            // Parse previous lesson
+            if (navigation['previous_lesson'] is Map) {
+              previousLesson = LessonModel.fromJson(navigation['previous_lesson']);
+            }
+          }
+
+          debugPrint('✅ Lesson details loaded: ${lesson.title}');
+          debugPrint('📊 Next lesson: ${nextLesson?.title ?? "None"}');
+          debugPrint('📊 Previous lesson: ${previousLesson?.title ?? "None"}');
+
+          return {
+            'lesson': lesson,
+            'nextLesson': nextLesson,
+            'previousLesson': previousLesson,
+          };
         }
         throw ServerException(message: 'Invalid data format received');
       } else if (response.statusCode == 401) {
@@ -238,6 +275,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
     } on AppException {
       rethrow;
     } catch (e) {
+      debugPrint('❌ Exception: $e');
       throw ServerException(message: e.toString());
     }
   }

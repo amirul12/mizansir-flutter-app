@@ -53,6 +53,27 @@ class CourseLessonsLoaded extends EnrollmentState {
   List<Object?> get props => [lessons, courseId];
 }
 
+/// Lesson Details Loaded State (with navigation)
+class LessonDetailsLoaded extends EnrollmentState {
+  final Lesson lesson;
+  final Lesson? nextLesson;
+  final Lesson? previousLesson;
+
+  const LessonDetailsLoaded({
+    required this.lesson,
+    this.nextLesson,
+    this.previousLesson,
+  });
+
+  @override
+  List<Object?> get props => [lesson, nextLesson, previousLesson];
+}
+
+/// Lesson Loading State
+class LessonLoading extends EnrollmentState {
+  const LessonLoading();
+}
+
 /// Course Progress Loaded State
 class CourseProgressLoaded extends EnrollmentState {
   final CourseProgress progress;

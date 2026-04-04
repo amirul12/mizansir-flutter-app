@@ -5,6 +5,7 @@ import '../../domain/usecases/get_enrolled_course_details_usecase.dart';
 import '../../domain/usecases/get_course_lessons_usecase.dart';
 import '../../domain/usecases/get_course_progress_usecase.dart';
 import '../../domain/usecases/mark_lesson_complete_usecase.dart';
+import '../../domain/usecases/get_lesson_details_usecase.dart';
 import 'enrollment_event.dart';
 import 'enrollment_state.dart';
 
@@ -15,6 +16,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
   final GetCourseLessonsUseCase getCourseLessonsUseCase;
   final GetCourseProgressUseCase getCourseProgressUseCase;
   final MarkLessonCompleteUseCase markLessonCompleteUseCase;
+  final GetLessonDetailsUseCase getLessonDetailsUseCase;
 
   EnrollmentBloc({
     required this.getMyCoursesUseCase,
@@ -22,6 +24,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     required this.getCourseLessonsUseCase,
     required this.getCourseProgressUseCase,
     required this.markLessonCompleteUseCase,
+    required this.getLessonDetailsUseCase,
   }) : super(EnrollmentInitial()) {
     on<LoadMyCoursesEvent>(_onLoadMyCourses);
     on<LoadEnrolledCourseDetailsEvent>(_onLoadCourseDetails);
@@ -29,6 +32,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     on<LoadCourseProgressEvent>(_onLoadCourseProgress);
     on<MarkLessonCompleteEvent>(_onMarkLessonComplete);
     on<MarkLessonIncompleteEvent>(_onMarkLessonIncomplete);
+    on<GetLessonDetailsEvent>(_onGetLessonDetails);
     on<ClearEnrollmentErrorEvent>(_onClearError);
   }
 
@@ -135,6 +139,29 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     // For now, we'll treat marking incomplete as loading the course details again
     // You could implement a separate use case if needed
     add(LoadEnrolledCourseDetailsEvent(courseId: event.courseId));
+  }
+
+  Future<void> _onGetLessonDetails(
+    GetLessonDetailsEvent event,
+    Emitter<EnrollmentState> emit,
+  ) async {
+    emit(const LessonLoading());
+
+    final result = await getLessonDetailsUseCase(
+      GetLessonDetailsParams(
+        courseId: event.courseId,
+        lessonId: event.lessonId,
+      ),
+    );
+
+    result.fold(
+      (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
+      (lessonsMap) => emit(LessonDetailsLoaded(
+        lesson: lessonsMap['lesson']!,
+        nextLesson: lessonsMap['nextLesson'],
+        previousLesson: lessonsMap['previousLesson'],
+      )),
+    );
   }
 
   Future<void> _onClearError(

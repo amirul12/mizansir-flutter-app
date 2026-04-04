@@ -14,8 +14,16 @@ abstract class EnrollmentRemoteDataSource {
   /// Get lessons for an enrolled course
   Future<List<LessonModel>> getCourseLessons(String courseId);
 
-  /// Get lesson details
-  Future<LessonModel> getLessonDetails(String courseId, String lessonId);
+  /// Get lesson details with navigation
+  ///
+  /// Returns a map containing:
+  /// - 'lesson': The current lesson
+  /// - 'nextLesson': The next lesson (nullable)
+  /// - 'previousLesson': The previous lesson (nullable)
+  Future<Map<String, LessonModel?>> getLessonDetails({
+    required String courseId,
+    required String lessonId,
+  });
 
   /// Get course progress
   Future<CourseProgressModel> getCourseProgress(String courseId);

@@ -397,7 +397,7 @@ class HomeDashboardPage extends StatelessWidget {
               final courses = state.courses.take(3).toList();
 
               return SizedBox(
-                height: 200,
+                height: 220,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: courses.length,
@@ -439,7 +439,7 @@ class HomeDashboardPage extends StatelessWidget {
     double price,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -449,16 +449,16 @@ class HomeDashboardPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            height: 80,
+            height: 70,
             decoration: BoxDecoration(
               color: Colors.blue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Center(
-              child: Icon(Icons.school, size: 40, color: Colors.blue),
+              child: Icon(Icons.school, size: 36, color: Colors.blue),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -478,7 +478,7 @@ class HomeDashboardPage extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           Text(
             price > 0 ? '\$${price.toInt()}' : 'Free',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(

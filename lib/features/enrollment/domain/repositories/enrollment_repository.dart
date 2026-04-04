@@ -16,8 +16,16 @@ abstract class EnrollmentRepository {
   /// Get lessons for an enrolled course
   Future<Either<Failure, List<Lesson>>> getCourseLessons(String courseId);
 
-  /// Get lesson details
-  Future<Either<Failure, Lesson>> getLessonDetails(String courseId, String lessonId);
+  /// Get lesson details with navigation
+  ///
+  /// Returns a map containing:
+  /// - 'lesson': The current lesson
+  /// - 'nextLesson': The next lesson (nullable)
+  /// - 'previousLesson': The previous lesson (nullable)
+  Future<Either<Failure, Map<String, Lesson?>>> getLessonDetails({
+    required String courseId,
+    required String lessonId,
+  });
 
   /// Get course progress
   Future<Either<Failure, CourseProgress>> getCourseProgress(String courseId);

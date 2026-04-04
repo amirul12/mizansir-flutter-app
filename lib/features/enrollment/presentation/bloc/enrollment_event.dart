@@ -34,6 +34,20 @@ class LoadCourseLessonsEvent extends EnrollmentEvent {
   List<Object?> get props => [courseId];
 }
 
+/// Get Lesson Details Event (with navigation)
+class GetLessonDetailsEvent extends EnrollmentEvent {
+  final String courseId;
+  final String lessonId;
+
+  const GetLessonDetailsEvent({
+    required this.courseId,
+    required this.lessonId,
+  });
+
+  @override
+  List<Object?> get props => [courseId, lessonId];
+}
+
 /// Load Course Progress Event
 class LoadCourseProgressEvent extends EnrollmentEvent {
   final String courseId;
