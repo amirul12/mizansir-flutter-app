@@ -1,5 +1,6 @@
 // File: lib/core/di/injection_container.dart
 import 'package:get_it/get_it.dart';
+import 'package:http/http.dart' as http;
 import '../services/api_service.dart';
 import '../services/token_service.dart';
 import '../services/storage_service.dart';
@@ -30,6 +31,11 @@ Future<void> init() async {
 /// Initialize core services
 Future<void> _initCore() async {
   // ==================== Services ====================
+
+  // HTTP Client
+  sl.registerLazySingleton<http.Client>(
+    () => http.Client(),
+  );
 
   // Storage Service - must be initialized first
   sl.registerLazySingleton<StorageService>(
@@ -62,8 +68,8 @@ Future<void> _initCore() async {
   // API Service
   sl.registerLazySingleton<ApiService>(
     () => ApiService(
-      baseUrl: 'http://your-domain.com/api', // Update with actual base URL
-      client: null, // Uses default http.Client
+      baseUrl: 'https://ict.mizansir.com/api',
+      client: sl(), // Uses registered http.Client
     ),
   );
 
@@ -121,7 +127,7 @@ Future<void> _initAuth() async {
     () => AuthRemoteDataSourceImpl(
       client: sl(),
       tokenService: sl(),
-      baseUrl: 'http://your-domain.com/api', // Update with actual base URL
+      baseUrl: 'https://ict.mizansir.com/api',
     ),
   );
 

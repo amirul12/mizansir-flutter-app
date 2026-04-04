@@ -1,8 +1,8 @@
 // File: lib/core/constants/api_constants.dart
 /// API-related constants for the PrivateTutor application
 class ApiConstants {
-  // Base URL - Update this with your actual domain
-  static const String baseUrl = 'http://your-domain.com/api';
+  // Base URL
+  static const String baseUrl = 'https://ict.mizansir.com/api';
 
   // API Version
   static const String apiVersion = '/v1';

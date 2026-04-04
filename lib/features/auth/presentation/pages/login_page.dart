@@ -1,6 +1,7 @@
 // File: lib/features/auth/presentation/pages/login_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -47,7 +48,7 @@ class _LoginPageState extends State<LoginPage> {
           listener: (context, state) {
             if (state is AuthLoginSuccess) {
               // Navigate to home on successful login
-              Navigator.of(context).pushReplacementNamed('/');
+              context.go('/');
             } else if (state is AuthError) {
               // Show error snackbar
               ScaffoldMessenger.of(context).showSnackBar(
@@ -169,7 +170,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         TextButton(
           onPressed: () {
-            Navigator.of(context).pushReplacementNamed('/register');
+            context.go('/register');
           },
           child: Text(
             'Register',

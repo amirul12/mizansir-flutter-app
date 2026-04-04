@@ -1,6 +1,7 @@
 // File: lib/features/auth/presentation/pages/register_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -66,7 +67,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   duration: Duration(seconds: 3),
                 ),
               );
-              Navigator.of(context).pushReplacementNamed('/login');
+              context.go('/login');
             } else if (state is AuthError) {
               // Show error snackbar
               ScaffoldMessenger.of(context).showSnackBar(
@@ -197,7 +198,7 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
         TextButton(
           onPressed: () {
-            Navigator.of(context).pop();
+            context.go('/login');
           },
           child: Text(
             'Sign In',
