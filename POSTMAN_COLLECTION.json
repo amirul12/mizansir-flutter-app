@@ -1,0 +1,813 @@
+{
+  "info": {
+    "name": "Student Course Management API",
+    "description": "Complete API collection for Private Student Course Management System",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://your-domain.com/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "your-token-here",
+      "type": "string"
+    },
+    {
+      "key": "course_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "lesson_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "enrollment_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.success && jsonData.data.token) {",
+                  "    pm.collectionVariables.set(\"token\", jsonData.data.token);",
+                  "    pm.test(\"Token saved\", function() {",
+                  "        pm.expect(pm.collectionVariables.get(\"token\")).to.exist;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"phone\": \"01712345678\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if(jsonData.success && jsonData.data.token) {",
+                  "    pm.collectionVariables.set(\"token\", jsonData.data.token);",
+                  "    pm.test(\"Login successful and token saved\", function() {",
+                  "        pm.expect(pm.collectionVariables.get(\"token\")).to.exist;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"device_name\": \"iPhone 13\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/user",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "user"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "Logout All Devices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/logout-all",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "logout-all"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"oldpassword\",\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/auth/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "change-password"]
+            }
+          }
+        },
+        {
+          "name": "Get Active Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/auth/active-sessions",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "auth", "active-sessions"]
+            }
+          }
+        }
+      ],
+      "description": "Authentication endpoints for student access"
+    },
+    {
+      "name": "2. Courses (Public)",
+      "item": [
+        {
+          "name": "List All Courses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/courses",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "courses"]
+            }
+          }
+        },
+        {
+          "name": "List Courses with Filters",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/courses?search=math&status=active&per_page=20&sort_by=price&sort_direction=asc",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "courses"],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "math"
+                },
+                {
+                  "key": "status",
+                  "value": "active"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                },
+                {
+                  "key": "sort_by",
+                  "value": "price"
+                },
+                {
+                  "key": "sort_direction",
+                  "value": "asc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Featured Courses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/courses/featured",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "courses", "featured"]
+            }
+          }
+        },
+        {
+          "name": "Get Course Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/courses/categories",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "courses", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Search Courses",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/courses/search?q=mathematics",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "courses", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "mathematics"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Course Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/courses/{{course_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "courses", "{{course_id}}"]
+            }
+          }
+        }
+      ],
+      "description": "Public course browsing endpoints (no authentication required)"
+    },
+    {
+      "name": "3. Lessons (Public - Preview)",
+      "item": [
+        {
+          "name": "Get Preview Lessons",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/courses/{{course_id}}/lessons",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "courses", "{{course_id}}", "lessons"]
+            }
+          }
+        },
+        {
+          "name": "Get Preview Lesson Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/courses/{{course_id}}/lessons/{{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "courses", "{{course_id}}", "lessons", "{{lesson_id}}"]
+            }
+          }
+        }
+      ],
+      "description": "Preview lessons accessible without enrollment"
+    },
+    {
+      "name": "4. My Enrolled Courses",
+      "item": [
+        {
+          "name": "Get My Courses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/my-courses",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "my-courses"]
+            }
+          }
+        }
+      ],
+      "description": "Enrolled course endpoints"
+    },
+    {
+      "name": "5. Lessons (Protected)",
+      "item": [
+        {
+          "name": "Get Course Lessons",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/my-courses/{{course_id}}/lessons",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "my-courses", "{{course_id}}", "lessons"]
+            }
+          }
+        },
+        {
+          "name": "Get Lesson Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/my-courses/{{course_id}}/lessons/{{lesson_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "my-courses", "{{course_id}}", "lessons", "{{lesson_id}}"]
+            }
+          }
+        }
+      ],
+      "description": "Full lesson access for enrolled students"
+    },
+    {
+      "name": "6. Lesson Completion & Progress",
+      "item": [
+        {
+          "name": "Mark Lesson Complete",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"watch_time_seconds\": 2700,\n  \"progress_percentage\": 100\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/my-courses/{{course_id}}/lessons/{{lesson_id}}/complete",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "my-courses", "{{course_id}}", "lessons", "{{lesson_id}}", "complete"]
+            }
+          }
+        },
+        {
+          "name": "Mark Lesson Incomplete",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+              "key": "Authorization",
+              "value": "Bearer {{token}}"
+            }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/my-courses/{{course_id}}/lessons/{{lesson_id}}/incomplete",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "my-courses", "{{course_id}}", "lessons", "{{lesson_id}}", "incomplete"]
+            }
+          }
+        },
+        {
+          "name": "Update Progress",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"progress_percentage\": 50,\n  \"watch_time_seconds\": 1200\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/my-courses/{{course_id}}/lessons/{{lesson_id}}/progress",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "my-courses", "{{course_id}}", "lessons", "{{lesson_id}}", "progress"]
+            }
+          }
+        },
+        {
+          "name": "Get Course Progress",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/my-courses/{{course_id}}/progress",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "my-courses", "{{course_id}}", "progress"]
+            }
+          }
+        }
+      ],
+      "description": "Progress tracking and lesson completion"
+    },
+    {
+      "name": "7. Enrollments",
+      "item": [
+        {
+          "name": "Get My Enrollments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/enrollments",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "enrollments"]
+            }
+          }
+        },
+        {
+          "name": "Create Enrollment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"course_id\": 1,\n  \"payment_method\": \"bkash\",\n  \"payment_notes\": \"Sent from 01712345678\",\n  \"transaction_id\": \"TXN123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/enrollments",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "enrollments"]
+            }
+          }
+        },
+        {
+          "name": "Get Enrollment Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/enrollments/{{enrollment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "enrollments", "{{enrollment_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Enrollment Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/enrollments/stats",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "enrollments", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Renew Enrollment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_method\": \"bkash\",\n  \"payment_notes\": \"Renewal payment\",\n  \"transaction_id\": \"TXN789012\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/enrollments/{{enrollment_id}}/renew",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "enrollments", "{{enrollment_id}}", "renew"]
+            }
+          }
+        },
+        {
+          "name": "Cancel Enrollment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/enrollments/{{enrollment_id}}/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "enrollments", "{{enrollment_id}}", "cancel"]
+            }
+          }
+        }
+      ],
+      "description": "Enrollment management endpoints"
+    },
+    {
+      "name": "8. User Profile",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"phone\": \"01712345678\",\n  \"address\": \"Dhaka, Bangladesh\",\n  \"college_name\": \"Dhaka College\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/user/profile",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "user", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Upload Avatar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "avatar",
+                  "type": "file",
+                  "src": "/path/to/avatar.jpg"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/user/upload-avatar",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "user", "upload-avatar"]
+            }
+          }
+        },
+        {
+          "name": "Get Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/user/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "user", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get Activity",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/user/activity",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "user", "activity"]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"oldpassword\",\n  \"password\": \"newpassword123\",\n  \"password_confirmation\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/v1/user/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "user", "change-password"]
+            }
+          }
+        },
+        {
+          "name": "Delete Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/user/account",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "user", "account"]
+            }
+          }
+        }
+      ],
+      "description": "User profile and account management"
+    },
+    {
+      "name": "9. System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "API Documentation",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/docs",
+              "host": ["{{base_url}}"],
+              "path": ["docs"]
+            }
+          }
+        }
+      ],
+      "description": "System health and documentation endpoints"
+    }
+  ]
+}
