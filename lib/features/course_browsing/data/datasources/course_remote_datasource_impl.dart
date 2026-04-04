@@ -1,0 +1,300 @@
+// File: lib/features/course_browsing/data/datasources/course_remote_datasource_impl.dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../../../../core/errors/exceptions.dart';
+import '../models/course_model.dart';
+import '../models/category_model.dart';
+import '../models/lesson_preview_model.dart';
+import 'course_remote_datasource.dart';
+
+/// Course Remote Data Source Implementation
+class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
+  final http.Client client;
+  final String baseUrl;
+
+  CourseRemoteDataSourceImpl({
+    required this.client,
+    required this.baseUrl,
+  });
+
+  @override
+  Future<List<CourseModel>> getCourses({
+    Map<String, dynamic>? queryParams,
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final params = queryParams ?? {};
+      params['page'] = page.toString();
+      params['limit'] = limit.toString();
+
+      final uri = Uri.https(
+        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
+        '/v1/courses',
+        params,
+      );
+
+      final response = await client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 30),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['data'] is List) {
+          return (jsonData['data'] as List)
+              .map((course) => CourseModel.fromJson(course))
+              .toList();
+        }
+        throw ServerException(message: 'Invalid data format received');
+      } else if (response.statusCode == 401) {
+        throw UnauthorizedException();
+      } else if (response.statusCode == 404) {
+        throw const NotFoundException(message: 'Courses not found');
+      } else {
+        throw ServerException(
+          message: 'Failed to load courses',
+          statusCode: response.statusCode,
+        );
+      }
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<List<CourseModel>> getFeaturedCourses({int limit = 10}) async {
+    try {
+      final uri = Uri.https(
+        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
+        '/v1/courses/featured',
+        {'limit': limit.toString()},
+      );
+
+      final response = await client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 30),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['data'] is List) {
+          return (jsonData['data'] as List)
+              .map((course) => CourseModel.fromJson(course))
+              .toList();
+        }
+        throw ServerException(message: 'Invalid data format received');
+      } else if (response.statusCode == 401) {
+        throw UnauthorizedException();
+      } else {
+        throw ServerException(
+          message: 'Failed to load featured courses',
+          statusCode: response.statusCode,
+        );
+      }
+    } on Exception {
+      rethrow;
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<CourseModel> getCourseDetails(String courseId) async {
+    try {
+      final uri = Uri.https(
+        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
+        '/v1/courses/$courseId',
+      );
+
+      final response = await client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 30),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['data'] is Map) {
+          return CourseModel.fromJson(jsonData['data']);
+        }
+        throw ServerException(message: 'Invalid data format received');
+      } else if (response.statusCode == 401) {
+        throw UnauthorizedException();
+      } else if (response.statusCode == 404) {
+        throw const NotFoundException(message: 'Course not found');
+      } else {
+        throw ServerException(
+          message: 'Failed to load course details',
+          statusCode: response.statusCode,
+        );
+      }
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<List<CourseModel>> searchCourses(
+    String query, {
+    int page = 1,
+    int limit = 20,
+  }) async {
+    try {
+      final uri = Uri.https(
+        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
+        '/v1/courses/search',
+        {
+          'q': query,
+          'page': page.toString(),
+          'limit': limit.toString(),
+        },
+      );
+
+      final response = await client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 30),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['data'] is List) {
+          return (jsonData['data'] as List)
+              .map((course) => CourseModel.fromJson(course))
+              .toList();
+        }
+        throw ServerException(message: 'Invalid data format received');
+      } else if (response.statusCode == 401) {
+        throw UnauthorizedException();
+      } else {
+        throw ServerException(
+          message: 'Failed to search courses',
+          statusCode: response.statusCode,
+        );
+      }
+    } on Exception {
+      rethrow;
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<List<CategoryModel>> getCategories() async {
+    try {
+      final uri = Uri.https(
+        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
+        '/v1/courses/categories',
+      );
+
+      final response = await client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 30),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['data'] is List) {
+          return (jsonData['data'] as List)
+              .map((category) => CategoryModel.fromJson(category))
+              .toList();
+        }
+        throw ServerException(message: 'Invalid data format received');
+      } else if (response.statusCode == 401) {
+        throw UnauthorizedException();
+      } else {
+        throw ServerException(
+          message: 'Failed to load categories',
+          statusCode: response.statusCode,
+        );
+      }
+    } on Exception {
+      rethrow;
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<List<LessonPreviewModel>> getPreviewLessons(String courseId) async {
+    try {
+      final uri = Uri.https(
+        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
+        '/v1/courses/$courseId/lessons',
+      );
+
+      final response = await client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 30),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (jsonData['data'] is List) {
+          return (jsonData['data'] as List)
+              .map((lesson) => LessonPreviewModel.fromJson(lesson))
+              .toList();
+        }
+        throw ServerException(message: 'Invalid data format received');
+      } else if (response.statusCode == 401) {
+        throw UnauthorizedException();
+      } else if (response.statusCode == 404) {
+        throw const NotFoundException(message: 'Lessons not found');
+      } else {
+        throw ServerException(
+          message: 'Failed to load preview lessons',
+          statusCode: response.statusCode,
+        );
+      }
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<bool> isEnrolled(String courseId) async {
+    try {
+      final uri = Uri.https(
+        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
+        '/courses/$courseId/check-enrollment',
+      );
+
+      final response = await client.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+      ).timeout(
+        const Duration(seconds: 30),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        return jsonData['enrolled'] ?? false;
+      } else if (response.statusCode == 401) {
+        throw UnauthorizedException();
+      } else {
+        return false;
+      }
+    } on AppException {
+      rethrow;
+    } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+}

@@ -1,6 +1,7 @@
 // File: lib/core/di/injection_container.dart
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../services/api_service.dart';
 import '../services/token_service.dart';
 import '../services/storage_service.dart';
@@ -16,6 +17,18 @@ import '../../features/auth/domain/usecases/register_usecase.dart';
 import '../../features/auth/domain/usecases/get_current_user_usecase.dart';
 import '../../features/auth/domain/usecases/logout_usecase.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+// Course Browsing Imports
+import '../../features/course_browsing/data/datasources/course_remote_datasource.dart';
+import '../../features/course_browsing/data/datasources/course_remote_datasource_impl.dart';
+import '../../features/course_browsing/data/repositories/course_repository_impl.dart';
+import '../../features/course_browsing/domain/repositories/course_repository.dart';
+import '../../features/course_browsing/domain/usecases/get_courses_usecase.dart';
+import '../../features/course_browsing/domain/usecases/get_featured_courses_usecase.dart';
+import '../../features/course_browsing/domain/usecases/get_course_details_usecase.dart';
+import '../../features/course_browsing/domain/usecases/search_courses_usecase.dart';
+import '../../features/course_browsing/domain/usecases/get_categories_usecase.dart';
+import '../../features/course_browsing/domain/usecases/get_preview_lessons_usecase.dart';
+import '../../features/course_browsing/presentation/bloc/course_bloc.dart';
 
 /// Global service locator instance
 final sl = GetIt.instance;
@@ -26,6 +39,7 @@ Future<void> init() async {
   await _initCore();
   // Initialize features
   await _initAuth();
+  await _initCourseBrowsing();
 }
 
 /// Initialize core services
@@ -140,7 +154,70 @@ Future<void> _initAuth() async {
 
 /// Initialize course browsing feature (Phase 3)
 Future<void> _initCourseBrowsing() async {
-  // TODO: Implement in Phase 3
+  // ==================== Data Sources ====================
+
+  // Course Remote Data Source
+  sl.registerLazySingleton<CourseRemoteDataSource>(
+    () => CourseRemoteDataSourceImpl(
+      client: sl(),
+      baseUrl: 'https://ict.mizansir.com/api',
+    ),
+  );
+
+  // ==================== Repositories ====================
+
+  // Course Repository
+  sl.registerLazySingleton<CourseRepository>(
+    () => CourseRepositoryImpl(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  // ==================== Use Cases ====================
+
+  // Get Courses Use Case
+  sl.registerLazySingleton<GetCoursesUseCase>(
+    () => GetCoursesUseCase(sl()),
+  );
+
+  // Get Featured Courses Use Case
+  sl.registerLazySingleton<GetFeaturedCoursesUseCase>(
+    () => GetFeaturedCoursesUseCase(sl()),
+  );
+
+  // Get Course Details Use Case
+  sl.registerLazySingleton<GetCourseDetailsUseCase>(
+    () => GetCourseDetailsUseCase(sl()),
+  );
+
+  // Search Courses Use Case
+  sl.registerLazySingleton<SearchCoursesUseCase>(
+    () => SearchCoursesUseCase(sl()),
+  );
+
+  // Get Categories Use Case
+  sl.registerLazySingleton<GetCategoriesUseCase>(
+    () => GetCategoriesUseCase(sl()),
+  );
+
+  // Get Preview Lessons Use Case
+  sl.registerLazySingleton<GetPreviewLessonsUseCase>(
+    () => GetPreviewLessonsUseCase(sl()),
+  );
+
+  // ==================== BLoC ====================
+
+  // Course BLoC - registered as factory since it should be fresh for each scope
+  sl.registerFactory<CourseBloc>(
+    () => CourseBloc(
+      getCoursesUseCase: sl(),
+      getFeaturedCoursesUseCase: sl(),
+      getCourseDetailsUseCase: sl(),
+      searchCoursesUseCase: sl(),
+      getCategoriesUseCase: sl(),
+      getPreviewLessonsUseCase: sl(),
+    ),
+  );
 }
 
 /// Initialize lesson feature (Phase 4)

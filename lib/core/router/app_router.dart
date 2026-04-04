@@ -5,6 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/auth/presentation/bloc/auth_state.dart';
+import '../../features/auth/presentation/bloc/auth_event.dart';
+import '../../features/course_browsing/presentation/pages/courses_page.dart';
+import '../../features/course_browsing/presentation/pages/course_details_page.dart';
+import '../../features/course_browsing/presentation/pages/course_search_page.dart';
+import '../../features/course_browsing/presentation/pages/categories_page.dart';
+import '../../features/course_browsing/presentation/bloc/course_bloc.dart';
 import '../di/injection_container.dart' as di;
 
 /// App router configuration
@@ -18,6 +25,8 @@ class AppRouter {
   static const String register = 'register';
   static const String courses = 'courses';
   static const String courseDetails = 'course_details';
+  static const String courseSearch = 'course_search';
+  static const String categories = 'categories';
   static const String myCourses = 'my_courses';
   static const String lessonPlayer = 'lesson_player';
   static const String enrollments = 'enrollments';
@@ -30,6 +39,8 @@ class AppRouter {
   static const String registerPath = '/register';
   static const String coursesPath = '/courses';
   static const String courseDetailsPath = '/courses/:id';
+  static const String courseSearchPath = '/search';
+  static const String categoriesPath = '/categories';
   static const String myCoursesPath = '/my-courses';
   static const String lessonPlayerPath = '/my-courses/:courseId/lessons/:lessonId';
   static const String enrollmentsPath = '/enrollments';
@@ -43,11 +54,14 @@ class AppRouter {
       debugLogDiagnostics: true,
       errorBuilder: (context, state) => _ErrorPage(error: state.error),
       routes: [
-        // Home Route
+        // Home Route - Checks auth and redirects accordingly
         GoRoute(
           path: homePath,
           name: home,
-          builder: (context, state) => const _HomePage(),
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<AuthBloc>()..add(GetCurrentUserEvent()),
+            child: const _HomePage(),
+          ),
         ),
 
         // Authentication Routes
@@ -72,15 +86,37 @@ class AppRouter {
         GoRoute(
           path: coursesPath,
           name: courses,
-          builder: (context, state) => const _CoursesPage(),
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<CourseBloc>(),
+            child: const CoursesPage(),
+          ),
         ),
         GoRoute(
           path: courseDetailsPath,
           name: courseDetails,
           builder: (context, state) {
             final courseId = state.pathParameters['id']!;
-            return _CourseDetailsPage(courseId: courseId);
+            return BlocProvider(
+              create: (context) => di.sl<CourseBloc>(),
+              child: CourseDetailsPage(courseId: courseId),
+            );
           },
+        ),
+        GoRoute(
+          path: courseSearchPath,
+          name: courseSearch,
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<CourseBloc>(),
+            child: const CourseSearchPage(),
+          ),
+        ),
+        GoRoute(
+          path: categoriesPath,
+          name: categories,
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<CourseBloc>(),
+            child: const CategoriesPage(),
+          ),
         ),
 
         // My Courses Route
@@ -131,69 +167,159 @@ class AppRouter {
 
 // ========== Placeholder Pages ==========
 
-/// Home Page Placeholder
+/// Home Page - Shows login/register if not auth, redirects to courses if auth
 class _HomePage extends StatelessWidget {
   const _HomePage();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('PrivateTutor')),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Welcome to PrivateTutor',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          // User is logged in, redirect to courses
+          context.go('/courses');
+        }
+      },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          // Show loading while checking auth
+          if (state is AuthLoading) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          // If authenticated, will redirect via listener
+          // If not authenticated or error, show login/register screen
+          return Scaffold(
+            appBar: AppBar(title: const Text('PrivateTutor')),
+            body: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.school_outlined,
+                        size: 80,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    const Text(
+                      'Welcome to PrivateTutor',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Your Online Learning Platform',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Please login or register to continue',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[500],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 48),
+
+                    // Login button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => context.go('/login'),
+                        icon: const Icon(Icons.login),
+                        label: const Text('Login'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          textStyle: const TextStyle(fontSize: 18),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Register button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.go('/register'),
+                        icon: const Icon(Icons.person_add),
+                        label: const Text('Create Account'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          textStyle: const TextStyle(fontSize: 18),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 48),
+
+                    // Features preview
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildFeature(
+                          Icons.video_library,
+                          'Video Courses',
+                          Colors.blue,
+                        ),
+                        _buildFeature(
+                          Icons.quiz,
+                          'Quizzes',
+                          Colors.green,
+                        ),
+                        _buildFeature(
+                          Icons.verified,
+                          'Certificates',
+                          Colors.orange,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-            const Text('Phase 2 Authentication Complete'),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () => context.go('/login'),
-              child: const Text('Login'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.go('/register'),
-              child: const Text('Register'),
-            ),
-          ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFeature(IconData icon, String label, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 32),
         ),
-      ),
-    );
-  }
-}
-
-/// Courses Page Placeholder
-class _CoursesPage extends StatelessWidget {
-  const _CoursesPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Courses')),
-      body: const Center(
-        child: Text('Courses Page - Coming Soon'),
-      ),
-    );
-  }
-}
-
-/// Course Details Page Placeholder
-class _CourseDetailsPage extends StatelessWidget {
-  final String courseId;
-
-  const _CourseDetailsPage({required this.courseId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Course Details')),
-      body: Center(
-        child: Text('Course Details: $courseId - Coming Soon'),
-      ),
+        const SizedBox(height: 8),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }
