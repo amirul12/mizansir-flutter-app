@@ -16,6 +16,12 @@ import '../../features/enrollment/presentation/bloc/enrollment_bloc.dart';
 import '../../features/enrollment/presentation/pages/my_courses_page.dart';
 import '../../features/enrollment/presentation/pages/lesson_player_page.dart';
 import '../../features/enrollment/presentation/pages/course_progress_page.dart';
+import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/profile/presentation/pages/dashboard_page.dart';
+import '../../features/profile/presentation/bloc/profile_bloc.dart';
+import '../../features/profile/presentation/bloc/profile_event.dart';
+import '../../features/profile/presentation/bloc/dashboard_bloc.dart';
+import '../../features/profile/presentation/bloc/dashboard_event.dart';
 import '../di/injection_container.dart' as di;
 
 /// App router configuration
@@ -158,14 +164,20 @@ class AppRouter {
         GoRoute(
           path: profilePath,
           name: profile,
-          builder: (context, state) => const _ProfilePage(),
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<ProfileBloc>()..add(LoadProfileEvent()),
+            child: const ProfilePage(),
+          ),
         ),
 
         // Dashboard Route
         GoRoute(
           path: dashboardPath,
           name: dashboard,
-          builder: (context, state) => const _DashboardPage(),
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<DashboardBloc>()..add(LoadDashboardEvent()),
+            child: const DashboardPage(),
+          ),
         ),
       ],
     );

@@ -40,6 +40,24 @@ import '../../features/enrollment/domain/usecases/get_course_lessons_usecase.dar
 import '../../features/enrollment/domain/usecases/get_course_progress_usecase.dart';
 import '../../features/enrollment/domain/usecases/mark_lesson_complete_usecase.dart';
 import '../../features/enrollment/presentation/bloc/enrollment_bloc.dart';
+// Profile & Dashboard Imports
+import '../../features/profile/data/datasources/profile_remote_datasource.dart';
+import '../../features/profile/data/datasources/profile_remote_datasource_impl.dart';
+import '../../features/profile/data/datasources/dashboard_remote_datasource.dart';
+import '../../features/profile/data/datasources/dashboard_remote_datasource_impl.dart';
+import '../../features/profile/data/repositories/profile_repository_impl.dart';
+import '../../features/profile/data/repositories/dashboard_repository_impl.dart';
+import '../../features/profile/domain/repositories/profile_repository.dart';
+import '../../features/profile/domain/repositories/dashboard_repository.dart';
+import '../../features/profile/domain/usecases/get_profile_usecase.dart';
+import '../../features/profile/domain/usecases/update_profile_usecase.dart';
+import '../../features/profile/domain/usecases/upload_avatar_usecase.dart';
+import '../../features/profile/domain/usecases/change_password_usecase.dart';
+import '../../features/profile/domain/usecases/delete_account_usecase.dart';
+import '../../features/profile/domain/usecases/get_dashboard_usecase.dart';
+import '../../features/profile/domain/usecases/get_activity_usecase.dart';
+import '../../features/profile/presentation/bloc/profile_bloc.dart';
+import '../../features/profile/presentation/bloc/dashboard_bloc.dart';
 
 /// Global service locator instance
 final sl = GetIt.instance;
@@ -52,6 +70,7 @@ Future<void> init() async {
   await _initAuth();
   await _initCourseBrowsing();
   await _initEnrollment();
+  await _initProfile();
 }
 
 /// Initialize core services
@@ -302,10 +321,73 @@ Future<void> _initEnrollment() async {
 
 /// Initialize profile feature (Phase 6)
 Future<void> _initProfile() async {
-  // TODO: Implement in Phase 6
-}
+  // ==================== Data Sources ====================
 
-/// Initialize dashboard feature (Phase 6)
-Future<void> _initDashboard() async {
-  // TODO: Implement in Phase 6
+  // Profile Remote Data Source
+  sl.registerLazySingleton<ProfileRemoteDataSource>(
+    () => ProfileRemoteDataSourceImpl(
+      client: sl(),
+      baseUrl: 'https://ict.mizansir.com/api',
+    ),
+  );
+
+  // Dashboard Remote Data Source
+  sl.registerLazySingleton<DashboardRemoteDataSource>(
+    () => DashboardRemoteDataSourceImpl(
+      client: sl(),
+      baseUrl: 'https://ict.mizansir.com/api',
+    ),
+  );
+
+  // ==================== Repositories ====================
+
+  // Profile Repository
+  sl.registerLazySingleton<ProfileRepository>(
+    () => ProfileRepositoryImpl(
+      remoteDataSource: sl(),
+      authRepository: sl(),
+    ),
+  );
+
+  // Dashboard Repository
+  sl.registerLazySingleton<DashboardRepository>(
+    () => DashboardRepositoryImpl(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  // ==================== Use Cases ====================
+
+  // Profile Use Cases
+  sl.registerLazySingleton<GetProfileUseCase>(() => GetProfileUseCase(sl()));
+  sl.registerLazySingleton<UpdateProfileUseCase>(() => UpdateProfileUseCase(sl()));
+  sl.registerLazySingleton<UploadAvatarUseCase>(() => UploadAvatarUseCase(sl()));
+  sl.registerLazySingleton<ChangePasswordUseCase>(() => ChangePasswordUseCase(sl()));
+  sl.registerLazySingleton<DeleteAccountUseCase>(() => DeleteAccountUseCase(sl()));
+
+  // Dashboard Use Cases
+  sl.registerLazySingleton<GetDashboardUseCase>(() => GetDashboardUseCase(sl()));
+  sl.registerLazySingleton<GetActivityUseCase>(() => GetActivityUseCase(sl()));
+
+  // ==================== BLoC ====================
+
+  // Profile BLoC
+  sl.registerFactory<ProfileBloc>(
+    () => ProfileBloc(
+      getProfileUseCase: sl(),
+      updateProfileUseCase: sl(),
+      uploadAvatarUseCase: sl(),
+      changePasswordUseCase: sl(),
+      deleteAccountUseCase: sl(),
+      logoutUseCase: sl(),
+    ),
+  );
+
+  // Dashboard BLoC
+  sl.registerFactory<DashboardBloc>(
+    () => DashboardBloc(
+      getDashboardUseCase: sl(),
+      getActivityUseCase: sl(),
+    ),
+  );
 }
