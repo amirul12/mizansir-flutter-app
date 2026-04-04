@@ -12,6 +12,8 @@ class LessonModel extends Equatable {
   final int order;
   final String? videoUrl;
   final String? thumbnailUrl;
+  final String? youtubeEmbedUrl;
+  final String? youtubeVideoId;
   final bool isFree;
   final bool isCompleted;
   final int? watchTimeSeconds;
@@ -29,6 +31,8 @@ class LessonModel extends Equatable {
     required this.order,
     this.videoUrl,
     this.thumbnailUrl,
+    this.youtubeEmbedUrl,
+    this.youtubeVideoId,
     required this.isFree,
     this.isCompleted = false,
     this.watchTimeSeconds,
@@ -48,6 +52,8 @@ class LessonModel extends Equatable {
       order: json['order'] is num ? (json['order'] as num).toInt() : 0,
       videoUrl: json['video_url'],
       thumbnailUrl: json['thumbnail_url'],
+      youtubeEmbedUrl: json['youtube_embed_url'],
+      youtubeVideoId: json['youtube_video_id'],
       isFree: json['is_free'] ?? false,
       isCompleted: json['is_completed'] ?? false,
       watchTimeSeconds: json['watch_time_seconds'] is num
@@ -72,6 +78,8 @@ class LessonModel extends Equatable {
       order: order,
       videoUrl: videoUrl,
       thumbnailUrl: thumbnailUrl,
+      youtubeEmbedUrl: youtubeEmbedUrl,
+      youtubeVideoId: youtubeVideoId,
       isFree: isFree,
       isCompleted: isCompleted,
       watchTimeSeconds: watchTimeSeconds,
@@ -92,6 +100,8 @@ class LessonModel extends Equatable {
         order,
         videoUrl,
         thumbnailUrl,
+        youtubeEmbedUrl,
+        youtubeVideoId,
         isFree,
         isCompleted,
         watchTimeSeconds,

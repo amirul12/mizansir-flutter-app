@@ -1,6 +1,7 @@
 // File: lib/features/enrollment/presentation/pages/lesson_player_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../bloc/enrollment_bloc.dart';
 import '../bloc/enrollment_event.dart';
 import '../bloc/enrollment_state.dart';
@@ -25,11 +26,18 @@ class LessonPlayerPage extends StatefulWidget {
 class _LessonPlayerPageState extends State<LessonPlayerPage> {
   Lesson? _currentLesson;
   List<Lesson> _lessons = [];
+  YoutubePlayerController? _youtubeController;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _youtubeController?.dispose();
+    super.dispose();
   }
 
   void _loadData() {
@@ -42,6 +50,22 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
   void _selectLesson(Lesson lesson) {
     setState(() {
       _currentLesson = lesson;
+
+      // Initialize YouTube player if lesson has YouTube video
+      if (lesson.hasYoutubeVideo) {
+        _youtubeController?.dispose();
+        _youtubeController = YoutubePlayerController(
+          initialVideoId: lesson.youtubeVideoId!,
+          flags: const YoutubePlayerFlags(
+            autoPlay: true,
+            mute: false,
+            enableCaption: true,
+          ),
+        );
+      } else {
+        _youtubeController?.dispose();
+        _youtubeController = null;
+      }
     });
   }
 
@@ -171,52 +195,69 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
         children: [
           // Video player or content placeholder
           Center(
-            child: _currentLesson!.hasVideo
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.play_circle_outline,
-                        size: 80,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Video Player',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _currentLesson!.videoUrl!,
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 12,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+            child: _currentLesson!.hasYoutubeVideo && _youtubeController != null
+                ? YoutubePlayer(
+                    controller: _youtubeController!,
+                    showVideoProgressIndicator: true,
+                    progressIndicatorColor: Colors.amber,
+                    progressColors: const ProgressBarColors(
+                      playedColor: Colors.amber,
+                      handleColor: Colors.amberAccent,
+                    ),
+                    onEnded: (_) {
+                      // Auto-play next lesson when video ends
+                      if (_currentLesson!.progressPercentage == null ||
+                          _currentLesson!.progressPercentage! < 100) {
+                        _markLessonComplete();
+                      }
+                    },
                   )
-                : Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.article_outlined,
-                        size: 80,
-                        color: Colors.white,
+                : _currentLesson!.hasVideo
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.play_circle_outline,
+                            size: 80,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Video Player',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _currentLesson!.videoUrl!,
+                            style: TextStyle(
+                              color: Colors.grey[400],
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      )
+                    : Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.article_outlined,
+                            size: 80,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Lesson Content',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Lesson Content',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ],
-                  ),
           ),
 
           // Top controls
@@ -232,7 +273,7 @@ class _LessonPlayerPageState extends State<LessonPlayerPage> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black.withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(

@@ -11,6 +11,8 @@ class Lesson extends Equatable {
   final int order;
   final String? videoUrl;
   final String? thumbnailUrl;
+  final String? youtubeEmbedUrl;
+  final String? youtubeVideoId;
   final bool isFree;
   final bool isCompleted;
   final int? watchTimeSeconds;
@@ -28,6 +30,8 @@ class Lesson extends Equatable {
     required this.order,
     this.videoUrl,
     this.thumbnailUrl,
+    this.youtubeEmbedUrl,
+    this.youtubeVideoId,
     required this.isFree,
     this.isCompleted = false,
     this.watchTimeSeconds,
@@ -41,6 +45,7 @@ class Lesson extends Equatable {
   bool get hasVideo => videoUrl != null && videoUrl!.isNotEmpty;
   bool get hasThumbnail => thumbnailUrl != null && thumbnailUrl!.isNotEmpty;
   bool get hasDescription => description != null && description!.isNotEmpty;
+  bool get hasYoutubeVideo => youtubeVideoId != null && youtubeVideoId!.isNotEmpty;
 
   String get formattedDuration {
     final hours = duration ~/ 60;
@@ -70,6 +75,8 @@ class Lesson extends Equatable {
         order,
         videoUrl,
         thumbnailUrl,
+        youtubeEmbedUrl,
+        youtubeVideoId,
         isFree,
         isCompleted,
         watchTimeSeconds,
