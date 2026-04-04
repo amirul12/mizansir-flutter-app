@@ -1,6 +1,8 @@
 // File: lib/core/router/app_router.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/register_page.dart';
 
 /// App router configuration
 class AppRouter {
@@ -49,12 +51,12 @@ class AppRouter {
         GoRoute(
           path: loginPath,
           name: login,
-          builder: (context, state) => const _LoginPage(),
+          builder: (context, state) => const LoginPage(),
         ),
         GoRoute(
           path: registerPath,
           name: register,
-          builder: (context, state) => const _RegisterPage(),
+          builder: (context, state) => const RegisterPage(),
         ),
 
         // Course Routes
@@ -145,36 +147,6 @@ class _HomePage extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Login Page Placeholder
-class _LoginPage extends StatelessWidget {
-  const _LoginPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: const Center(
-        child: Text('Login Page - Coming Soon'),
-      ),
-    );
-  }
-}
-
-/// Register Page Placeholder
-class _RegisterPage extends StatelessWidget {
-  const _RegisterPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
-      body: const Center(
-        child: Text('Register Page - Coming Soon'),
       ),
     );
   }

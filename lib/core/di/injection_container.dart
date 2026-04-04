@@ -4,6 +4,17 @@ import '../services/api_service.dart';
 import '../services/token_service.dart';
 import '../services/storage_service.dart';
 import '../services/connectivity_service.dart';
+import '../../features/auth/data/datasources/auth_remote_datasource.dart';
+import '../../features/auth/data/datasources/auth_remote_datasource_impl.dart';
+import '../../features/auth/data/datasources/auth_local_datasource.dart';
+import '../../features/auth/data/datasources/auth_local_datasource_impl.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/domain/usecases/login_usecase.dart';
+import '../../features/auth/domain/usecases/register_usecase.dart';
+import '../../features/auth/domain/usecases/get_current_user_usecase.dart';
+import '../../features/auth/domain/usecases/logout_usecase.dart';
+import '../../features/auth/presentation/bloc/auth_bloc.dart';
 
 /// Global service locator instance
 final sl = GetIt.instance;
@@ -12,6 +23,8 @@ final sl = GetIt.instance;
 Future<void> init() async {
   // Initialize core services first
   await _initCore();
+  // Initialize features
+  await _initAuth();
 }
 
 /// Initialize core services
@@ -47,12 +60,7 @@ Future<void> _initCore() async {
 
   // ==================== Features ====================
   // Features will be registered in their respective phases
-  // Example:
-  // await _initAuth();
-  // await _initCourseBrowsing();
-  // etc.
-
-  // Note: Feature registrations will be added as we implement each phase
+  // Note: Feature registrations are called from the main init() function
 }
 
 /// Reset all registrations (useful for testing)
@@ -71,14 +79,48 @@ Future<void> dispose() async {
   await sl.reset();
 }
 
-// ========== Feature Registration Methods (Placeholders) ==========
+// ========== Feature Registration Methods ==========
 
 /// Initialize authentication feature (Phase 2)
 Future<void> _initAuth() async {
-  // TODO: Implement in Phase 2
-  // sl.registerFactory(() => AuthBloc(...));
-  // sl.registerLazySingleton(() => LoginUseCase(sl()));
-  // etc.
+  // BLoC - Factory (new instance each time)
+  sl.registerFactory(
+    () => AuthBloc(
+      loginUseCase: sl(),
+      registerUseCase: sl(),
+      getCurrentUserUseCase: sl(),
+      logoutUseCase: sl(),
+    ),
+  );
+
+  // Use Cases - LazySingleton (single instance)
+  sl.registerLazySingleton(() => LoginUseCase(sl()));
+  sl.registerLazySingleton(() => RegisterUseCase(sl()));
+  sl.registerLazySingleton(() => GetCurrentUserUseCase(sl()));
+  sl.registerLazySingleton(() => LogoutUseCase(sl()));
+
+  // Repository
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      remoteDataSource: sl(),
+      localDataSource: sl(),
+    ),
+  );
+
+  // Data Sources
+  sl.registerLazySingleton<AuthRemoteDataSource>(
+    () => AuthRemoteDataSourceImpl(
+      client: sl(),
+      tokenService: sl(),
+      baseUrl: 'http://your-domain.com/api', // Update with actual base URL
+    ),
+  );
+
+  sl.registerLazySingleton<AuthLocalDataSource>(
+    () => AuthLocalDataSourceImpl(
+      storageService: sl(),
+    ),
+  );
 }
 
 /// Initialize course browsing feature (Phase 3)
