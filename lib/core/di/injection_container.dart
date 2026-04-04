@@ -29,6 +29,17 @@ import '../../features/course_browsing/domain/usecases/search_courses_usecase.da
 import '../../features/course_browsing/domain/usecases/get_categories_usecase.dart';
 import '../../features/course_browsing/domain/usecases/get_preview_lessons_usecase.dart';
 import '../../features/course_browsing/presentation/bloc/course_bloc.dart';
+// Enrollment Imports
+import '../../features/enrollment/data/datasources/enrollment_remote_datasource.dart';
+import '../../features/enrollment/data/datasources/enrollment_remote_datasource_impl.dart';
+import '../../features/enrollment/data/repositories/enrollment_repository_impl.dart';
+import '../../features/enrollment/domain/repositories/enrollment_repository.dart';
+import '../../features/enrollment/domain/usecases/get_my_courses_usecase.dart';
+import '../../features/enrollment/domain/usecases/get_enrolled_course_details_usecase.dart';
+import '../../features/enrollment/domain/usecases/get_course_lessons_usecase.dart';
+import '../../features/enrollment/domain/usecases/get_course_progress_usecase.dart';
+import '../../features/enrollment/domain/usecases/mark_lesson_complete_usecase.dart';
+import '../../features/enrollment/presentation/bloc/enrollment_bloc.dart';
 
 /// Global service locator instance
 final sl = GetIt.instance;
@@ -40,6 +51,7 @@ Future<void> init() async {
   // Initialize features
   await _initAuth();
   await _initCourseBrowsing();
+  await _initEnrollment();
 }
 
 /// Initialize core services
@@ -227,7 +239,65 @@ Future<void> _initLesson() async {
 
 /// Initialize enrollment feature (Phase 5)
 Future<void> _initEnrollment() async {
-  // TODO: Implement in Phase 5
+  // ==================== Data Sources ====================
+
+  // Enrollment Remote Data Source
+  sl.registerLazySingleton<EnrollmentRemoteDataSource>(
+    () => EnrollmentRemoteDataSourceImpl(
+      client: sl(),
+      tokenService: sl(),
+      baseUrl: 'https://ict.mizansir.com/api',
+    ),
+  );
+
+  // ==================== Repositories ====================
+
+  // Enrollment Repository
+  sl.registerLazySingleton<EnrollmentRepository>(
+    () => EnrollmentRepositoryImpl(
+      remoteDataSource: sl(),
+    ),
+  );
+
+  // ==================== Use Cases ====================
+
+  // Get My Courses Use Case
+  sl.registerLazySingleton<GetMyCoursesUseCase>(
+    () => GetMyCoursesUseCase(sl()),
+  );
+
+  // Get Enrolled Course Details Use Case
+  sl.registerLazySingleton<GetEnrolledCourseDetailsUseCase>(
+    () => GetEnrolledCourseDetailsUseCase(sl()),
+  );
+
+  // Get Course Lessons Use Case
+  sl.registerLazySingleton<GetCourseLessonsUseCase>(
+    () => GetCourseLessonsUseCase(sl()),
+  );
+
+  // Get Course Progress Use Case
+  sl.registerLazySingleton<GetCourseProgressUseCase>(
+    () => GetCourseProgressUseCase(sl()),
+  );
+
+  // Mark Lesson Complete Use Case
+  sl.registerLazySingleton<MarkLessonCompleteUseCase>(
+    () => MarkLessonCompleteUseCase(sl()),
+  );
+
+  // ==================== BLoC ====================
+
+  // Enrollment BLoC - registered as factory since it should be fresh for each scope
+  sl.registerFactory<EnrollmentBloc>(
+    () => EnrollmentBloc(
+      getMyCoursesUseCase: sl(),
+      getEnrolledCourseDetailsUseCase: sl(),
+      getCourseLessonsUseCase: sl(),
+      getCourseProgressUseCase: sl(),
+      markLessonCompleteUseCase: sl(),
+    ),
+  );
 }
 
 /// Initialize profile feature (Phase 6)

@@ -12,6 +12,10 @@ import '../../features/course_browsing/presentation/pages/course_details_page.da
 import '../../features/course_browsing/presentation/pages/course_search_page.dart';
 import '../../features/course_browsing/presentation/pages/categories_page.dart';
 import '../../features/course_browsing/presentation/bloc/course_bloc.dart';
+import '../../features/enrollment/presentation/bloc/enrollment_bloc.dart';
+import '../../features/enrollment/presentation/pages/my_courses_page.dart';
+import '../../features/enrollment/presentation/pages/lesson_player_page.dart';
+import '../../features/enrollment/presentation/pages/course_progress_page.dart';
 import '../di/injection_container.dart' as di;
 
 /// App router configuration
@@ -28,6 +32,7 @@ class AppRouter {
   static const String courseSearch = 'course_search';
   static const String categories = 'categories';
   static const String myCourses = 'my_courses';
+  static const String courseProgress = 'course_progress';
   static const String lessonPlayer = 'lesson_player';
   static const String enrollments = 'enrollments';
   static const String profile = 'profile';
@@ -42,7 +47,9 @@ class AppRouter {
   static const String courseSearchPath = '/search';
   static const String categoriesPath = '/categories';
   static const String myCoursesPath = '/my-courses';
-  static const String lessonPlayerPath = '/my-courses/:courseId/lessons/:lessonId';
+  static const String courseProgressPath = '/my-courses/:courseId';
+  static const String lessonPlayerPath = '/my-courses/:courseId/lessons';
+  static const String lessonPlayerWithPath = '/my-courses/:courseId/lessons/:lessonId';
   static const String enrollmentsPath = '/enrollments';
   static const String profilePath = '/profile';
   static const String dashboardPath = '/dashboard';

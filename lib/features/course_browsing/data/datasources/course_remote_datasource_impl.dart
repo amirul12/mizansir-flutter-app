@@ -29,11 +29,8 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
       params['page'] = page.toString();
       params['limit'] = limit.toString();
 
-      final uri = Uri.https(
-        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
-        '/v1/courses',
-        params,
-      );
+      // Use Uri.parse to handle full URL correctly
+      final uri = Uri.parse('$baseUrl/v1/courses').replace(queryParameters: params);
 
       // DEBUG: Print API Request
       debugPrint('🔵 GET COURSES REQUEST');
@@ -85,10 +82,9 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
   @override
   Future<List<CourseModel>> getFeaturedCourses({int limit = 10}) async {
     try {
-      final uri = Uri.https(
-        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
-        '/v1/courses/featured',
-        {'limit': limit.toString()},
+      // Use Uri.parse to handle full URL correctly
+      final uri = Uri.parse('$baseUrl/v1/courses/featured').replace(
+        queryParameters: {'limit': limit.toString()},
       );
 
       // DEBUG: Print API Request
@@ -133,10 +129,8 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
   @override
   Future<CourseModel> getCourseDetails(String courseId) async {
     try {
-      final uri = Uri.https(
-        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
-        '/v1/courses/$courseId',
-      );
+      // Use Uri.parse to handle full URL correctly
+      final uri = Uri.parse('$baseUrl/v1/courses/$courseId');
 
       // DEBUG: Print API Request
       debugPrint('🔵 GET COURSE DETAILS REQUEST');
@@ -184,10 +178,9 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     int limit = 20,
   }) async {
     try {
-      final uri = Uri.https(
-        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
-        '/v1/courses/search',
-        {
+      // Use Uri.parse to handle full URL correctly
+      final uri = Uri.parse('$baseUrl/v1/courses/search').replace(
+        queryParameters: {
           'q': query,
           'page': page.toString(),
           'limit': limit.toString(),
@@ -236,10 +229,8 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
   @override
   Future<List<CategoryModel>> getCategories() async {
     try {
-      final uri = Uri.https(
-        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
-        '/v1/courses/categories',
-      );
+      // Use Uri.parse to handle full URL correctly
+      final uri = Uri.parse('$baseUrl/v1/courses/categories');
 
       // DEBUG: Print API Request
       debugPrint('🔵 GET CATEGORIES REQUEST');
@@ -283,10 +274,8 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
   @override
   Future<List<LessonPreviewModel>> getPreviewLessons(String courseId) async {
     try {
-      final uri = Uri.https(
-        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
-        '/v1/courses/$courseId/lessons',
-      );
+      // Use Uri.parse to handle full URL correctly
+      final uri = Uri.parse('$baseUrl/v1/courses/$courseId/lessons');
 
       // DEBUG: Print API Request
       debugPrint('🔵 GET PREVIEW LESSONS REQUEST');
