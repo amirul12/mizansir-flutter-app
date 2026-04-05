@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/services/token_service.dart';
 import '../models/user_profile_model.dart';
 import 'profile_remote_datasource.dart';
 
@@ -10,23 +11,26 @@ import 'profile_remote_datasource.dart';
 class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   final http.Client client;
   final String baseUrl;
+  final TokenService tokenService;
 
   ProfileRemoteDataSourceImpl({
     required this.client,
     required this.baseUrl,
+    required this.tokenService,
   });
 
   @override
   Future<UserProfileModel> getProfile() async {
+    final headers = await _buildHeaders();
     final response = await client.get(
-      Uri.parse('$baseUrl/v1/profile'),
-      headers: _buildHeaders(),
+      Uri.parse('$baseUrl/v1/user/profile'),
+      headers: headers,
     );
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-      final userData = jsonData['data'] as Map<String, dynamic>;
-      return UserProfileModel.fromJson(userData);
+      final responseData = jsonData['data'] as Map<String, dynamic>;
+      return UserProfileModel.fromApiResponse(responseData);
     } else if (response.statusCode == 401) {
       throw UnauthorizedException();
     } else if (response.statusCode == 404) {
@@ -41,16 +45,17 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<UserProfileModel> updateProfile(Map<String, dynamic> data) async {
+    final headers = await _buildHeaders();
     final response = await client.put(
-      Uri.parse('$baseUrl/v1/profile'),
-      headers: _buildHeaders(),
+      Uri.parse('$baseUrl/v1/user/profile'),
+      headers: headers,
       body: jsonEncode(data),
     );
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-      final userData = jsonData['data'] as Map<String, dynamic>;
-      return UserProfileModel.fromJson(userData);
+      final responseData = jsonData['data'] as Map<String, dynamic>;
+      return UserProfileModel.fromApiResponse(responseData);
     } else if (response.statusCode == 401) {
       throw UnauthorizedException();
     } else if (response.statusCode == 422) {
@@ -105,9 +110,10 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     required String currentPassword,
     required String newPassword,
   }) async {
+    final headers = await _buildHeaders();
     final response = await client.post(
       Uri.parse('$baseUrl/v1/profile/change-password'),
-      headers: _buildHeaders(),
+      headers: headers,
       body: jsonEncode({
         'current_password': currentPassword,
         'new_password': newPassword,
@@ -134,9 +140,10 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
 
   @override
   Future<void> deleteAccount(String password) async {
+    final headers = await _buildHeaders();
     final response = await client.delete(
-      Uri.parse('$baseUrl/v1/profile'),
-      headers: _buildHeaders(),
+      Uri.parse('$baseUrl/v1/user/profile'),
+      headers: headers,
       body: jsonEncode({'password': password}),
     );
 
@@ -158,13 +165,18 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }
 
   /// Build request headers with authentication.
-  Map<String, String> _buildHeaders() {
-    // TODO: Get token from TokenService
-    // For now, return basic headers
-    return {
+  Future<Map<String, String>> _buildHeaders() async {
+    final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      // 'Authorization': 'Bearer $token',
     };
+
+    // Add Authorization header if token exists
+    final token = await tokenService.getAccessToken();
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return headers;
   }
 }

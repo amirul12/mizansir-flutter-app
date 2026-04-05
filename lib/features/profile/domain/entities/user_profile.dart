@@ -1,5 +1,39 @@
 import 'package:equatable/equatable.dart';
 
+/// User stats entity containing enrollment statistics.
+class UserStats extends Equatable {
+  final int totalEnrollments;
+  final int activeEnrollments;
+  final int pendingEnrollments;
+
+  const UserStats({
+    required this.totalEnrollments,
+    required this.activeEnrollments,
+    required this.pendingEnrollments,
+  });
+
+  @override
+  List<Object?> get props => [totalEnrollments, activeEnrollments, pendingEnrollments];
+}
+
+/// Profile completion entity.
+class ProfileCompletion extends Equatable {
+  final int percentage;
+  final int completedFields;
+  final int totalFields;
+  final List<String> missingFields;
+
+  const ProfileCompletion({
+    required this.percentage,
+    required this.completedFields,
+    required this.totalFields,
+    required this.missingFields,
+  });
+
+  @override
+  List<Object?> get props => [percentage, completedFields, totalFields, missingFields];
+}
+
 /// User profile entity containing user information and settings.
 class UserProfile extends Equatable {
   final int id;
@@ -11,6 +45,8 @@ class UserProfile extends Equatable {
   final String? address;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final UserStats? stats;
+  final ProfileCompletion? profileCompletion;
 
   const UserProfile({
     required this.id,
@@ -22,6 +58,8 @@ class UserProfile extends Equatable {
     this.address,
     required this.createdAt,
     required this.updatedAt,
+    this.stats,
+    this.profileCompletion,
   });
 
   /// Returns true if user has uploaded an avatar.
@@ -38,6 +76,9 @@ class UserProfile extends Equatable {
 
   /// Returns true if profile is complete (has all optional fields).
   bool get isComplete => hasPhone && hasCollegeName && hasAddress && hasAvatar;
+
+  /// Returns profile completion percentage.
+  int get completionPercentage => profileCompletion?.percentage ?? 0;
 
   /// Returns initials from name (e.g., "John Doe" -> "JD").
   String get initials {
@@ -76,6 +117,8 @@ class UserProfile extends Equatable {
         address,
         createdAt,
         updatedAt,
+        stats,
+        profileCompletion,
       ];
 
   /// CopyWith method for creating modified copies.
@@ -89,6 +132,8 @@ class UserProfile extends Equatable {
     String? address,
     DateTime? createdAt,
     DateTime? updatedAt,
+    UserStats? stats,
+    ProfileCompletion? profileCompletion,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -100,6 +145,8 @@ class UserProfile extends Equatable {
       address: address ?? this.address,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      stats: stats ?? this.stats,
+      profileCompletion: profileCompletion ?? this.profileCompletion,
     );
   }
 }

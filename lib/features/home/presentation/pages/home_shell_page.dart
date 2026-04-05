@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_event.dart';
 import '../../../profile/presentation/bloc/dashboard_bloc.dart';
@@ -10,6 +11,7 @@ import '../../../enrollment/presentation/bloc/enrollment_event.dart';
 import '../../../enrollment/presentation/bloc/enrollment_state.dart';
 import '../../../course_browsing/presentation/bloc/course_bloc.dart';
 import '../../../course_browsing/presentation/bloc/course_event.dart';
+import '../../../course_browsing/presentation/bloc/course_state.dart';
 import '../../domain/entities/home_tab.dart';
 import '../bloc/home_shell_cubit.dart';
 import '../widgets/home_bottom_nav_bar.dart';
@@ -30,6 +32,10 @@ class HomeShellPage extends StatelessWidget {
       providers: [
         BlocProvider(
           create: (context) => HomeShellCubit(),
+        ),
+        // Auth bloc for logout functionality
+        BlocProvider(
+          create: (context) => di.sl<AuthBloc>(),
         ),
         // Initialize profile and dashboard blocs
         BlocProvider(
@@ -172,9 +178,269 @@ class _CoursesTabPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // This will be replaced with actual CoursesPage
-    return const Center(
-      child: Text('Courses Tab - Will integrate CoursesPage here'),
+    return BlocBuilder<CourseBloc, CourseState>(
+      buildWhen: (previous, current) =>
+          current is CourseLoading ||
+          current is CoursesLoaded ||
+          current is CourseError ||
+          current is CourseEmpty,
+      builder: (context, state) {
+        // Show loading
+        if (state is CourseLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        // Show error
+        if (state is CourseError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 64,
+                    color: Colors.red[300],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Oops!',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    state.message ?? 'Failed to load courses',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.read<CourseBloc>().add(const LoadCoursesEvent());
+                    },
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Try Again'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Show empty
+        if (state is CourseEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.school_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No courses available',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Check back later for new courses',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[500],
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Show courses
+        if (state is CoursesLoaded) {
+          if (state.courses?.isEmpty ?? true) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.school_outlined,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No courses available',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Check back later for new courses',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[500],
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              context.read<CourseBloc>().add(const LoadCoursesEvent());
+            },
+            child: ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: state.courses?.length ?? 0,
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                final course = state.courses![index];
+                return _buildCourseCard(context, course);
+              },
+            ),
+          );
+        }
+
+        // Initial state
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+  }
+
+  Widget _buildCourseCard(BuildContext context, dynamic course) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            context.go('/courses/${course.id}');
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with title and price
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            course.title ?? 'No Title',
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          if (course.enrollmentCount != null)
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.people_outline,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${course.enrollmentCount} enrolled',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: Colors.grey[600],
+                                      ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                    // Price badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: course.price == 0 || course.price == "0.00"
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: course.price == 0 || course.price == "0.00"
+                              ? Colors.green.withValues(alpha: 0.3)
+                              : Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        course.formattedPrice ?? 'Free',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: course.price == 0 || course.price == "0.00"
+                              ? Colors.green
+                              : Theme.of(context).primaryColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Description
+                if (course.description != null && course.description!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      course.description!,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                // View details button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      context.go('/courses/${course.id}');
+                    },
+                    icon: const Icon(Icons.info_outline),
+                    label: const Text('View Details'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

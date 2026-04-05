@@ -370,7 +370,7 @@ class HomeDashboardPage extends StatelessWidget {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close drawer if open
+               // Navigator.pop(context); // Close drawer if open
                 context.go('/courses?featured=true');
               },
               child: const Text('View All'),

@@ -42,11 +42,11 @@ class _CoursesPageState extends State<CoursesPage> {
       if (state is CoursesLoaded && state.hasMore) {
         // Load more courses
         context.read<CourseBloc>().add(
-              LoadCoursesEvent(
-                filter: _currentFilter,
-                page: (state.courses.length / 20).floor() + 1,
-              ),
-            );
+          LoadCoursesEvent(
+            filter: _currentFilter,
+            page: (state.courses.length / 20).floor() + 1,
+          ),
+        );
       }
     }
   }
@@ -62,9 +62,7 @@ class _CoursesPageState extends State<CoursesPage> {
     setState(() {
       _currentFilter = newFilter;
     });
-    context.read<CourseBloc>().add(
-          LoadCoursesEvent(filter: newFilter),
-        );
+    context.read<CourseBloc>().add(LoadCoursesEvent(filter: newFilter));
   }
 
   void _clearFilters() {
@@ -78,6 +76,13 @@ class _CoursesPageState extends State<CoursesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            context.pop();
+          },
+        ),
+
         title: const Text('Explore Courses'),
         actions: [
           // Search button
@@ -91,7 +96,9 @@ class _CoursesPageState extends State<CoursesPage> {
 
           // Filter toggle
           IconButton(
-            icon: Icon(_showFilters ? Icons.filter_list_off : Icons.filter_list),
+            icon: Icon(
+              _showFilters ? Icons.filter_list_off : Icons.filter_list,
+            ),
             onPressed: () {
               setState(() {
                 _showFilters = !_showFilters;
@@ -159,8 +166,8 @@ class _CoursesPageState extends State<CoursesPage> {
     return RefreshIndicator(
       onRefresh: () async {
         context.read<CourseBloc>().add(
-              LoadCoursesEvent(filter: _currentFilter),
-            );
+          LoadCoursesEvent(filter: _currentFilter),
+        );
       },
       child: ListView.separated(
         controller: _scrollController,
@@ -198,16 +205,9 @@ class _CoursesPageState extends State<CoursesPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red[300],
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
-            Text(
-              'Oops!',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
+            Text('Oops!', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Text(
               message,
@@ -218,8 +218,8 @@ class _CoursesPageState extends State<CoursesPage> {
             ElevatedButton.icon(
               onPressed: () {
                 context.read<CourseBloc>().add(
-                      LoadCoursesEvent(filter: _currentFilter),
-                    );
+                  LoadCoursesEvent(filter: _currentFilter),
+                );
               },
               icon: const Icon(Icons.refresh),
               label: const Text('Try Again'),
@@ -237,17 +237,13 @@ class _CoursesPageState extends State<CoursesPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.school_outlined,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.school_outlined, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               message,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             if (_currentFilter != null && _currentFilter!.hasActiveFilters) ...[

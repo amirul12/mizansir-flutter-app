@@ -337,6 +337,7 @@ Future<void> _initProfile() async {
     () => ProfileRemoteDataSourceImpl(
       client: sl(),
       baseUrl: 'https://ict.mizansir.com/api',
+      tokenService: sl(),
     ),
   );
 

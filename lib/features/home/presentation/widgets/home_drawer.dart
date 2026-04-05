@@ -184,18 +184,19 @@ class HomeDrawer extends StatelessWidget {
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
+              // Use parent context to access AuthBloc
               context.read<AuthBloc>().add(LogoutEvent());
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
             },
             child: const Text('Logout'),
           ),

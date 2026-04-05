@@ -10,6 +10,7 @@ import '../bloc/enrollment_bloc.dart';
 import '../bloc/enrollment_event.dart';
 import '../bloc/enrollment_state.dart';
 import '../../domain/entities/lesson.dart';
+import '../../../../core/services/screen_security_service.dart';
 
 /// Student Lesson Player - Dedicated YouTube video player for students
 class StudentLessonPlayerPage extends StatefulWidget {
@@ -31,10 +32,14 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
   Lesson? _nextLesson;
   YoutubePlayerController? _youtubeController;
   bool _isPlayerReady = false;
+  bool _isFullScreen = false;
+  final ScreenSecurityService _screenSecurityService = ScreenSecurityService();
 
   @override
   void initState() {
     super.initState();
+    // Prevent screenshots and screen recording
+    _enableScreenSecurity();
     // Set landscape orientation for better video experience
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
@@ -47,6 +52,8 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
   @override
   void dispose() {
     _youtubeController?.dispose();
+    // Disable screen security
+    _disableScreenSecurity();
     // Reset orientation
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
@@ -55,6 +62,26 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
       DeviceOrientation.landscapeRight,
     ]);
     super.dispose();
+  }
+
+  /// Enable screen security to prevent screenshots and screen recording
+  Future<void> _enableScreenSecurity() async {
+    try {
+      await _screenSecurityService.enableSecurity();
+      debugPrint('✅ Screen security enabled - screenshots and recording prevented');
+    } catch (e) {
+      debugPrint('⚠️ Failed to enable screen security: $e');
+    }
+  }
+
+  /// Disable screen security when leaving the page
+  Future<void> _disableScreenSecurity() async {
+    try {
+      await _screenSecurityService.disableSecurity();
+      debugPrint('✅ Screen security disabled - screenshots allowed again');
+    } catch (e) {
+      debugPrint('⚠️ Failed to disable screen security: $e');
+    }
   }
 
   void _loadLesson() {
@@ -83,6 +110,14 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
           isLive: false,
         ),
       );
+
+      _youtubeController!.addListener(() {
+        if (_youtubeController!.value.isFullScreen != _isFullScreen) {
+          setState(() {
+            _isFullScreen = _youtubeController!.value.isFullScreen;
+          });
+        }
+      });
 
       _isPlayerReady = true;
       debugPrint('✅ YouTube player ready: ${lesson.youtubeVideoId}');
@@ -201,288 +236,155 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
         ? authState.user.email
         : 'student@example.com';
 
-    return SafeArea(
-      child: Column(
-        children: [
-          // Top control bar
-          Container(
-            color: Colors.black.withValues(alpha: 0.8),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                // Back button
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: _toggleFullscreen,
-                  tooltip: 'Back to lessons',
-                ),
-                // Lesson title
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Top bar - Only show when NOT in fullscreen
+            if (!_isFullScreen)
+              Container(
+                color: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  children: [
+                    // Back button
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 24),
+                      onPressed: _toggleFullscreen,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                    ),
+                    const SizedBox(width: 8),
+                    // Lesson title
+                    Expanded(
+                      child: Text(
                         _currentLesson!.title,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (_currentLesson!.hasDescription)
-                        Text(
-                          _currentLesson!.description!,
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
+                    ),
+                    // Mark complete icon
+                    if (!_currentLesson!.isCompleted)
+                      IconButton(
+                        icon: const Icon(Icons.check_circle_outline, color: Colors.white70, size: 24),
+                        onPressed: _markAsWatched,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                        tooltip: 'Mark as watched',
+                      )
+                    else
+                      const Icon(Icons.check_circle, color: Colors.green, size: 24),
+                  ],
                 ),
-                // Mark complete button
-                if (!_currentLesson!.isCompleted)
-                  IconButton(
-                    icon: const Icon(Icons.check_circle_outline, color: Colors.white),
-                    onPressed: _markAsWatched,
-                    tooltip: 'Mark as watched',
-                  )
-                else
-                  const Icon(Icons.check_circle, color: Colors.green),
-              ],
-            ),
-          ),
-
-          // YouTube Player (Main Content)
-          Expanded(
-            child: _currentLesson!.hasYoutubeVideo && _youtubeController != null
-                ? Stack(
-                    children: [
-                      Center(
-                        child: YoutubePlayer(
-                          controller: _youtubeController!,
-                          showVideoProgressIndicator: true,
-                          progressIndicatorColor: Colors.red,
-                          progressColors: const ProgressBarColors(
-                            playedColor: Colors.red,
-                            handleColor: Colors.redAccent,
-                            backgroundColor: Colors.white24,
-                          ),
-                          onEnded: (_) {
-                            // Auto-mark as complete
-                            if (_currentLesson!.progressPercentage == null ||
-                                _currentLesson!.progressPercentage! < 100) {
-                              _markAsWatched();
-                              // Auto-play next lesson after delay
-                              Future.delayed(const Duration(seconds: 3), () {
-                                if (mounted) {
-                                  _playNextLesson();
-                                }
-                              });
-                            }
-                          },
-                        ),
-                      ),
-
-                      // Student watermark (top-right)
-                      Positioned(
-                        top: 16,
-                        right: 16,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.7),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white24, width: 1),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.person_outline,
-                                color: Colors.white70,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                studentEmail,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      // Video info overlay (bottom)
-                      Positioned(
-                        bottom: 16,
-                        left: 16,
-                        right: 16,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.7),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Progress bar
-                              if (_currentLesson!.progressPercentage != null)
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    LinearProgressIndicator(
-                                      value: _currentLesson!.progressPercentage! / 100,
-                                      backgroundColor: Colors.white24,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        _currentLesson!.isCompleted
-                                            ? Colors.green
-                                            : Colors.amber,
-                                      ),
-                                      minHeight: 3,
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      '${_currentLesson!.progressPercentage}% completed',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              if (_nextLesson != null) ...[
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.skip_next,
-                                      color: Colors.white70,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        'Up next: ${_nextLesson!.title}',
-                                        style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 12,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Container(
-                    color: Colors.black,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.video_library_outlined,
-                            size: 64,
-                            color: Colors.white54,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No video available',
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-                          ElevatedButton.icon(
-                            onPressed: () => context.go('/my-courses/${widget.courseId}/lessons'),
-                            icon: const Icon(Icons.list),
-                            label: const Text('Back to Lessons'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-          ),
-
-          // Bottom control bar
-          Container(
-            color: Colors.black.withValues(alpha: 0.9),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: SafeArea(
-              top: false,
-              child: Row(
-                children: [
-                  // Previous lesson
-                  IconButton(
-                    icon: const Icon(Icons.skip_previous, color: Colors.white),
-                    iconSize: 32,
-                    onPressed: _nextLesson != null
-                        ? () => context.go('/my-courses/${widget.courseId}/lessons')
-                        : null,
-                  ),
-                  const Spacer(),
-                  // Mark complete button
-                  if (!_currentLesson!.isCompleted)
-                    ElevatedButton.icon(
-                      onPressed: _markAsWatched,
-                      icon: const Icon(Icons.check, size: 18),
-                      label: const Text('Mark Complete'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                      ),
-                    )
-                  else
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(Icons.check, size: 18, color: Colors.white),
-                          SizedBox(width: 8),
-                          Text(
-                            'Completed',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ),
-                  const Spacer(),
-                  // Next lesson
-                  IconButton(
-                    icon: const Icon(Icons.skip_next, color: Colors.white),
-                    iconSize: 32,
-                    onPressed: _nextLesson != null ? _playNextLesson : null,
-                  ),
-                ],
               ),
+
+            // YouTube Player (Main Content)
+            Expanded(
+              child: _currentLesson!.hasYoutubeVideo && _youtubeController != null
+                  ? Stack(
+                      children: [
+                        Center(
+                          child: YoutubePlayer(
+                            controller: _youtubeController!,
+                            showVideoProgressIndicator: true,
+                            progressIndicatorColor: Colors.red,
+                            progressColors: const ProgressBarColors(
+                              playedColor: Colors.red,
+                              handleColor: Colors.redAccent,
+                              backgroundColor: Colors.white24,
+                            ),
+                            onEnded: (_) {
+                              // Auto-mark as complete
+                              if (_currentLesson!.progressPercentage == null ||
+                                  _currentLesson!.progressPercentage! < 100) {
+                                _markAsWatched();
+                                // Auto-play next lesson after delay
+                                Future.delayed(const Duration(seconds: 3), () {
+                                  if (mounted) {
+                                    _playNextLesson();
+                                  }
+                                });
+                              }
+                            },
+                          ),
+                        ),
+
+                        // Student watermark (top-right corner) - Only when NOT in fullscreen
+                        if (!_isFullScreen)
+                          Positioned(
+                            top: 12,
+                            right: 12,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.6),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.person_outline,
+                                    color: Colors.white70,
+                                    size: 12,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    studentEmail,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    )
+                  : Container(
+                      color: Colors.black,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.video_library_outlined,
+                              size: 64,
+                              color: Colors.white54,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No video available',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 18,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            ElevatedButton.icon(
+                              onPressed: () => context.go('/my-courses/${widget.courseId}/lessons'),
+                              icon: const Icon(Icons.list),
+                              label: const Text('Back to Lessons'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
