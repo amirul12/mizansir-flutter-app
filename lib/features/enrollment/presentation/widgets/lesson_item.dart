@@ -1,8 +1,17 @@
 // File: lib/features/enrollment/presentation/widgets/lesson_item.dart
 import 'package:flutter/material.dart';
 import '../../domain/entities/lesson.dart';
+import '../../../../core/theme/app_colors.dart';
 
-/// Lesson Item Widget
+/// Modern Lesson Item Widget - Beautiful card design for lesson list.
+///
+/// Features:
+/// - Gradient card backgrounds for completed lessons
+/// - Thumbnail support with placeholder gradients
+/// - Progress indicators with smooth animations
+/// - Status badges (Completed, In Progress, Not Started)
+/// - Duration and video type indicators
+/// - Smooth touch feedback and hover states
 class LessonItem extends StatelessWidget {
   final Lesson lesson;
   final bool isSelected;
@@ -19,173 +28,309 @@ class LessonItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: isSelected
-            ? Theme.of(context).primaryColor.withOpacity(0.1)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 8,
-        ),
-        leading: _buildLeadingIcon(context),
-        title: Text(
-          lesson.title,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            // Show YouTube indicator and module info
-            if (lesson.hasYoutubeVideo || lesson.hasDescription)
-              Row(
-                children: [
-                  if (lesson.hasYoutubeVideo) ...[
-                    Icon(
-                      Icons.play_circle,
-                      size: 14,
-                      color: Colors.red[600],
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Video Lesson',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.red[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                  if (lesson.hasDescription && lesson.description != lesson.title)
-                    Expanded(
-                      child: Text(
-                        lesson.description!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Colors.grey[600],
-                            ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                ],
-              ),
-            const SizedBox(height: 4),
-            // Duration and progress
-            Row(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
               children: [
-                Icon(
-                  Icons.access_time,
-                  size: 14,
-                  color: Colors.grey[600],
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  lesson.formattedDuration,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                // Thumbnail or Status Icon
+                _buildLeadingWidget(context),
+                const SizedBox(width: 16),
+
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title and Status Badge
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              lesson.title,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _buildStatusBadge(),
+                        ],
                       ),
-                ),
-                if (lesson.progressPercentage != null) ...[
-                  const SizedBox(width: 12),
-                  Text(
-                    '${lesson.progressPercentage}% complete',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: lesson.isCompleted
-                              ? Colors.green
-                              : Colors.grey[600],
+
+                      const SizedBox(height: 8),
+
+                      // Description
+                      if (lesson.hasDescription && lesson.description != lesson.title)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            lesson.description!,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
+
+                      // Metadata Row
+                      Row(
+                        children: [
+                          // Video Type Indicator
+                          if (lesson.hasYoutubeVideo) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.errorLight,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.play_circle_filled,
+                                    size: 14,
+                                    color: AppColors.error,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Video',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.error,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+
+                          // Duration
+                          Icon(
+                            Icons.schedule,
+                            size: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            lesson.formattedDuration,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                          ),
+
+                          // Progress
+                          if (lesson.progressPercentage != null && !lesson.isCompleted) ...[
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: lesson.progressPercentage! / 100,
+                                  backgroundColor: AppColors.progressBackground,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    lesson.progressPercentage! >= 75
+                                        ? AppColors.success
+                                        : AppColors.primary,
+                                  ),
+                                  minHeight: 4,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${lesson.progressPercentage}%',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppColors.textSecondary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
+
+                // Play Button
+                if (onTap != null)
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: lesson.isCompleted
+                          ? AppColors.success
+                          : AppColors.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      lesson.isCompleted ? Icons.replay : Icons.play_arrow_rounded,
+                      color: lesson.isCompleted ? Colors.white : AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
               ],
             ),
-            if (lesson.isCompleted) ...[
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    size: 14,
-                    color: Colors.green,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Completed',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.green,
-                          fontWeight: FontWeight.w500,
-                        ),
-                  ),
-                ],
-              ),
-            ],
-          ],
+          ),
         ),
-        trailing: onTap != null
-            ? Icon(
-                Icons.play_circle_outline,
-                color: isSelected
-                    ? Theme.of(context).primaryColor
-                    : Colors.grey[600],
-              )
-            : null,
-        onTap: onTap,
       ),
     );
   }
 
-  Widget _buildLeadingIcon(BuildContext context) {
+  /// Build status badge widget.
+  Widget _buildStatusBadge() {
     if (lesson.isCompleted) {
       return Container(
-        width: 40,
-        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.green,
-          borderRadius: BorderRadius.circular(20),
+          color: AppColors.successLight,
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: const Icon(
-          Icons.check,
-          color: Colors.white,
-          size: 24,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.check_circle,
+              size: 12,
+              color: AppColors.success,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Done',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: AppColors.success,
+              ),
+            ),
+          ],
         ),
       );
     }
 
-    if (isSelected) {
+    if (lesson.progressPercentage != null && lesson.progressPercentage! > 0) {
       return Container(
-        width: 40,
-        height: 40,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.circular(20),
+          color: AppColors.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: const Icon(
-          Icons.play_arrow,
-          color: Colors.white,
-          size: 24,
+        child: Text(
+          'In Progress',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: AppColors.primary,
+          ),
         ),
       );
     }
 
     return Container(
-      width: 40,
-      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.grey[300],
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.textTertiary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        '${lesson.order}',
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.grey[700],
-              fontWeight: FontWeight.bold,
-            ),
-        textAlign: TextAlign.center,
+        'New',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textTertiary,
+        ),
+      ),
+    );
+  }
+
+  /// Build leading widget with thumbnail or icon.
+  Widget _buildLeadingWidget(BuildContext context) {
+    if (lesson.isCompleted) {
+      return Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.success,
+              AppColors.secondaryLight,
+            ],
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.check_rounded,
+          color: Colors.white,
+          size: 32,
+        ),
+      );
+    }
+
+    if (lesson.hasThumbnail) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          lesson.thumbnailUrl!,
+          width: 60,
+          height: 60,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildDefaultThumbnail(context);
+          },
+        ),
+      );
+    }
+
+    return _buildDefaultThumbnail(context);
+  }
+
+  /// Build default thumbnail with gradient.
+  Widget _buildDefaultThumbnail(BuildContext context) {
+    return Container(
+      width: 60,
+      height: 60,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: AppColors.primaryGradient.map((c) => c.withValues(alpha: 0.15)).toList(),
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.3),
+          width: 2,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          '${lesson.order}',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+        ),
       ),
     );
   }

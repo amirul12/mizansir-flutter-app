@@ -2,17 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../profile/presentation/bloc/dashboard_bloc.dart';
+import '../../../profile/presentation/bloc/dashboard_event.dart';
 import '../../../profile/presentation/bloc/dashboard_state.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../../profile/domain/entities/activity.dart';
 import '../../../enrollment/presentation/bloc/enrollment_bloc.dart';
+import '../../../enrollment/presentation/bloc/enrollment_event.dart';
 import '../../../enrollment/presentation/bloc/enrollment_state.dart';
 import '../../../course_browsing/presentation/bloc/course_bloc.dart';
+import '../../../course_browsing/presentation/bloc/course_event.dart';
 import '../../../course_browsing/presentation/bloc/course_state.dart';
 import '../bloc/home_shell_cubit.dart';
+import '../../../../core/theme/app_colors.dart';
 
-/// Home Dashboard Page - Rich dashboard content for authenticated users.
+/// Home Dashboard Page - Modern, visually rich dashboard for authenticated students.
+///
+/// Features:
+/// - Personalized greeting with time-based messages
+/// - Visual stats cards with icons and colors
+/// - Continue learning section with progress tracking
+/// - Featured courses carousel
+/// - Recent activity feed
+/// - Quick action buttons
+/// - Modern card design with shadows and gradients
 class HomeDashboardPage extends StatelessWidget {
   const HomeDashboardPage({super.key});
 
@@ -45,80 +58,170 @@ class HomeDashboardPage extends StatelessWidget {
           },
         ),
       ],
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Greeting Section
-            _buildGreetingSection(context),
+      child: RefreshIndicator(
+        onRefresh: () async {
+          context.read<DashboardBloc>().add(LoadDashboardEvent());
+          context.read<DashboardBloc>().add(LoadActivityEvent());
+          context.read<EnrollmentBloc>().add(const LoadMyCoursesEvent());
+          context.read<CourseBloc>().add(const LoadFeaturedCoursesEvent());
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Greeting Section with Quick Actions
+              _buildGreetingSection(context),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Stats Section
-            _buildStatsSection(context),
+              // Stats Section
+              _buildStatsSection(context),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Continue Learning Section
-            _buildContinueLearningSection(context),
+              // Quick Actions Section
+              _buildQuickActionsSection(context),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Featured Courses Section
-            _buildFeaturedCoursesSection(context),
+              // Continue Learning Section
+              _buildContinueLearningSection(context),
 
-            const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-            // Recent Activity Section
-            _buildRecentActivitySection(context),
-          ],
+              // Featured Courses Section
+              _buildFeaturedCoursesSection(context),
+
+              const SizedBox(height: 24),
+
+              // Recent Activity Section
+              _buildRecentActivitySection(context),
+
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  /// Build greeting section with user name.
+  /// Build greeting section with user name and motivational message.
   Widget _buildGreetingSection(BuildContext context) {
     return BlocBuilder<ProfileBloc, ProfileState>(
       buildWhen: (previous, current) => current is ProfileLoaded,
       builder: (context, state) {
         String userName = 'Student';
+        String? avatarUrl;
         if (state is ProfileLoaded) {
           userName = state.profile.name.split(' ')[0];
+          avatarUrl = state.profile.avatar;
         }
 
         final hour = DateTime.now().hour;
         String greeting = 'Good Morning';
+        String emoji = '🌅';
+        String motivationalMessage = 'Start your day with learning!';
+
         if (hour >= 12 && hour < 17) {
           greeting = 'Good Afternoon';
+          emoji = '☀️';
+          motivationalMessage = 'Keep up the great work!';
         } else if (hour >= 17) {
           greeting = 'Good Evening';
+          emoji = '🌙';
+          motivationalMessage = 'Evening sessions are productive!';
         }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '$greeting, $userName! 👋',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.primary,
+                AppColors.primaryLight,
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Ready to continue learning?',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-            ),
-          ],
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$greeting, $userName! $emoji',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      motivationalMessage,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Avatar or placeholder
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  border: Border.all(color: Colors.white, width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+                child: avatarUrl != null && avatarUrl.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(30),
+                        child: Image.network(
+                          avatarUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.person,
+                              size: 30,
+                              color: AppColors.primary,
+                            );
+                          },
+                        ),
+                      )
+                    : const Icon(
+                        Icons.person,
+                        size: 30,
+                        color: AppColors.primary,
+                      ),
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
-  /// Build stats cards section.
+  /// Build stats cards section with modern design.
   Widget _buildStatsSection(BuildContext context) {
     return BlocBuilder<DashboardBloc, DashboardState>(
       buildWhen: (previous, current) => current is DashboardLoaded,
@@ -132,42 +235,51 @@ class HomeDashboardPage extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Your Progress',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Your Progress',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                _buildWeeklyTrendIndicator(context),
+              ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
-                  child: _buildStatCard(
+                  child: _buildModernStatCard(
                     context,
-                    icon: Icons.school,
+                    icon: Icons.school_outlined,
                     title: 'Enrollments',
                     value: stats.totalEnrollments.toString(),
-                    color: Colors.blue,
+                    color: AppColors.primary,
+                    gradient: AppColors.primaryGradient,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildStatCard(
+                  child: _buildModernStatCard(
                     context,
-                    icon: Icons.play_circle,
+                    icon: Icons.play_circle_outline,
                     title: 'Active',
                     value: stats.activeEnrollments.toString(),
-                    color: Colors.green,
+                    color: AppColors.secondary,
+                    gradient: AppColors.secondaryGradient,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _buildStatCard(
+                  child: _buildModernStatCard(
                     context,
-                    icon: Icons.check_circle,
+                    icon: Icons.check_circle_outline,
                     title: 'Lessons',
                     value: stats.completedLessons.toString(),
-                    color: Colors.orange,
+                    color: AppColors.accent,
+                    gradient: [AppColors.accent, AppColors.accentLight],
                   ),
                 ),
               ],
@@ -178,32 +290,83 @@ class HomeDashboardPage extends StatelessWidget {
     );
   }
 
-  /// Build a single stat card.
-  Widget _buildStatCard(
+  /// Build weekly trend indicator.
+  Widget _buildWeeklyTrendIndicator(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.successLight,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.trending_up,
+            size: 16,
+            color: AppColors.success,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'This Week',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.success,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build a modern stat card with gradient and shadow.
+  Widget _buildModernStatCard(
     BuildContext context, {
     required IconData icon,
     required String title,
     required String value,
     required Color color,
+    required List<Color> gradient,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            gradient[0].withValues(alpha: 0.15),
+            gradient[1].withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: color.withValues(alpha: 0.3),
+          color: color.withValues(alpha: 0.2),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 28),
-          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(height: 12),
           Text(
             value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: color,
                 ),
@@ -212,7 +375,8 @@ class HomeDashboardPage extends StatelessWidget {
           Text(
             title,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
                 ),
           ),
         ],
@@ -220,7 +384,121 @@ class HomeDashboardPage extends StatelessWidget {
     );
   }
 
-  /// Build continue learning section.
+  /// Build quick actions section.
+  Widget _buildQuickActionsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Actions',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildQuickActionButton(
+                context,
+                icon: Icons.explore_outlined,
+                label: 'Browse',
+                color: AppColors.primary,
+                onTap: () {
+                  context.read<HomeShellCubit>().goToCourses();
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildQuickActionButton(
+                context,
+                icon: Icons.play_arrow_outlined,
+                label: 'Continue',
+                color: AppColors.secondary,
+                onTap: () {
+                  context.read<HomeShellCubit>().goToMyLearning();
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildQuickActionButton(
+                context,
+                icon: Icons.search_outlined,
+                label: 'Search',
+                color: AppColors.accent,
+                onTap: () {
+                  context.push('/search');
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Build a quick action button.
+  Widget _buildQuickActionButton(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: color,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build continue learning section with modern cards.
   Widget _buildContinueLearningSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,11 +512,15 @@ class HomeDashboardPage extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            TextButton(
+            TextButton.icon(
               onPressed: () {
                 context.read<HomeShellCubit>().goToMyLearning();
               },
-              child: const Text('View All'),
+              icon: const Icon(Icons.arrow_forward, size: 18),
+              label: const Text('View All'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+              ),
             ),
           ],
         ),
@@ -265,21 +547,27 @@ class HomeDashboardPage extends StatelessWidget {
                 children: courses.map((course) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _buildCourseCard(
+                    child: _buildModernCourseCard(
                       context,
                       course.title,
                       course.progressPercentage,
+                      course.description,
+                      course.totalLessons ?? 0,
+                      course.completedLessons ?? 0,
+                      course.id,
+                      course.nextLessonId,
                     ),
                   );
                 }).toList(),
               );
             }
 
-            return _buildEmptyCard(
+            return _buildModernEmptyCard(
               context,
               icon: Icons.play_circle_outline,
               title: 'No courses in progress',
               subtitle: 'Browse our course catalog to get started',
+              buttonText: 'Explore Courses',
               onTap: () {
                 context.read<HomeShellCubit>().goToCourses();
               },
@@ -290,71 +578,160 @@ class HomeDashboardPage extends StatelessWidget {
     );
   }
 
-  /// Build a simple course card for continue learning.
-  Widget _buildCourseCard(
+  /// Build a modern course card with enhanced visual design.
+  Widget _buildModernCourseCard(
     BuildContext context,
     String title,
-    double progress, [
-    String? instructor,
-  ]) {
+    double progress,
+    String? description,
+    int totalLessons,
+    int completedLessons,
+    String courseId,
+    String? nextLessonId,
+  ) {
+    final progressColor = _getProgressColor(progress);
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          if (instructor != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              instructor,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          Row(
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            if (nextLessonId != null) {
+              context.go('/my-courses/$courseId/lessons/$nextLessonId');
+            } else {
+              context.go('/my-courses/$courseId/lessons');
+            }
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        if (description != null && description.isNotEmpty)
+                          Text(
+                            description,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: progressColor.withValues(alpha: 0.1),
+                      border: Border.all(
+                        color: progressColor,
+                        width: 2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${progress.toInt()}%',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: progressColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
                   value: progress / 100,
-                  backgroundColor: Colors.grey[300],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    progress >= 75
-                        ? Colors.green
-                        : progress >= 50
-                            ? Colors.orange
-                            : Colors.blue,
-                  ),
+                  backgroundColor: AppColors.progressBackground,
+                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                  minHeight: 8,
                 ),
               ),
-              const SizedBox(width: 12),
-              Text(
-                '${progress.toInt()}%',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    Icons.play_circle_outline,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$completedLessons of $totalLessons lessons',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: progressColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
                     ),
+                    child: Text(
+                      progress >= 75
+                          ? 'Almost Done!'
+                          : progress >= 50
+                              ? 'Halfway'
+                              : 'In Progress',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: progressColor,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  /// Build featured courses section.
+  /// Get progress color based on percentage.
+  Color _getProgressColor(double progress) {
+    if (progress >= 75) return AppColors.secondary;
+    if (progress >= 50) return AppColors.accent;
+    return AppColors.primary;
+  }
+
+  /// Build featured courses section with modern cards.
   Widget _buildFeaturedCoursesSection(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,12 +745,15 @@ class HomeDashboardPage extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            TextButton(
+            TextButton.icon(
               onPressed: () {
-               // Navigator.pop(context); // Close drawer if open
                 context.go('/courses?featured=true');
               },
-              child: const Text('View All'),
+              icon: const Icon(Icons.arrow_forward, size: 18),
+              label: const Text('View All'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.primary,
+              ),
             ),
           ],
         ),
@@ -406,11 +786,13 @@ class HomeDashboardPage extends StatelessWidget {
                     return Container(
                       width: 280,
                       margin: const EdgeInsets.only(right: 12),
-                      child: _buildFeaturedCourseCard(
+                      child: _buildModernFeaturedCourseCard(
                         context,
+                        course.id,
                         course.title,
                         course.description ?? '',
                         course.price,
+                        course.enrolledCount,
                       ),
                     );
                   },
@@ -418,12 +800,15 @@ class HomeDashboardPage extends StatelessWidget {
               );
             }
 
-            return _buildEmptyCard(
+            return _buildModernEmptyCard(
               context,
               icon: Icons.star_outline,
               title: 'No featured courses available',
               subtitle: 'Check back later for new courses',
-              onTap: () {},
+              buttonText: 'Browse All Courses',
+              onTap: () {
+                context.read<HomeShellCubit>().goToCourses();
+              },
             );
           },
         ),
@@ -431,67 +816,194 @@ class HomeDashboardPage extends StatelessWidget {
     );
   }
 
-  /// Build a featured course card.
-  Widget _buildFeaturedCourseCard(
+  /// Build a modern featured course card with enhanced design.
+  Widget _buildModernFeaturedCourseCard(
     BuildContext context,
+    String courseId,
     String title,
     String description,
     double price,
+    int enrollmentCount,
   ) {
+    final isFree = price == 0;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            context.go('/courses/$courseId');
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Course icon/image placeholder
+              Container(
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: AppColors.primaryGradient.map((c) => c.withValues(alpha: 0.1)).toList(),
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.school_outlined,
+                    size: 40,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: Text(
+                  description,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  if (enrollmentCount > 0)
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.people_outline,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '$enrollmentCount',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                        ),
+                      ],
+                    ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isFree
+                          ? AppColors.successLight
+                          : AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      isFree ? 'Free' : '\$${price.toInt()}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isFree ? AppColors.success : AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Build a modern empty state card.
+  Widget _buildModernEmptyCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String buttonText,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: AppColors.disabledBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.border,
+          width: 2,
+          strokeAlign: BorderSide.strokeAlignInside,
+        ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            height: 70,
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blue.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
             ),
-            child: const Center(
-              child: Icon(Icons.school, size: 36, color: Colors.blue),
+            child: Icon(
+              icon,
+              size: 48,
+              color: AppColors.primary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: Text(
-              description,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
-            price > 0 ? '\$${price.toInt()}' : 'Free',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
+            subtitle,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
                 ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: onTap,
+            icon: const Icon(Icons.explore_outlined),
+            label: Text(buttonText),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
           ),
         ],
       ),
     );
   }
 
-  /// Build recent activity section.
+  /// Build recent activity section with modern design.
   Widget _buildRecentActivitySection(BuildContext context) {
     return BlocBuilder<DashboardBloc, DashboardState>(
       buildWhen: (previous, current) => current is ActivityLoaded,
@@ -505,38 +1017,51 @@ class HomeDashboardPage extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Recent Activity',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Recent Activity',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    context.read<HomeShellCubit>().goToActivity();
+                  },
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
                   ),
+                  child: const Text('View All'),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
                 itemCount: activities.length,
                 separatorBuilder: (context, index) => Divider(
-                  color: Colors.grey[300],
+                  color: AppColors.border,
                   height: 1,
                 ),
                 itemBuilder: (context, index) {
                   final activity = activities[index];
-                  return ListTile(
-                    leading: Icon(
-                      _getActivityIcon(activity),
-                      color: _getActivityColor(activity),
-                    ),
-                    title: Text(activity.description),
-                    subtitle: Text(_formatActivityTime(activity.createdAt)),
-                    dense: true,
-                  );
+                  return _buildActivityTile(activity);
                 },
               ),
             ),
@@ -546,46 +1071,41 @@ class HomeDashboardPage extends StatelessWidget {
     );
   }
 
-  /// Build an empty state card.
-  Widget _buildEmptyCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
+  /// Build a modern activity tile.
+  Widget _buildActivityTile(Activity activity) {
+    final color = _getActivityColor(activity);
+    final icon = _getActivityIcon(activity);
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: color,
+          size: 22,
+        ),
       ),
-      child: Column(
-        children: [
-          Icon(icon, size: 48, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: onTap,
-            child: const Text('Explore Courses'),
-          ),
-        ],
+      title: Text(
+        activity.description,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
       ),
+      subtitle: Text(
+        _formatActivityTime(activity.createdAt),
+        style: TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 12,
+        ),
+      ),
+      dense: true,
     );
   }
 
@@ -593,17 +1113,17 @@ class HomeDashboardPage extends StatelessWidget {
   IconData _getActivityIcon(Activity activity) {
     switch (activity.type) {
       case ActivityType.lessonCompleted:
-        return Icons.check_circle;
+        return Icons.check_circle_outline;
       case ActivityType.enrollmentCreated:
-        return Icons.school;
+        return Icons.school_outlined;
       case ActivityType.courseProgressUpdated:
         return Icons.trending_up;
       case ActivityType.profileUpdated:
-        return Icons.edit;
+        return Icons.edit_outlined;
       case ActivityType.passwordChanged:
-        return Icons.lock;
+        return Icons.lock_outline;
       case ActivityType.avatarUpdated:
-        return Icons.image;
+        return Icons.image_outlined;
       case ActivityType.accountDeleted:
         return Icons.delete_forever;
     }
@@ -613,19 +1133,19 @@ class HomeDashboardPage extends StatelessWidget {
   Color _getActivityColor(Activity activity) {
     switch (activity.type) {
       case ActivityType.lessonCompleted:
-        return Colors.green;
+        return AppColors.success;
       case ActivityType.enrollmentCreated:
-        return Colors.blue;
+        return AppColors.primary;
       case ActivityType.courseProgressUpdated:
-        return Colors.orange;
+        return AppColors.accent;
       case ActivityType.profileUpdated:
-        return Colors.purple;
+        return AppColors.categoryEnglish;
       case ActivityType.passwordChanged:
-        return Colors.red;
+        return AppColors.error;
       case ActivityType.avatarUpdated:
-        return Colors.teal;
+        return AppColors.categoryChemistry;
       case ActivityType.accountDeleted:
-        return Colors.grey;
+        return AppColors.textTertiary;
     }
   }
 
