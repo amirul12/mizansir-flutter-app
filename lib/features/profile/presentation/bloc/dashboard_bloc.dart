@@ -2,6 +2,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecases/no_params.dart';
 import '../../domain/usecases/get_dashboard_usecase.dart';
 import '../../domain/usecases/get_activity_usecase.dart';
+import '../../domain/entities/dashboard_stats.dart';
+import '../../domain/entities/activity.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 
@@ -25,13 +27,41 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     LoadDashboardEvent event,
     Emitter<DashboardState> emit,
   ) async {
-    emit(DashboardLoading());
+    final currentState = state;
+    DashboardStats? existingStats;
+    List<Activity>? existingActivities;
+
+    if (currentState is DashboardLoaded) {
+      existingStats = currentState.stats;
+      existingActivities = currentState.activities;
+    } else if (currentState is DashboardLoading) {
+      existingStats = currentState.existingStats;
+      existingActivities = currentState.existingActivities;
+    }
+
+    emit(DashboardLoading(
+      existingStats: existingStats,
+      existingActivities: existingActivities,
+    ));
 
     final result = await getDashboardUseCase(NoParams());
 
     result.fold(
-      (failure) => emit(DashboardError(_getErrorMessage(failure))),
-      (stats) => emit(DashboardLoaded(stats)),
+      (failure) => emit(DashboardError(
+        _getErrorMessage(failure),
+        stats: existingStats,
+        activities: existingActivities,
+      )),
+      (stats) {
+        if (state is DashboardLoaded) {
+          emit((state as DashboardLoaded).copyWith(stats: stats));
+        } else {
+          emit(DashboardLoaded(
+            stats: stats,
+            activities: existingActivities,
+          ));
+        }
+      },
     );
   }
 
@@ -39,7 +69,22 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     LoadActivityEvent event,
     Emitter<DashboardState> emit,
   ) async {
-    emit(DashboardLoading());
+    final currentState = state;
+    DashboardStats? existingStats;
+    List<Activity>? existingActivities;
+
+    if (currentState is DashboardLoaded) {
+      existingStats = currentState.stats;
+      existingActivities = currentState.activities;
+    } else if (currentState is DashboardLoading) {
+      existingStats = currentState.existingStats;
+      existingActivities = currentState.existingActivities;
+    }
+
+    emit(DashboardLoading(
+      existingStats: existingStats,
+      existingActivities: existingActivities,
+    ));
 
     final result = await getActivityUseCase(
       GetActivityParams(
@@ -49,13 +94,25 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     );
 
     result.fold(
-      (failure) => emit(DashboardError(_getErrorMessage(failure))),
+      (failure) => emit(DashboardError(
+        _getErrorMessage(failure),
+        stats: existingStats,
+        activities: existingActivities,
+      )),
       (activities) {
-        if (activities.isEmpty) {
-          return emit(DashboardEmpty('No activity yet'));
-        }
         final hasMore = activities.length >= event.limit;
-        emit(ActivityLoaded(activities, hasMore: hasMore));
+        if (state is DashboardLoaded) {
+          emit((state as DashboardLoaded).copyWith(
+            activities: activities,
+            hasMoreActivities: hasMore,
+          ));
+        } else {
+          emit(DashboardLoaded(
+            stats: existingStats,
+            activities: activities,
+            hasMoreActivities: hasMore,
+          ));
+        }
       },
     );
   }
@@ -65,7 +122,11 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     Emitter<DashboardState> emit,
   ) async {
     if (state is DashboardError) {
-      emit(DashboardInitial());
+      final errorState = state as DashboardError;
+      emit(DashboardLoaded(
+        stats: errorState.stats,
+        activities: errorState.activities,
+      ));
     }
   }
 

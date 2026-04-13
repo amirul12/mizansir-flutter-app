@@ -51,12 +51,23 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        if (jsonData['data'] is List) {
+        
+        // Handle direct list response
+        if (jsonData is List) {
+          debugPrint('✅ Successfully parsed ${jsonData.length} courses');
+          return jsonData
+              .map((course) => CourseModel.fromJson(course))
+              .toList();
+        }
+        
+        // Handle wrapped response (CommonResponseModel format)
+        if (jsonData is Map && jsonData['data'] is List) {
           debugPrint('✅ Successfully parsed ${jsonData['data'].length} courses');
           return (jsonData['data'] as List)
               .map((course) => CourseModel.fromJson(course))
               .toList();
         }
+
         throw ServerException(message: 'Invalid data format received');
       } else if (response.statusCode == 401) {
         debugPrint('❌ Unauthorized: 401');
@@ -105,7 +116,16 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        if (jsonData['data'] is List) {
+        
+        // Handle direct list response
+        if (jsonData is List) {
+          return jsonData
+              .map((course) => CourseModel.fromJson(course))
+              .toList();
+        }
+        
+        // Handle wrapped response
+        if (jsonData is Map && jsonData['data'] is List) {
           return (jsonData['data'] as List)
               .map((course) => CourseModel.fromJson(course))
               .toList();

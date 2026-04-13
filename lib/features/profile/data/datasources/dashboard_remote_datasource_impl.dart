@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../../../../core/errors/exceptions.dart';
+import '../../../../core/services/token_service.dart';
 import '../models/dashboard_stats_model.dart';
 import '../models/activity_model.dart';
 import 'dashboard_remote_datasource.dart';
@@ -10,10 +11,12 @@ import 'dashboard_remote_datasource.dart';
 /// Implements dashboard-related API calls using http package.
 class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   final http.Client client;
+  final TokenService tokenService;
   final String baseUrl;
 
   DashboardRemoteDataSourceImpl({
     required this.client,
+    required this.tokenService,
     required this.baseUrl,
   });
 
@@ -21,7 +24,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   Future<DashboardStatsModel> getDashboard() async {
     final response = await client.get(
       Uri.parse('$baseUrl/v1/dashboard'),
-      headers: _buildHeaders(),
+      headers: await _buildHeaders(),
     );
 
     if (response.statusCode == 200) {
@@ -45,9 +48,9 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   }) async {
     final response = await client.get(
       Uri.parse(
-        '$baseUrl/v1/profile/activity?page=$page&limit=$limit',
+        '$baseUrl/v1/user/activity?page=$page&limit=$limit',
       ),
-      headers: _buildHeaders(),
+      headers: await _buildHeaders(),
     );
 
     if (response.statusCode == 200) {
@@ -67,13 +70,15 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
   }
 
   /// Build request headers with authentication.
-  Map<String, String> _buildHeaders() {
-    // TODO: Get token from TokenService
-    // For now, return basic headers
-    return {
+  Future<Map<String, String>> _buildHeaders() async {
+    final token = await tokenService.getAccessToken();
+    final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      // 'Authorization': 'Bearer $token',
     };
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
   }
 }

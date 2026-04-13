@@ -1,16 +1,9 @@
-import 'package:json_annotation/json_annotation.dart';
 import '../../domain/entities/user_profile.dart';
 
-part 'user_profile_model.g.dart';
-
-/// User stats model for JSON serialization.
-@JsonSerializable()
+/// User stats model for manual parsing.
 class UserStatsModel {
-  @JsonKey(name: 'total_enrollments')
   final int totalEnrollments;
-  @JsonKey(name: 'active_enrollments')
   final int activeEnrollments;
-  @JsonKey(name: 'pending_enrollments')
   final int pendingEnrollments;
 
   UserStatsModel({
@@ -19,14 +12,14 @@ class UserStatsModel {
     required this.pendingEnrollments,
   });
 
-  /// Create UserStatsModel from JSON.
-  factory UserStatsModel.fromJson(Map<String, dynamic> json) =>
-      _$UserStatsModelFromJson(json);
+  factory UserStatsModel.fromJson(Map<String, dynamic> json) {
+    return UserStatsModel(
+      totalEnrollments: json['total_enrollments'] as int? ?? 0,
+      activeEnrollments: json['active_enrollments'] as int? ?? 0,
+      pendingEnrollments: json['pending_enrollments'] as int? ?? 0,
+    );
+  }
 
-  /// Convert UserStatsModel to JSON.
-  Map<String, dynamic> toJson() => _$UserStatsModelToJson(this);
-
-  /// Convert to UserStats entity.
   UserStats toEntity() {
     return UserStats(
       totalEnrollments: totalEnrollments,
@@ -36,15 +29,11 @@ class UserStatsModel {
   }
 }
 
-/// Profile completion model for JSON serialization.
-@JsonSerializable()
+/// Profile completion model for manual parsing.
 class ProfileCompletionModel {
   final int percentage;
-  @JsonKey(name: 'completed_fields')
   final int completedFields;
-  @JsonKey(name: 'total_fields')
   final int totalFields;
-  @JsonKey(name: 'missing_fields')
   final List<String> missingFields;
 
   ProfileCompletionModel({
@@ -54,14 +43,15 @@ class ProfileCompletionModel {
     required this.missingFields,
   });
 
-  /// Create ProfileCompletionModel from JSON.
-  factory ProfileCompletionModel.fromJson(Map<String, dynamic> json) =>
-      _$ProfileCompletionModelFromJson(json);
+  factory ProfileCompletionModel.fromJson(Map<String, dynamic> json) {
+    return ProfileCompletionModel(
+      percentage: json['percentage'] as int? ?? 0,
+      completedFields: json['completed_fields'] as int? ?? 0,
+      totalFields: json['total_fields'] as int? ?? 0,
+      missingFields: (json['missing_fields'] as List?)?.map((e) => e.toString()).toList() ?? [],
+    );
+  }
 
-  /// Convert ProfileCompletionModel to JSON.
-  Map<String, dynamic> toJson() => _$ProfileCompletionModelToJson(this);
-
-  /// Convert to ProfileCompletion entity.
   ProfileCompletion toEntity() {
     return ProfileCompletion(
       percentage: percentage,
@@ -72,28 +62,20 @@ class ProfileCompletionModel {
   }
 }
 
-/// User profile model for JSON serialization.
-@JsonSerializable()
+/// User profile model for manual parsing.
 class UserProfileModel {
   final int id;
   final String name;
   final String email;
   final String? phone;
-  @JsonKey(name: 'avatar_url')
   final String? avatar;
-  @JsonKey(name: 'college_name')
   final String? collegeName;
   final String? address;
   final String? role;
-  @JsonKey(name: 'is_admin')
   final bool isAdmin;
-  @JsonKey(name: 'is_student')
   final bool isStudent;
-  @JsonKey(name: 'email_verified_at')
   final DateTime? emailVerifiedAt;
-  @JsonKey(name: 'created_at')
   final DateTime createdAt;
-  @JsonKey(name: 'updated_at')
   final DateTime updatedAt;
   final UserStatsModel? stats;
   final ProfileCompletionModel? profileCompletion;
@@ -116,14 +98,53 @@ class UserProfileModel {
     this.profileCompletion,
   });
 
-  /// Create UserProfileModel from JSON.
-  factory UserProfileModel.fromJson(Map<String, dynamic> json) =>
-      _$UserProfileModelFromJson(json);
+  factory UserProfileModel.fromJson(Map<String, dynamic> json) {
+    return UserProfileModel(
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      phone: json['phone'] as String?,
+      avatar: json['avatar_url'] as String? ?? json['avatar'] as String?,
+      collegeName: json['college_name'] as String?,
+      address: json['address'] as String?,
+      role: json['role'] as String?,
+      isAdmin: json['is_admin'] as bool? ?? false,
+      isStudent: json['is_student'] as bool? ?? true,
+      emailVerifiedAt: json['email_verified_at'] != null 
+          ? DateTime.tryParse(json['email_verified_at'].toString()) 
+          : null,
+      createdAt: json['created_at'] != null 
+          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null 
+          ? DateTime.tryParse(json['updated_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      stats: json['stats'] != null ? UserStatsModel.fromJson(json['stats'] as Map<String, dynamic>) : null,
+      profileCompletion: json['profile_completion'] != null 
+          ? ProfileCompletionModel.fromJson(json['profile_completion'] as Map<String, dynamic>) 
+          : null,
+    );
+  }
 
-  /// Convert UserProfileModel to JSON.
-  Map<String, dynamic> toJson() => _$UserProfileModelToJson(this);
+  /// Create from API response wrapper.
+  ///
+  /// The API returns { data: { user: {...}, profile_completion: {...} } }
+  factory UserProfileModel.fromApiResponse(Map<String, dynamic> responseData) {
+    final userData = responseData['user'] as Map<String, dynamic>? ?? {};
+    final profileCompletionData = responseData['profile_completion'] as Map<String, dynamic>?;
 
-  /// Convert to UserProfile entity.
+    final userDataWithExtras = Map<String, dynamic>.from(userData);
+    
+    // If stats is not already in userData but is somewhere else in responseData, 
+    // we could add it, but based on user example it is inside user.
+    
+    if (profileCompletionData != null) {
+      userDataWithExtras['profile_completion'] = profileCompletionData;
+    }
+
+    return UserProfileModel.fromJson(userDataWithExtras);
+  }
+
   UserProfile toEntity() {
     return UserProfile(
       id: id,
@@ -138,54 +159,5 @@ class UserProfileModel {
       stats: stats?.toEntity(),
       profileCompletion: profileCompletion?.toEntity(),
     );
-  }
-
-  /// Create UserProfileModel from UserProfile entity.
-  factory UserProfileModel.fromEntity(UserProfile entity) {
-    return UserProfileModel(
-      id: entity.id,
-      name: entity.name,
-      email: entity.email,
-      phone: entity.phone,
-      avatar: entity.avatar,
-      collegeName: entity.collegeName,
-      address: entity.address,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-      stats: entity.stats != null
-          ? UserStatsModel(
-              totalEnrollments: entity.stats!.totalEnrollments,
-              activeEnrollments: entity.stats!.activeEnrollments,
-              pendingEnrollments: entity.stats!.pendingEnrollments,
-            )
-          : null,
-      profileCompletion: entity.profileCompletion != null
-          ? ProfileCompletionModel(
-              percentage: entity.profileCompletion!.percentage,
-              completedFields: entity.profileCompletion!.completedFields,
-              totalFields: entity.profileCompletion!.totalFields,
-              missingFields: entity.profileCompletion!.missingFields,
-            )
-          : null,
-    );
-  }
-
-  /// Create from API response wrapper.
-  ///
-  /// The API returns { data: { user: {...}, profile_completion: {...} } }
-  factory UserProfileModel.fromApiResponse(Map<String, dynamic> responseData) {
-    final userData = responseData['user'] as Map<String, dynamic>? ?? {};
-    final profileCompletionData = responseData['profile_completion'] as Map<String, dynamic>?;
-
-    // Add stats and profileCompletion to user data
-    final userDataWithExtras = Map<String, dynamic>.from(userData);
-    if (userData['stats'] != null) {
-      userDataWithExtras['stats'] = userData['stats'];
-    }
-    if (profileCompletionData != null) {
-      userDataWithExtras['profile_completion'] = profileCompletionData;
-    }
-
-    return UserProfileModel.fromJson(userDataWithExtras);
   }
 }

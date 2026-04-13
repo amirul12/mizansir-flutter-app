@@ -7,6 +7,7 @@ import '../../../profile/presentation/bloc/dashboard_state.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../../profile/domain/entities/activity.dart';
+import '../../../profile/domain/entities/dashboard_stats.dart';
 import '../../../enrollment/presentation/bloc/enrollment_bloc.dart';
 import '../../../enrollment/presentation/bloc/enrollment_event.dart';
 import '../../../enrollment/presentation/bloc/enrollment_state.dart';
@@ -140,10 +141,7 @@ class HomeDashboardPage extends StatelessWidget {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                AppColors.primary,
-                AppColors.primaryLight,
-              ],
+              colors: [AppColors.primary, AppColors.primaryLight],
             ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
@@ -162,7 +160,8 @@ class HomeDashboardPage extends StatelessWidget {
                   children: [
                     Text(
                       '$greeting, $userName! $emoji',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
@@ -171,8 +170,8 @@ class HomeDashboardPage extends StatelessWidget {
                     Text(
                       motivationalMessage,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.9),
-                          ),
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
                     ),
                   ],
                 ),
@@ -224,13 +223,20 @@ class HomeDashboardPage extends StatelessWidget {
   /// Build stats cards section with modern design.
   Widget _buildStatsSection(BuildContext context) {
     return BlocBuilder<DashboardBloc, DashboardState>(
-      buildWhen: (previous, current) => current is DashboardLoaded,
+      buildWhen: (previous, current) => 
+          current is DashboardLoaded || current is DashboardLoading,
       builder: (context, state) {
-        if (state is! DashboardLoaded) {
-          return const SizedBox();
+        DashboardStats? stats;
+        
+        if (state is DashboardLoaded) {
+          stats = state.stats;
+        } else if (state is DashboardLoading) {
+          stats = state.existingStats;
         }
 
-        final stats = state.stats;
+        if (stats == null) {
+          return const SizedBox();
+        }
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,9 +246,9 @@ class HomeDashboardPage extends StatelessWidget {
               children: [
                 Text(
                   'Your Progress',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 _buildWeeklyTrendIndicator(context),
               ],
@@ -301,18 +307,14 @@ class HomeDashboardPage extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.trending_up,
-            size: 16,
-            color: AppColors.success,
-          ),
+          const Icon(Icons.trending_up, size: 16, color: AppColors.success),
           const SizedBox(width: 4),
           Text(
             'This Week',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.success,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: AppColors.success,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -340,10 +342,7 @@ class HomeDashboardPage extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withValues(alpha: 0.2),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
         boxShadow: [
           BoxShadow(
             color: color.withValues(alpha: 0.1),
@@ -367,17 +366,17 @@ class HomeDashboardPage extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             title,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -391,9 +390,9 @@ class HomeDashboardPage extends StatelessWidget {
       children: [
         Text(
           'Quick Actions',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         Row(
@@ -457,10 +456,7 @@ class HomeDashboardPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: color.withValues(alpha: 0.3),
-              width: 1,
-            ),
+            border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
           ),
           child: Column(
             children: [
@@ -477,19 +473,15 @@ class HomeDashboardPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: Icon(icon, color: Colors.white, size: 24),
               ),
               const SizedBox(height: 8),
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
               ),
             ],
           ),
@@ -508,9 +500,9 @@ class HomeDashboardPage extends StatelessWidget {
           children: [
             Text(
               'Continue Learning',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             TextButton.icon(
               onPressed: () {
@@ -518,9 +510,7 @@ class HomeDashboardPage extends StatelessWidget {
               },
               icon: const Icon(Icons.arrow_forward, size: 18),
               label: const Text('View All'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-              ),
+              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
             ),
           ],
         ),
@@ -626,9 +616,8 @@ class HomeDashboardPage extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -636,9 +625,8 @@ class HomeDashboardPage extends StatelessWidget {
                         if (description != null && description.isNotEmpty)
                           Text(
                             description,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppColors.textSecondary),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -652,10 +640,7 @@ class HomeDashboardPage extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: progressColor.withValues(alpha: 0.1),
-                      border: Border.all(
-                        color: progressColor,
-                        width: 2,
-                      ),
+                      border: Border.all(color: progressColor, width: 2),
                     ),
                     child: Center(
                       child: Text(
@@ -692,12 +677,15 @@ class HomeDashboardPage extends StatelessWidget {
                   Text(
                     '$completedLessons of $totalLessons lessons',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: progressColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -706,8 +694,8 @@ class HomeDashboardPage extends StatelessWidget {
                       progress >= 75
                           ? 'Almost Done!'
                           : progress >= 50
-                              ? 'Halfway'
-                              : 'In Progress',
+                          ? 'Halfway'
+                          : 'In Progress',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -741,9 +729,9 @@ class HomeDashboardPage extends StatelessWidget {
           children: [
             Text(
               'Featured Courses',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             TextButton.icon(
               onPressed: () {
@@ -751,9 +739,7 @@ class HomeDashboardPage extends StatelessWidget {
               },
               icon: const Icon(Icons.arrow_forward, size: 18),
               label: const Text('View All'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-              ),
+              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
             ),
           ],
         ),
@@ -777,7 +763,7 @@ class HomeDashboardPage extends StatelessWidget {
               final courses = state.courses.take(3).toList();
 
               return SizedBox(
-                height: 220,
+                height: 280,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: courses.length,
@@ -857,7 +843,9 @@ class HomeDashboardPage extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: AppColors.primaryGradient.map((c) => c.withValues(alpha: 0.1)).toList(),
+                    colors: AppColors.primaryGradient
+                        .map((c) => c.withValues(alpha: 0.1))
+                        .toList(),
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -872,9 +860,9 @@ class HomeDashboardPage extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -883,8 +871,8 @@ class HomeDashboardPage extends StatelessWidget {
                 child: Text(
                   description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                    color: AppColors.textSecondary,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -903,15 +891,17 @@ class HomeDashboardPage extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '$enrollmentCount',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textSecondary),
                         ),
                       ],
                     ),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: isFree
                           ? AppColors.successLight
@@ -964,27 +954,23 @@ class HomeDashboardPage extends StatelessWidget {
               color: AppColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              size: 48,
-              color: AppColors.primary,
-            ),
+            child: Icon(icon, size: 48, color: AppColors.primary),
           ),
           const SizedBox(height: 16),
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
@@ -1006,13 +992,22 @@ class HomeDashboardPage extends StatelessWidget {
   /// Build recent activity section with modern design.
   Widget _buildRecentActivitySection(BuildContext context) {
     return BlocBuilder<DashboardBloc, DashboardState>(
-      buildWhen: (previous, current) => current is ActivityLoaded,
+      buildWhen: (previous, current) => 
+          current is DashboardLoaded || current is DashboardLoading,
       builder: (context, state) {
-        if (state is! ActivityLoaded || state.activities.isEmpty) {
+        List<Activity>? activities;
+        
+        if (state is DashboardLoaded) {
+          activities = state.activities;
+        } else if (state is DashboardLoading) {
+          activities = state.existingActivities;
+        }
+
+        if (activities == null || activities.isEmpty) {
           return const SizedBox();
         }
 
-        final activities = state.activities.take(5).toList();
+        final recentActivities = activities.take(5).toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1022,9 +1017,9 @@ class HomeDashboardPage extends StatelessWidget {
               children: [
                 Text(
                   'Recent Activity',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 TextButton(
                   onPressed: () {
@@ -1054,13 +1049,11 @@ class HomeDashboardPage extends StatelessWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 padding: const EdgeInsets.all(16),
-                itemCount: activities.length,
-                separatorBuilder: (context, index) => Divider(
-                  color: AppColors.border,
-                  height: 1,
-                ),
+                itemCount: recentActivities.length,
+                separatorBuilder: (context, index) =>
+                    Divider(color: AppColors.border, height: 1),
                 itemBuilder: (context, index) {
-                  final activity = activities[index];
+                  final activity = recentActivities[index];
                   return _buildActivityTile(activity);
                 },
               ),
@@ -1085,25 +1078,15 @@ class HomeDashboardPage extends StatelessWidget {
           color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
-        child: Icon(
-          icon,
-          color: color,
-          size: 22,
-        ),
+        child: Icon(icon, color: color, size: 22),
       ),
       title: Text(
         activity.description,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 14,
-        ),
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
       ),
       subtitle: Text(
         _formatActivityTime(activity.createdAt),
-        style: TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 12,
-        ),
+        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
       ),
       dense: true,
     );

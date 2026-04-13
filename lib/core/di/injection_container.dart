@@ -345,6 +345,7 @@ Future<void> _initProfile() async {
   sl.registerLazySingleton<DashboardRemoteDataSource>(
     () => DashboardRemoteDataSourceImpl(
       client: sl(),
+      tokenService: sl(),
       baseUrl: 'https://ict.mizansir.com/api',
     ),
   );

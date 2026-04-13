@@ -1,7 +1,4 @@
-import 'package:json_annotation/json_annotation.dart';
 import '../../domain/entities/activity.dart';
-
-part 'activity_model.g.dart';
 
 /// Activity type converter for JSON serialization.
 class ActivityTypeConverter {
@@ -9,6 +6,7 @@ class ActivityTypeConverter {
     switch (type) {
       case 'lesson_completed':
         return ActivityType.lessonCompleted;
+      case 'enrollment':
       case 'enrollment_created':
         return ActivityType.enrollmentCreated;
       case 'course_progress_updated':
@@ -22,7 +20,8 @@ class ActivityTypeConverter {
       case 'account_deleted':
         return ActivityType.accountDeleted;
       default:
-        throw ArgumentError('Unknown activity type: $type');
+        // Default to a safe type if unknown
+        return ActivityType.profileUpdated;
     }
   }
 
@@ -47,15 +46,12 @@ class ActivityTypeConverter {
 }
 
 /// Activity model for JSON serialization.
-@JsonSerializable()
 class ActivityModel {
   final int id;
-  @JsonKey(name: 'user_id')
   final int userId;
   final String type;
   final String description;
   final Map<String, dynamic>? metadata;
-  @JsonKey(name: 'created_at')
   final DateTime createdAt;
 
   ActivityModel({
@@ -68,11 +64,32 @@ class ActivityModel {
   });
 
   /// Create ActivityModel from JSON.
-  factory ActivityModel.fromJson(Map<String, dynamic> json) =>
-      _$ActivityModelFromJson(json);
+  factory ActivityModel.fromJson(Map<String, dynamic> json) {
+    return ActivityModel(
+      id: json['id'] as int? ?? 0,
+      userId: json['user_id'] as int? ?? 0,
+      type: json['type'] as String? ?? 'unknown',
+      description: json['description'] as String? ?? '',
+      metadata: json['course'] != null 
+          ? {'course': json['course']} 
+          : json['metadata'] as Map<String, dynamic>?,
+      createdAt: json['created_at'] != null 
+          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+    );
+  }
 
   /// Convert ActivityModel to JSON.
-  Map<String, dynamic> toJson() => _$ActivityModelToJson(this);
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'user_id': userId,
+      'type': type,
+      'description': description,
+      'metadata': metadata,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 
   /// Convert to Activity entity.
   Activity toEntity() {

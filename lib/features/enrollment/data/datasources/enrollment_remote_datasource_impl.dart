@@ -55,12 +55,23 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        if (jsonData['data'] is List) {
+        
+        // Handle direct list response
+        if (jsonData is List) {
+          debugPrint('✅ Successfully parsed ${jsonData.length} enrolled courses');
+          return jsonData
+              .map((course) => EnrolledCourseModel.fromJson(course))
+              .toList();
+        }
+        
+        // Handle wrapped response (CommonResponseModel format)
+        if (jsonData is Map && jsonData['data'] is List) {
           debugPrint('✅ Successfully parsed ${(jsonData['data'] as List).length} enrolled courses');
           return (jsonData['data'] as List)
               .map((course) => EnrolledCourseModel.fromJson(course))
               .toList();
         }
+        
         throw ServerException(message: 'Invalid data format received');
       } else if (response.statusCode == 401) {
         debugPrint('❌ Unauthorized: 401');

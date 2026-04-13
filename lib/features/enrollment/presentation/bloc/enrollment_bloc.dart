@@ -48,7 +48,9 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
       (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
       (courses) {
         if (courses.isEmpty) {
-          return emit(const EnrollmentEmpty(message: 'No enrolled courses yet'));
+          return emit(
+            const EnrollmentEmpty(message: 'No enrolled courses yet'),
+          );
         }
         return emit(MyCoursesLoaded(courses: courses));
       },
@@ -87,7 +89,9 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
         if (lessons.isEmpty) {
           return emit(const EnrollmentEmpty(message: 'No lessons found'));
         }
-        return emit(CourseLessonsLoaded(lessons: lessons, courseId: event.courseId));
+        return emit(
+          CourseLessonsLoaded(lessons: lessons, courseId: event.courseId),
+        );
       },
     );
   }
@@ -125,10 +129,9 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
 
     result.fold(
       (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
-      (_) => emit(LessonCompleted(
-        courseId: event.courseId,
-        lessonId: event.lessonId,
-      )),
+      (_) => emit(
+        LessonCompleted(courseId: event.courseId, lessonId: event.lessonId),
+      ),
     );
   }
 
@@ -156,11 +159,13 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
 
     result.fold(
       (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
-      (lessonsMap) => emit(LessonDetailsLoaded(
-        lesson: lessonsMap['lesson']!,
-        nextLesson: lessonsMap['nextLesson'],
-        previousLesson: lessonsMap['previousLesson'],
-      )),
+      (lessonsMap) => emit(
+        LessonDetailsLoaded(
+          lesson: lessonsMap['lesson']!,
+          nextLesson: lessonsMap['nextLesson'],
+          previousLesson: lessonsMap['previousLesson'],
+        ),
+      ),
     );
   }
 

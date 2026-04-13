@@ -6,6 +6,8 @@ import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_event.dart';
 import '../../../profile/presentation/bloc/dashboard_bloc.dart';
 import '../../../profile/presentation/bloc/dashboard_event.dart';
+import '../../../profile/presentation/bloc/dashboard_state.dart';
+import '../../../profile/domain/entities/activity.dart';
 import '../../../enrollment/presentation/bloc/enrollment_bloc.dart';
 import '../../../enrollment/presentation/bloc/enrollment_event.dart';
 import '../../../enrollment/presentation/bloc/enrollment_state.dart';
@@ -17,6 +19,7 @@ import '../bloc/home_shell_cubit.dart';
 import '../widgets/home_bottom_nav_bar.dart';
 import '../widgets/home_drawer.dart';
 import 'home_dashboard_page.dart';
+import '../../../profile/presentation/pages/profile_page.dart';
 import '../../../../core/di/injection_container.dart' as di;
 
 /// Home Shell Page - Main authenticated app container.
@@ -30,17 +33,12 @@ class HomeShellPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (context) => HomeShellCubit(),
-        ),
+        BlocProvider(create: (context) => HomeShellCubit()),
         // Auth bloc for logout functionality
-        BlocProvider(
-          create: (context) => di.sl<AuthBloc>(),
-        ),
+        BlocProvider(create: (context) => di.sl<AuthBloc>()),
         // Initialize profile and dashboard blocs
         BlocProvider(
-          create: (context) => di.sl<ProfileBloc>()
-            ..add(LoadProfileEvent()),
+          create: (context) => di.sl<ProfileBloc>()..add(LoadProfileEvent()),
         ),
         BlocProvider(
           create: (context) => di.sl<DashboardBloc>()
@@ -49,13 +47,13 @@ class HomeShellPage extends StatelessWidget {
         ),
         // Initialize enrollment bloc for my courses
         BlocProvider(
-          create: (context) => di.sl<EnrollmentBloc>()
-            ..add(LoadMyCoursesEvent()),
+          create: (context) =>
+              di.sl<EnrollmentBloc>()..add(LoadMyCoursesEvent()),
         ),
         // Initialize course bloc for featured courses
         BlocProvider(
-          create: (context) => di.sl<CourseBloc>()
-            ..add(LoadFeaturedCoursesEvent()),
+          create: (context) =>
+              di.sl<CourseBloc>()..add(LoadFeaturedCoursesEvent()),
         ),
       ],
       child: const _HomeShellView(),
@@ -143,9 +141,7 @@ class _HomeShellView extends StatelessWidget {
           ),
         ],
       ),
-      _ => AppBar(
-        title: const Text('PrivateTutor'),
-      ),
+      _ => AppBar(title: const Text('PrivateTutor')),
     };
   }
 
@@ -198,16 +194,9 @@ class _CoursesTabPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.red[300],
-                  ),
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
                   const SizedBox(height: 16),
-                  Text(
-                    'Oops!',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+                  Text('Oops!', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 8),
                   Text(
                     state.message ?? 'Failed to load courses',
@@ -244,16 +233,16 @@ class _CoursesTabPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'No courses available',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Check back later for new courses',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[500],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
                   ),
                 ],
               ),
@@ -263,7 +252,7 @@ class _CoursesTabPage extends StatelessWidget {
 
         // Show courses
         if (state is CoursesLoaded) {
-          if (state.courses?.isEmpty ?? true) {
+          if (state.courses.isEmpty ?? true) {
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -278,16 +267,16 @@ class _CoursesTabPage extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       'No courses available',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Check back later for new courses',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[500],
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
                     ),
                   ],
                 ),
@@ -301,10 +290,10 @@ class _CoursesTabPage extends StatelessWidget {
             },
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: state.courses?.length ?? 0,
+              itemCount: state.courses.length ?? 0,
               separatorBuilder: (context, index) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
-                final course = state.courses![index];
+                final course = state.courses[index];
                 return _buildCourseCard(context, course);
               },
             ),
@@ -351,9 +340,8 @@ class _CoursesTabPage extends StatelessWidget {
                         children: [
                           Text(
                             course.title ?? 'No Title',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -369,9 +357,8 @@ class _CoursesTabPage extends StatelessWidget {
                                 const SizedBox(width: 4),
                                 Text(
                                   '${course.enrollmentCount} enrolled',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: Colors.grey[600],
-                                      ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(color: Colors.grey[600]),
                                 ),
                               ],
                             ),
@@ -380,16 +367,23 @@ class _CoursesTabPage extends StatelessWidget {
                     ),
                     // Price badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: course.price == 0 || course.price == "0.00"
                             ? Colors.green.withValues(alpha: 0.1)
-                            : Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                            : Theme.of(
+                                context,
+                              ).primaryColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: course.price == 0 || course.price == "0.00"
                               ? Colors.green.withValues(alpha: 0.3)
-                              : Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                              : Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -409,14 +403,15 @@ class _CoursesTabPage extends StatelessWidget {
                 const SizedBox(height: 12),
 
                 // Description
-                if (course.description != null && course.description!.isNotEmpty)
+                if (course.description != null &&
+                    course.description!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Text(
                       course.description!,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -470,16 +465,9 @@ class _MyLearningTabPage extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: Colors.red[300],
-                  ),
+                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
                   const SizedBox(height: 16),
-                  Text(
-                    'Oops!',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+                  Text('Oops!', style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 8),
                   Text(
                     state.message,
@@ -489,7 +477,9 @@ class _MyLearningTabPage extends StatelessWidget {
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () {
-                      context.read<EnrollmentBloc>().add(const LoadMyCoursesEvent());
+                      context.read<EnrollmentBloc>().add(
+                        const LoadMyCoursesEvent(),
+                      );
                     },
                     icon: const Icon(Icons.refresh),
                     label: const Text('Try Again'),
@@ -516,17 +506,17 @@ class _MyLearningTabPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     state.message,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Start learning by enrolling in courses',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[500],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
@@ -559,16 +549,16 @@ class _MyLearningTabPage extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       'No enrolled courses yet',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleLarge?.copyWith(color: Colors.grey[600]),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Start your learning journey today!',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[500],
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
@@ -625,7 +615,9 @@ class _MyLearningTabPage extends StatelessWidget {
           onTap: () {
             // Navigate to next lesson if available, otherwise show all lessons
             if (course.nextLessonId != null) {
-              context.go('/my-courses/${course.id}/lessons/${course.nextLessonId}');
+              context.go(
+                '/my-courses/${course.id}/lessons/${course.nextLessonId}',
+              );
             } else {
               context.go('/my-courses/${course.id}/lessons');
             }
@@ -645,9 +637,8 @@ class _MyLearningTabPage extends StatelessWidget {
                         children: [
                           Text(
                             course.title,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -670,8 +661,9 @@ class _MyLearningTabPage extends StatelessWidget {
                         height: 60,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: _getProgressColor(course.progressPercentage)
-                              .withValues(alpha: 0.1),
+                          color: _getProgressColor(
+                            course.progressPercentage,
+                          ).withValues(alpha: 0.1),
                           border: Border.all(
                             color: _getProgressColor(course.progressPercentage),
                             width: 2,
@@ -683,7 +675,9 @@ class _MyLearningTabPage extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: _getProgressColor(course.progressPercentage),
+                              color: _getProgressColor(
+                                course.progressPercentage,
+                              ),
                             ),
                           ),
                         ),
@@ -693,14 +687,15 @@ class _MyLearningTabPage extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 // Description
-                if (course.description != null && course.description!.isNotEmpty)
+                if (course.description != null &&
+                    course.description!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Text(
                       course.description!,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -740,7 +735,9 @@ class _MyLearningTabPage extends StatelessWidget {
                     onPressed: () {
                       // Navigate to next lesson if available, otherwise show all lessons
                       if (course.nextLessonId != null) {
-                        context.go('/my-courses/${course.id}/lessons/${course.nextLessonId}');
+                        context.go(
+                          '/my-courses/${course.id}/lessons/${course.nextLessonId}',
+                        );
                       } else {
                         context.go('/my-courses/${course.id}/lessons');
                       }
@@ -794,10 +791,7 @@ class _MyLearningTabPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Text(
         label,
@@ -820,17 +814,11 @@ class _MyLearningTabPage extends StatelessWidget {
     final color = _getDaysRemainingColor(daysRemaining);
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 6,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Text(
         '$daysRemaining days left',
@@ -880,10 +868,136 @@ class _ActivityTabPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // This will be replaced with activity feed
-    return const Center(
-      child: Text('Activity Tab - Will integrate activity feed here'),
+    return BlocBuilder<DashboardBloc, DashboardState>(
+      builder: (context, state) {
+        List<Activity>? activities;
+        bool isLoading = state is DashboardLoading && state.existingActivities == null;
+        
+        if (state is DashboardLoaded) {
+          activities = state.activities;
+        } else if (state is DashboardLoading) {
+          activities = state.existingActivities;
+        }
+
+        if (isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (activities == null || activities.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.history, size: 64, color: Colors.grey[300]),
+                const SizedBox(height: 16),
+                Text(
+                  'No activity yet',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<DashboardBloc>().add(LoadActivityEvent());
+          },
+          child: ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: activities.length,
+            separatorBuilder: (context, index) => const Divider(),
+            itemBuilder: (context, index) {
+              final activity = activities![index];
+              return ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: _getActivityColor(activity).withValues(alpha: 0.1),
+                  child: Icon(
+                    _getActivityIcon(activity),
+                    color: _getActivityColor(activity),
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  activity.description,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(_formatActivityDate(activity.createdAt)),
+                trailing: Text(
+                  activity.typeLabel,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey[500],
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
+  }
+
+  IconData _getActivityIcon(Activity activity) {
+    switch (activity.type) {
+      case ActivityType.lessonCompleted:
+        return Icons.check_circle_outline;
+      case ActivityType.enrollmentCreated:
+        return Icons.school_outlined;
+      case ActivityType.courseProgressUpdated:
+        return Icons.trending_up;
+      case ActivityType.profileUpdated:
+        return Icons.person_outline;
+      case ActivityType.passwordChanged:
+        return Icons.lock_outline;
+      case ActivityType.avatarUpdated:
+        return Icons.photo_camera_outlined;
+      case ActivityType.accountDeleted:
+        return Icons.delete_outline;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
+  Color _getActivityColor(Activity activity) {
+    switch (activity.type) {
+      case ActivityType.lessonCompleted:
+        return Colors.green;
+      case ActivityType.enrollmentCreated:
+        return Colors.blue;
+      case ActivityType.courseProgressUpdated:
+        return Colors.orange;
+      case ActivityType.profileUpdated:
+        return Colors.purple;
+      case ActivityType.passwordChanged:
+        return Colors.teal;
+      case ActivityType.avatarUpdated:
+        return Colors.pink;
+      case ActivityType.accountDeleted:
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _formatActivityDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays > 7) {
+      return '${date.day}/${date.month}/${date.year}';
+    } else if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
   }
 }
 
@@ -892,9 +1006,6 @@ class _ProfileTabPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // This will be replaced with actual ProfilePage
-    return const Center(
-      child: Text('Profile Tab - Will integrate ProfilePage here'),
-    );
+    return const ProfilePage();
   }
 }
