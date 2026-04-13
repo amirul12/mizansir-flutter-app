@@ -508,6 +508,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showLogoutDialog(BuildContext context) {
+    final profileBloc = context.read<ProfileBloc>();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -521,7 +522,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           TextButton(
             onPressed: () {
-              context.read<ProfileBloc>().add(LogoutEvent());
+              profileBloc.add(LogoutEvent());
               Navigator.pop(context);
             },
             child: const Text('Logout', style: TextStyle(color: AppColors.error)),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -66,20 +67,49 @@ class _HomeShellView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeShellCubit, HomeTab>(
-      builder: (context, currentTab) {
-        return Scaffold(
-          appBar: _buildAppBar(context, currentTab),
-          drawer: const HomeDrawer(),
-          body: _buildBodyForTab(currentTab),
-          bottomNavigationBar: HomeBottomNavBar(
-            currentTab: currentTab,
-            onTabSelected: (tab) {
-              context.read<HomeShellCubit>().setTab(tab);
-            },
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        
+        final shouldExit = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Exit App'),
+            content: const Text('Are you sure you want to exit the app?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Exit'),
+              ),
+            ],
           ),
         );
+
+        if (shouldExit ?? false) {
+          // If User confirms, close the app using SystemNavigator
+          SystemNavigator.pop();
+        }
       },
+      child: BlocBuilder<HomeShellCubit, HomeTab>(
+        builder: (context, currentTab) {
+          return Scaffold(
+            appBar: _buildAppBar(context, currentTab),
+            drawer: const HomeDrawer(),
+            body: _buildBodyForTab(currentTab),
+            bottomNavigationBar: HomeBottomNavBar(
+              currentTab: currentTab,
+              onTabSelected: (tab) {
+                context.read<HomeShellCubit>().setTab(tab);
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -957,8 +987,6 @@ class _ActivityTabPage extends StatelessWidget {
         return Icons.photo_camera_outlined;
       case ActivityType.accountDeleted:
         return Icons.delete_outline;
-      default:
-        return Icons.info_outline;
     }
   }
 
@@ -978,8 +1006,6 @@ class _ActivityTabPage extends StatelessWidget {
         return Colors.pink;
       case ActivityType.accountDeleted:
         return Colors.red;
-      default:
-        return Colors.grey;
     }
   }
 
