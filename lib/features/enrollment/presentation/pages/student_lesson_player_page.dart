@@ -5,8 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../auth/presentation/bloc/auth_state.dart';
 import '../bloc/enrollment_bloc.dart';
 import '../bloc/enrollment_event.dart';
 import '../bloc/enrollment_state.dart';
@@ -301,6 +299,29 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
+      appBar: _isFullScreen
+          ? null
+          : AppBar(
+              backgroundColor: Colors.black,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                onPressed: () =>
+                    context.go('/my-courses/${widget.courseId}/lessons'),
+              ),
+              title: Text(
+                _currentLesson?.title ?? 'Playing Lesson',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
       body: BlocListener<EnrollmentBloc, EnrollmentState>(
         listener: (context, state) {
           if (state is LessonCompleted) {
@@ -370,11 +391,6 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
           bufferedColor: Colors.white38,
         ),
         topActions: [
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => context.go('/my-courses/${widget.courseId}/lessons'),
-          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -452,21 +468,27 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
   }
 
   Widget _buildMobileLayout(Widget player) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: player,
+    return Column(
+      children: [
+        AspectRatio(
+          aspectRatio: 16 / 9,
+          child: player,
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                _buildLessonInfo(),
+                _buildPlaylistHeader(),
+                _buildPlaylist(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                ),
+              ],
+            ),
           ),
-          _buildLessonInfo(),
-          _buildPlaylistHeader(),
-          SizedBox(
-            height: 400,
-            child: _buildPlaylist(),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -474,11 +496,6 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
     if (_currentLesson == null) {
       return const SizedBox.shrink();
     }
-
-    final authState = context.read<AuthBloc>().state;
-    final studentEmail = authState is AuthAuthenticated
-        ? authState.user.email
-        : 'student@example.com';
 
     return Container(
       width: double.infinity,
@@ -521,44 +538,16 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white10,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.person_outline,
-                        color: Colors.white70, size: 12),
-                    const SizedBox(width: 4),
-                    Text(
-                      studentEmail,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
+          if (!_currentLesson!.isCompleted)
+            ElevatedButton.icon(
+              onPressed: () => _markAsWatched(),
+              icon: const Icon(Icons.check_circle_outline, size: 18),
+              label: const Text('Mark Complete'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
               ),
-              const SizedBox(width: 12),
-              if (!_currentLesson!.isCompleted)
-                ElevatedButton.icon(
-                  onPressed: () => _markAsWatched(),
-                  icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: const Text('Mark Complete'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-            ],
-          ),
+            ),
           if (_currentLesson?.description != null &&
               _currentLesson!.description!.trim().isNotEmpty)
             Padding(
@@ -610,7 +599,7 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
     );
   }
 
-  Widget _buildPlaylist() {
+  Widget _buildPlaylist({bool shrinkWrap = false, ScrollPhysics? physics}) {
     if (_allLessons.isEmpty) {
       return const Center(
         child: Column(
@@ -628,9 +617,11 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
     }
 
     return ListView.builder(
-      controller: _playlistController,
+      controller: shrinkWrap ? null : _playlistController,
+      shrinkWrap: shrinkWrap,
+      physics: physics,
       itemCount: _allLessons.length,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.only(top: 8, bottom: 100), // Added bottom padding
       itemBuilder: (context, index) {
         final lesson = _allLessons[index];
         final isCurrentLesson = lesson.id == _currentLesson?.id;

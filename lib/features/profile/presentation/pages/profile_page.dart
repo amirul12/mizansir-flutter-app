@@ -593,6 +593,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showEditDialog(BuildContext context, UserProfile profile) {
+    final profileBloc = context.read<ProfileBloc>();
     final nameController = TextEditingController(text: profile.name);
     final phoneController = TextEditingController(text: profile.phone ?? '');
     final collegeController = TextEditingController(text: profile.collegeName ?? '');
@@ -625,7 +626,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ElevatedButton(
             onPressed: () {
               if (nameController.text.trim().isNotEmpty) {
-                context.read<ProfileBloc>().add(UpdateProfileEvent(
+                profileBloc.add(UpdateProfileEvent(
                   name: nameController.text.trim(),
                   phone: phoneController.text.trim().isEmpty ? null : phoneController.text.trim(),
                   collegeName: collegeController.text.trim().isEmpty ? null : collegeController.text.trim(),
@@ -664,6 +665,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showDeleteDialog(BuildContext context) {
+    final profileBloc = context.read<ProfileBloc>();
     final passwordController = TextEditingController();
     showDialog(
       context: context,
@@ -689,7 +691,7 @@ class _ProfilePageState extends State<ProfilePage> {
           TextButton(
             onPressed: () {
               if (passwordController.text.trim().isNotEmpty) {
-                context.read<ProfileBloc>().add(DeleteAccountEvent(password: passwordController.text.trim()));
+                profileBloc.add(DeleteAccountEvent(password: passwordController.text.trim()));
                 Navigator.pop(context);
               }
             },
