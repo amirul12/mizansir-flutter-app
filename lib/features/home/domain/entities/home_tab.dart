@@ -35,15 +35,8 @@ class HomeTab extends Equatable {
     label: 'My Learning',
   );
 
-  static const activity = HomeTab._(
-    index: 3,
-    name: 'activity',
-    icon: 'history',
-    label: 'Activity',
-  );
-
   static const profile = HomeTab._(
-    index: 4,
+    index: 3,
     name: 'profile',
     icon: 'person',
     label: 'Profile',
@@ -53,7 +46,7 @@ class HomeTab extends Equatable {
     home,
     courses,
     myLearning,
-    activity,
+    // activity,
     profile,
   ];
 

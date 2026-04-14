@@ -223,11 +223,11 @@ class HomeDashboardPage extends StatelessWidget {
   /// Build stats cards section with modern design.
   Widget _buildStatsSection(BuildContext context) {
     return BlocBuilder<DashboardBloc, DashboardState>(
-      buildWhen: (previous, current) => 
+      buildWhen: (previous, current) =>
           current is DashboardLoaded || current is DashboardLoading,
       builder: (context, state) {
         DashboardStats? stats;
-        
+
         if (state is DashboardLoaded) {
           stats = state.stats;
         } else if (state is DashboardLoading) {
@@ -992,11 +992,11 @@ class HomeDashboardPage extends StatelessWidget {
   /// Build recent activity section with modern design.
   Widget _buildRecentActivitySection(BuildContext context) {
     return BlocBuilder<DashboardBloc, DashboardState>(
-      buildWhen: (previous, current) => 
+      buildWhen: (previous, current) =>
           current is DashboardLoaded || current is DashboardLoading,
       builder: (context, state) {
         List<Activity>? activities;
-        
+
         if (state is DashboardLoaded) {
           activities = state.activities;
         } else if (state is DashboardLoading) {
@@ -1021,15 +1021,15 @@ class HomeDashboardPage extends StatelessWidget {
                     context,
                   ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                TextButton(
-                  onPressed: () {
-                    context.read<HomeShellCubit>().goToActivity();
-                  },
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                  ),
-                  child: const Text('View All'),
-                ),
+                // TextButton(
+                //   onPressed: () {
+                //     context.read<HomeShellCubit>().goToActivity();
+                //   },
+                //   style: TextButton.styleFrom(
+                //     foregroundColor: AppColors.primary,
+                //   ),
+                //   child: const Text('View All'),
+                // ),
               ],
             ),
             const SizedBox(height: 12),

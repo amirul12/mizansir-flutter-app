@@ -77,7 +77,9 @@ class CourseBloc extends Bloc<CourseEvent, CourseState> {
       (failure) => emit(CourseError(message: _getErrorMessage(failure))),
       (courses) {
         if (courses.isEmpty) {
-          return emit(const CourseEmpty(message: 'No featured courses available'));
+          return emit(
+            const CourseEmpty(message: 'No featured courses available'),
+          );
         }
         return emit(FeaturedCoursesLoaded(courses: courses));
       },
@@ -118,9 +120,9 @@ class CourseBloc extends Bloc<CourseEvent, CourseState> {
       (failure) => emit(CourseError(message: _getErrorMessage(failure))),
       (courses) {
         if (courses.isEmpty) {
-          return emit(CourseEmpty(
-            message: 'No results found for "${event.query}"',
-          ));
+          return emit(
+            CourseEmpty(message: 'No results found for "${event.query}"'),
+          );
         }
         return emit(SearchResultsLoaded(courses: courses, query: event.query));
       },
@@ -160,7 +162,9 @@ class CourseBloc extends Bloc<CourseEvent, CourseState> {
       (failure) => emit(CourseError(message: _getErrorMessage(failure))),
       (lessons) {
         if (lessons.isEmpty) {
-          return emit(const CourseEmpty(message: 'No preview lessons available'));
+          return emit(
+            const CourseEmpty(message: 'No preview lessons available'),
+          );
         }
         return emit(PreviewLessonsLoaded(lessons: lessons));
       },

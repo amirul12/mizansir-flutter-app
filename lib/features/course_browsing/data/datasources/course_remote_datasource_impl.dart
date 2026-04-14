@@ -13,10 +13,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
   final http.Client client;
   final String baseUrl;
 
-  CourseRemoteDataSourceImpl({
-    required this.client,
-    required this.baseUrl,
-  });
+  CourseRemoteDataSourceImpl({required this.client, required this.baseUrl});
 
   @override
   Future<List<CourseModel>> getCourses({
@@ -30,19 +27,18 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
       params['limit'] = limit.toString();
 
       // Use Uri.parse to handle full URL correctly
-      final uri = Uri.parse('$baseUrl/v1/courses').replace(queryParameters: params);
+      final uri = Uri.parse(
+        '$baseUrl/v1/courses',
+      ).replace(queryParameters: params);
 
       // DEBUG: Print API Request
       debugPrint('🔵 GET COURSES REQUEST');
       debugPrint('URL: $uri');
       debugPrint('Headers: {"Content-Type": "application/json"}');
 
-      final response = await client.get(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(
-        const Duration(seconds: 30),
-      );
+      final response = await client
+          .get(uri, headers: {'Content-Type': 'application/json'})
+          .timeout(const Duration(seconds: 30));
 
       // DEBUG: Print API Response
       debugPrint('🟢 GET COURSES RESPONSE');
@@ -51,7 +47,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        
+
         // Handle direct list response
         if (jsonData is List) {
           debugPrint('✅ Successfully parsed ${jsonData.length} courses');
@@ -59,10 +55,12 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
               .map((course) => CourseModel.fromJson(course))
               .toList();
         }
-        
+
         // Handle wrapped response (CommonResponseModel format)
         if (jsonData is Map && jsonData['data'] is List) {
-          debugPrint('✅ Successfully parsed ${jsonData['data'].length} courses');
+          debugPrint(
+            '✅ Successfully parsed ${jsonData['data'].length} courses',
+          );
           return (jsonData['data'] as List)
               .map((course) => CourseModel.fromJson(course))
               .toList();
@@ -94,20 +92,17 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
   Future<List<CourseModel>> getFeaturedCourses({int limit = 10}) async {
     try {
       // Use Uri.parse to handle full URL correctly
-      final uri = Uri.parse('$baseUrl/v1/courses/featured').replace(
-        queryParameters: {'limit': limit.toString()},
-      );
+      final uri = Uri.parse(
+        '$baseUrl/v1/courses/featured',
+      ).replace(queryParameters: {'limit': limit.toString()});
 
       // DEBUG: Print API Request
       debugPrint('🔵 GET FEATURED COURSES REQUEST');
       debugPrint('URL: $uri');
 
-      final response = await client.get(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(
-        const Duration(seconds: 30),
-      );
+      final response = await client
+          .get(uri, headers: {'Content-Type': 'application/json'})
+          .timeout(const Duration(seconds: 30));
 
       // DEBUG: Print API Response
       debugPrint('🟢 GET FEATURED COURSES RESPONSE');
@@ -116,14 +111,14 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        
+
         // Handle direct list response
         if (jsonData is List) {
           return jsonData
               .map((course) => CourseModel.fromJson(course))
               .toList();
         }
-        
+
         // Handle wrapped response
         if (jsonData is Map && jsonData['data'] is List) {
           return (jsonData['data'] as List)
@@ -156,12 +151,9 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
       debugPrint('🔵 GET COURSE DETAILS REQUEST');
       debugPrint('URL: $uri');
 
-      final response = await client.get(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(
-        const Duration(seconds: 30),
-      );
+      final response = await client
+          .get(uri, headers: {'Content-Type': 'application/json'})
+          .timeout(const Duration(seconds: 30));
 
       // DEBUG: Print API Response
       debugPrint('🟢 GET COURSE DETAILS RESPONSE');
@@ -170,9 +162,20 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
+
+        // Handle nested course object in response
         if (jsonData['data'] is Map) {
-          return CourseModel.fromJson(jsonData['data']);
+          final data = jsonData['data'] as Map<String, dynamic>;
+
+          // Check if course is nested (new API format)
+          if (data['course'] is Map) {
+            return CourseModel.fromJson(data['course'] as Map<String, dynamic>);
+          }
+
+          // Otherwise, data is the course object (old API format)
+          return CourseModel.fromJson(data);
         }
+
         throw ServerException(message: 'Invalid data format received');
       } else if (response.statusCode == 401) {
         throw UnauthorizedException();
@@ -211,12 +214,9 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
       debugPrint('🔵 SEARCH COURSES REQUEST');
       debugPrint('URL: $uri');
 
-      final response = await client.get(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(
-        const Duration(seconds: 30),
-      );
+      final response = await client
+          .get(uri, headers: {'Content-Type': 'application/json'})
+          .timeout(const Duration(seconds: 30));
 
       // DEBUG: Print API Response
       debugPrint('🟢 SEARCH COURSES RESPONSE');
@@ -256,12 +256,9 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
       debugPrint('🔵 GET CATEGORIES REQUEST');
       debugPrint('URL: $uri');
 
-      final response = await client.get(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(
-        const Duration(seconds: 30),
-      );
+      final response = await client
+          .get(uri, headers: {'Content-Type': 'application/json'})
+          .timeout(const Duration(seconds: 30));
 
       // DEBUG: Print API Response
       debugPrint('🟢 GET CATEGORIES RESPONSE');
@@ -301,12 +298,9 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
       debugPrint('🔵 GET PREVIEW LESSONS REQUEST');
       debugPrint('URL: $uri');
 
-      final response = await client.get(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(
-        const Duration(seconds: 30),
-      );
+      final response = await client
+          .get(uri, headers: {'Content-Type': 'application/json'})
+          .timeout(const Duration(seconds: 30));
 
       // DEBUG: Print API Response
       debugPrint('🟢 GET PREVIEW LESSONS RESPONSE');
@@ -346,12 +340,9 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         '/courses/$courseId/check-enrollment',
       );
 
-      final response = await client.get(
-        uri,
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(
-        const Duration(seconds: 30),
-      );
+      final response = await client
+          .get(uri, headers: {'Content-Type': 'application/json'})
+          .timeout(const Duration(seconds: 30));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);

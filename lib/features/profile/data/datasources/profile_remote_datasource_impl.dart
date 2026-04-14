@@ -112,7 +112,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
   }) async {
     final headers = await _buildHeaders();
     final response = await client.post(
-      Uri.parse('$baseUrl/v1/profile/change-password'),
+      Uri.parse('$baseUrl/v1/user/change-password'),
       headers: headers,
       body: jsonEncode({
         'current_password': currentPassword,
@@ -124,10 +124,14 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
     if (response.statusCode == 200) {
       return;
     } else if (response.statusCode == 401) {
-      throw UnauthorizedException();
+      final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
+      throw UnauthorizedException(
+        message: jsonData['message'] ?? 'Current password is incorrect',
+      );
     } else if (response.statusCode == 422) {
+      final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
       throw ValidationException(
-        message: 'Current password is incorrect',
+        message: jsonData['message'] ?? 'Validation failed',
         statusCode: response.statusCode,
       );
     } else {

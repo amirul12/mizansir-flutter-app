@@ -18,6 +18,7 @@ import '../../features/enrollment/presentation/pages/course_lessons_page.dart';
 import '../../features/enrollment/presentation/pages/student_lesson_player_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/dashboard_page.dart';
+import '../../features/profile/presentation/pages/change_password_page.dart';
 import '../../features/profile/presentation/bloc/profile_bloc.dart';
 import '../../features/profile/presentation/bloc/profile_event.dart';
 import '../../features/profile/presentation/bloc/dashboard_bloc.dart';
@@ -48,6 +49,7 @@ class AppRouter {
   static const String enrollments = 'enrollments';
   static const String profile = 'profile';
   static const String dashboard = 'dashboard';
+  static const String changePassword = 'change_password';
 
   // Route paths
   static const String splashPath = '/splash';
@@ -66,6 +68,7 @@ class AppRouter {
   static const String enrollmentsPath = '/enrollments';
   static const String profilePath = '/profile';
   static const String dashboardPath = '/dashboard';
+  static const String changePasswordPath = '/change-password';
 
   // GoRouter configuration
   static GoRouter get router {
@@ -224,6 +227,16 @@ class AppRouter {
           builder: (context, state) => BlocProvider(
             create: (context) => di.sl<DashboardBloc>()..add(LoadDashboardEvent()),
             child: const DashboardPage(),
+          ),
+        ),
+
+        // Change Password Route
+        GoRoute(
+          path: changePasswordPath,
+          name: changePassword,
+          builder: (context, state) => BlocProvider(
+            create: (context) => di.sl<ProfileBloc>(),
+            child: const ChangePasswordPage(),
           ),
         ),
       ],
@@ -394,36 +407,6 @@ class _EnrollmentsPage extends StatelessWidget {
       appBar: AppBar(title: const Text('Enrollments')),
       body: const Center(
         child: Text('Enrollments Page - Coming Soon'),
-      ),
-    );
-  }
-}
-
-/// Profile Page Placeholder
-class _ProfilePage extends StatelessWidget {
-  const _ProfilePage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: const Center(
-        child: Text('Profile Page - Coming Soon'),
-      ),
-    );
-  }
-}
-
-/// Dashboard Page Placeholder
-class _DashboardPage extends StatelessWidget {
-  const _DashboardPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
-      body: const Center(
-        child: Text('Dashboard Page - Coming Soon'),
       ),
     );
   }

@@ -21,9 +21,6 @@ class HomeShellCubit extends Cubit<HomeTab> {
   /// Navigate to my learning tab.
   void goToMyLearning() => setTab(HomeTab.myLearning);
 
-  /// Navigate to activity tab.
-  void goToActivity() => setTab(HomeTab.activity);
-
   /// Navigate to profile tab.
   void goToProfile() => setTab(HomeTab.profile);
 }

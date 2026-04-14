@@ -241,7 +241,7 @@ class CourseCard extends StatelessWidget {
 
   Widget _buildPrice(BuildContext context) {
     return Text(
-      course.formattedPrice,
+      course.displayPrice,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(
             color: course.isFree
                 ? Colors.green

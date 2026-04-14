@@ -38,8 +38,8 @@ class HomeBottomNavBar extends StatelessWidget {
         return Icons.school_outlined;
       case 'play_circle':
         return Icons.play_circle_outline;
-      case 'history':
-        return Icons.history_outlined;
+      // case 'history':
+      //   return Icons.history_outlined;
       case 'person':
         return Icons.person_outline;
       default:
@@ -55,8 +55,8 @@ class HomeBottomNavBar extends StatelessWidget {
         return Icons.school;
       case 'play_circle':
         return Icons.play_circle;
-      case 'history':
-        return Icons.history;
+      // case 'history':
+      //   return Icons.history;
       case 'person':
         return Icons.person;
       default:
