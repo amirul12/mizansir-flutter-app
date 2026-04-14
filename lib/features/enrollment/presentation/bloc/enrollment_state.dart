@@ -1,6 +1,7 @@
 // File: lib/features/enrollment/presentation/bloc/enrollment_state.dart
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/enrolled_course.dart';
+import '../../domain/entities/my_course_entity.dart';
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/course_progress.dart';
 
@@ -24,7 +25,7 @@ class EnrollmentLoading extends EnrollmentState {
 
 /// My Courses Loaded State
 class MyCoursesLoaded extends EnrollmentState {
-  final List<EnrolledCourse> courses;
+  final List<dynamic> courses; // Can be List<MyCourseEntity> or List<EnrolledCourse>
 
   const MyCoursesLoaded({required this.courses});
 

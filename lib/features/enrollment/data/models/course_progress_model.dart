@@ -1,7 +1,6 @@
 // File: lib/features/enrollment/data/models/course_progress_model.dart
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/course_progress.dart';
-import 'lesson_model.dart';
 
 /// Course Progress Model
 class CourseProgressModel extends Equatable {

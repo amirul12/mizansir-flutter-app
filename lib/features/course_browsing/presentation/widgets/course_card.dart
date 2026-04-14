@@ -208,18 +208,6 @@ class CourseCard extends StatelessWidget {
           const SizedBox(width: 8),
         ],
 
-        // Students count
-        Icon(
-          Icons.people_outline,
-          size: 16,
-          color: Colors.grey[600],
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '${course.enrolledCount}',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-
         const Spacer(),
 
         // Duration

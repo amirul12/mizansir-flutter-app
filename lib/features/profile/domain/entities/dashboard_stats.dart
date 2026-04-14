@@ -5,18 +5,28 @@ import 'activity.dart';
 class DashboardStats extends Equatable {
   final int totalEnrollments;
   final int activeEnrollments;
+  final int pendingEnrollments;
+  final int expiredEnrollments;
   final int completedLessons;
   final int totalLessons;
   final double overallProgress; // 0.0 to 1.0
   final List<Activity> recentActivities;
+  final List<dynamic> recentEnrollments;
+  final List<dynamic> expiringSoon;
+  final Map<String, dynamic> notifications;
 
   const DashboardStats({
     required this.totalEnrollments,
     required this.activeEnrollments,
+    this.pendingEnrollments = 0,
+    this.expiredEnrollments = 0,
     required this.completedLessons,
     required this.totalLessons,
     required this.overallProgress,
     required this.recentActivities,
+    this.recentEnrollments = const [],
+    this.expiringSoon = const [],
+    this.notifications = const {},
   });
 
   /// Returns true if user has any enrollments.
@@ -24,6 +34,12 @@ class DashboardStats extends Equatable {
 
   /// Returns true if user has any active enrollments.
   bool get hasActiveEnrollments => activeEnrollments > 0;
+
+  /// Returns true if user has pending enrollments.
+  bool get hasPendingEnrollments => pendingEnrollments > 0;
+
+  /// Returns true if user has any expiring soon courses.
+  bool get hasExpiringSoon => expiringSoon.isNotEmpty;
 
   /// Returns completion percentage (0-100).
   double get completionPercentage => overallProgress * 100;
@@ -57,9 +73,14 @@ class DashboardStats extends Equatable {
   List<Object?> get props => [
         totalEnrollments,
         activeEnrollments,
+        pendingEnrollments,
+        expiredEnrollments,
         completedLessons,
         totalLessons,
         overallProgress,
         recentActivities,
+        recentEnrollments,
+        expiringSoon,
+        notifications,
       ];
 }

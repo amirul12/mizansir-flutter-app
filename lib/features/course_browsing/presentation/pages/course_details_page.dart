@@ -12,10 +12,7 @@ import '../../domain/entities/course.dart';
 class CourseDetailsPage extends StatefulWidget {
   final String courseId;
 
-  const CourseDetailsPage({
-    super.key,
-    required this.courseId,
-  });
+  const CourseDetailsPage({super.key, required this.courseId});
 
   @override
   State<CourseDetailsPage> createState() => _CourseDetailsPageState();
@@ -27,11 +24,11 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     super.initState();
     // Load course details and preview lessons
     context.read<CourseBloc>().add(
-          LoadCourseDetailsEvent(courseId: widget.courseId),
-        );
+      LoadCourseDetailsEvent(courseId: widget.courseId),
+    );
     context.read<CourseBloc>().add(
-          LoadPreviewLessonsEvent(courseId: widget.courseId),
-        );
+      LoadPreviewLessonsEvent(courseId: widget.courseId),
+    );
   }
 
   @override
@@ -103,7 +100,15 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           pinned: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_rounded),
-            onPressed: () => context.pop(),
+            onPressed: () {
+              // Navigate back to courses tab in home
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                // Navigate to home and switch to courses tab
+                context.go('/home?tab=courses');
+              }
+            },
           ),
           flexibleSpace: FlexibleSpaceBar(
             title: Text(
@@ -194,16 +199,6 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                         color: Colors.blue,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        icon: Icons.people_outline,
-                        label: 'Students',
-                        value: '${course.enrolledCount}',
-                        color: Colors.green,
-                      ),
-                    ),
                     if (course.modulesCount != null) ...[
                       const SizedBox(width: 12),
                       Expanded(
@@ -232,15 +227,24 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: course.isFree
-                          ? [Colors.green.withValues(alpha: 0.1), Colors.green.withValues(alpha: 0.05)]
+                          ? [
+                              Colors.green.withValues(alpha: 0.1),
+                              Colors.green.withValues(alpha: 0.05),
+                            ]
                           : [
-                              Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                              Theme.of(context).primaryColor.withValues(alpha: 0.05)
+                              Theme.of(
+                                context,
+                              ).primaryColor.withValues(alpha: 0.1),
+                              Theme.of(
+                                context,
+                              ).primaryColor.withValues(alpha: 0.05),
                             ],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: course.isFree ? Colors.green : Theme.of(context).primaryColor,
+                      color: course.isFree
+                          ? Colors.green
+                          : Theme.of(context).primaryColor,
                       width: 2,
                     ),
                   ),
@@ -252,24 +256,31 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                         children: [
                           Text(
                             'Price',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey[600]),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             course.displayPrice,
-                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                  color: course.isFree ? Colors.green : Theme.of(context).primaryColor,
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(
+                                  color: course.isFree
+                                      ? Colors.green
+                                      : Theme.of(context).primaryColor,
                                   fontWeight: FontWeight.bold,
                                 ),
                           ),
                         ],
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                         decoration: BoxDecoration(
-                          color: course.isFree ? Colors.green : Theme.of(context).primaryColor,
+                          color: course.isFree
+                              ? Colors.green
+                              : Theme.of(context).primaryColor,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -295,9 +306,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                   child: Text(
                     course.description,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          height: 1.6,
-                          color: Colors.grey[700],
-                        ),
+                      height: 1.6,
+                      color: Colors.grey[700],
+                    ),
                   ),
                 ),
 
@@ -321,7 +332,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: course.isFree ? Colors.green : Theme.of(context).primaryColor,
+                      backgroundColor: course.isFree
+                          ? Colors.green
+                          : Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -329,7 +342,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                       elevation: 2,
                     ),
                     child: Text(
-                      course.isFree ? 'Start Learning - Free' : 'Enroll Now - ${course.displayPrice}',
+                      course.isFree
+                          ? 'Start Learning - Free'
+                          : 'Enroll Now - ${course.displayPrice}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -360,10 +375,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         children: [
@@ -372,15 +384,15 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
         ],
       ),
@@ -419,17 +431,17 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               children: [
                 Text(
                   'Total Duration',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   course.formattedDuration!,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.purple,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.purple,
+                  ),
                 ),
               ],
             ),
@@ -454,9 +466,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
             const SizedBox(width: 8),
             Text(
               title,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -481,9 +493,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
         const SizedBox(height: 8),
         Text(
           '${course.totalLessonsCount} lessons in ${course.modulesCount} modules',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
         ),
         const SizedBox(height: 16),
         ...modules.asMap().entries.map((entry) {
@@ -503,7 +515,8 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     List<dynamic> lessons,
     int moduleNumber,
   ) {
-    final moduleName = module['module_name'] as String? ?? 'Module $moduleNumber';
+    final moduleName =
+        module['module_name'] as String? ?? 'Module $moduleNumber';
     final lessonsCount = module['lessons_count'] as int? ?? lessons.length;
     final totalMinutes = module['total_duration_minutes'] as int?;
 
@@ -512,10 +525,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey.withValues(alpha: 0.2),
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2), width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -555,20 +565,21 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           ),
           title: Text(
             moduleName.isEmpty ? 'Module $moduleNumber' : moduleName,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           subtitle: Row(
             children: [
-              Icon(Icons.play_circle_outline, size: 16, color: Colors.grey[600]),
+              Icon(
+                Icons.play_circle_outline,
+                size: 16,
+                color: Colors.grey[600],
+              ),
               const SizedBox(width: 4),
               Text(
                 '$lessonsCount lessons',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
               if (totalMinutes != null && totalMinutes > 0) ...[
                 const SizedBox(width: 16),
@@ -576,9 +587,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                 const SizedBox(width: 4),
                 Text(
                   '${totalMinutes}m',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
               ],
             ],
@@ -591,14 +602,17 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               )
             else
               Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                children: lessons.map((lesson) {
-                  final lessonMap = lesson as Map<String, dynamic>;
-                  return _buildLessonItem(context, lessonMap);
-                }).toList(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Column(
+                  children: lessons.map((lesson) {
+                    final lessonMap = lesson as Map<String, dynamic>;
+                    return _buildLessonItem(context, lessonMap);
+                  }).toList(),
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -637,7 +651,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              contentType == 'video' ? Icons.play_arrow : Icons.article_outlined,
+              contentType == 'video'
+                  ? Icons.play_arrow
+                  : Icons.article_outlined,
               color: contentType == 'video' ? Colors.blue : Colors.orange,
               size: 20,
             ),
@@ -654,13 +670,13 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                     fontSize: 14,
                   ),
                 ),
-                if (description != null && description!.isNotEmpty) ...[
+                if (description != null && description.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
-                    description!,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    description,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -673,9 +689,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
             const SizedBox(width: 4),
             Text(
               '${durationMinutes}m',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
             ),
           ],
           if (isPreview) ...[
@@ -708,11 +724,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red[300],
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
               'Error Loading Course',
@@ -728,15 +740,21 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
             ElevatedButton.icon(
               onPressed: () {
                 context.read<CourseBloc>().add(
-                      LoadCourseDetailsEvent(courseId: widget.courseId),
-                    );
+                  LoadCourseDetailsEvent(courseId: widget.courseId),
+                );
               },
               icon: const Icon(Icons.refresh),
               label: const Text('Try Again'),
             ),
             const SizedBox(height: 16),
             TextButton.icon(
-              onPressed: () => context.pop(),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/courses');
+                }
+              },
               icon: const Icon(Icons.arrow_back),
               label: const Text('Go Back'),
             ),
@@ -750,7 +768,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     BuildContext context,
     CourseState state,
   ) {
-    final errorMessage = state is CourseError ? state.message : 'This lesson requires enrollment. Please enroll to access.';
+    final errorMessage = state is CourseError
+        ? state.message
+        : 'This lesson requires enrollment. Please enroll to access.';
 
     return Center(
       child: Padding(
@@ -773,16 +793,16 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
             const SizedBox(height: 24),
             Text(
               'Enrollment Required',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             Text(
               errorMessage,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -810,7 +830,13 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                 ),
                 const SizedBox(width: 16),
                 TextButton.icon(
-                  onPressed: () => context.pop(),
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/courses');
+                    }
+                  },
                   icon: const Icon(Icons.arrow_back),
                   label: const Text('Go Back'),
                 ),

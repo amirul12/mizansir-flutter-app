@@ -11,6 +11,7 @@ import '../../../profile/domain/entities/dashboard_stats.dart';
 import '../../../enrollment/presentation/bloc/enrollment_bloc.dart';
 import '../../../enrollment/presentation/bloc/enrollment_event.dart';
 import '../../../enrollment/presentation/bloc/enrollment_state.dart';
+import '../../../enrollment/domain/entities/my_course_entity.dart';
 import '../../../course_browsing/presentation/bloc/course_bloc.dart';
 import '../../../course_browsing/presentation/bloc/course_event.dart';
 import '../../../course_browsing/presentation/bloc/course_state.dart';
@@ -535,17 +536,47 @@ class HomeDashboardPage extends StatelessWidget {
 
               return Column(
                 children: courses.map((course) {
+                  // Handle both MyCourseEntity and legacy EnrolledCourse
+                  final String title;
+                  final String description;
+                  final double progressPercentage;
+                  final int totalLessons;
+                  final int completedLessons;
+                  final String courseId;
+                  final String? nextLessonId;
+
+                  if (course.runtimeType.toString().contains('MyCourseEntity')) {
+                    // MyCourseEntity has nested structure
+                    final myCourse = course as dynamic;
+                    title = myCourse.course.title;
+                    description = myCourse.course.description;
+                    progressPercentage = myCourse.curriculum.progressPercentage;
+                    totalLessons = myCourse.curriculum.totalLessons;
+                    completedLessons = myCourse.curriculum.completedLessons;
+                    courseId = myCourse.course.id;
+                    nextLessonId = myCourse.curriculum.nextLesson?.id;
+                  } else {
+                    // Legacy EnrolledCourse structure
+                    title = course.title ?? 'Untitled Course';
+                    description = course.description ?? '';
+                    progressPercentage = course.progressPercentage ?? 0.0;
+                    totalLessons = course.totalLessons ?? 0;
+                    completedLessons = course.completedLessons ?? 0;
+                    courseId = course.id;
+                    nextLessonId = course.nextLessonId;
+                  }
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _buildModernCourseCard(
                       context,
-                      course.title,
-                      course.progressPercentage,
-                      course.description,
-                      course.totalLessons ?? 0,
-                      course.completedLessons ?? 0,
-                      course.id,
-                      course.nextLessonId,
+                      title,
+                      progressPercentage,
+                      description,
+                      totalLessons,
+                      completedLessons,
+                      courseId,
+                      nextLessonId,
                     ),
                   );
                 }).toList(),

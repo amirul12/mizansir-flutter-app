@@ -7,26 +7,37 @@ part 'dashboard_stats_model.g.dart';
 /// Dashboard statistics model for JSON serialization.
 @JsonSerializable()
 class DashboardStatsModel {
-  @JsonKey(name: 'total_enrollments')
-  final int totalEnrollments;
-  @JsonKey(name: 'active_enrollments')
-  final int activeEnrollments;
-  @JsonKey(name: 'completed_lessons')
-  final int completedLessons;
-  @JsonKey(name: 'total_lessons')
-  final int totalLessons;
-  @JsonKey(name: 'overall_progress')
-  final double overallProgress;
+  // User information
+  @JsonKey(name: 'user')
+  final Map<String, dynamic>? user;
+
+  // Enrollment statistics
+  @JsonKey(name: 'enrollment_stats')
+  final Map<String, dynamic>? enrollmentStats;
+
+  // Recent enrollments
+  @JsonKey(name: 'recent_enrollments')
+  final List<dynamic>? recentEnrollments;
+
+  // Expiring soon courses
+  @JsonKey(name: 'expiring_soon')
+  final List<dynamic>? expiringSoon;
+
+  // Notifications
+  @JsonKey(name: 'notifications')
+  final Map<String, dynamic>? notifications;
+
+  // Recent activities (for activity feed)
   @JsonKey(name: 'recent_activities')
-  final List<ActivityModel> recentActivities;
+  final List<ActivityModel>? recentActivities;
 
   DashboardStatsModel({
-    required this.totalEnrollments,
-    required this.activeEnrollments,
-    required this.completedLessons,
-    required this.totalLessons,
-    required this.overallProgress,
-    required this.recentActivities,
+    this.user,
+    this.enrollmentStats,
+    this.recentEnrollments,
+    this.expiringSoon,
+    this.notifications,
+    this.recentActivities,
   });
 
   /// Create DashboardStatsModel from JSON.
@@ -38,24 +49,32 @@ class DashboardStatsModel {
 
   /// Convert to DashboardStats entity.
   DashboardStats toEntity() {
+    // Extract enrollment stats
+    final stats = enrollmentStats;
+    final totalEnroll = stats?['total'] ?? 0;
+    final activeEnroll = stats?['active'] ?? 0;
+    final pendingEnroll = stats?['pending'] ?? 0;
+    final expiredEnroll = stats?['expired'] ?? 0;
+
     return DashboardStats(
-      totalEnrollments: totalEnrollments,
-      activeEnrollments: activeEnrollments,
-      completedLessons: completedLessons,
-      totalLessons: totalLessons,
-      overallProgress: overallProgress,
-      recentActivities: recentActivities.map((a) => a.toEntity()).toList(),
+      totalEnrollments: totalEnroll,
+      activeEnrollments: activeEnroll,
+      pendingEnrollments: pendingEnroll,
+      expiredEnrollments: expiredEnroll,
+      completedLessons: 0,
+      totalLessons: 0,
+      overallProgress: 0.0,
+      recentActivities: recentActivities?.map((a) => a.toEntity()).toList() ??
+          [],
+      recentEnrollments: recentEnrollments ?? [],
+      expiringSoon: expiringSoon ?? [],
+      notifications: notifications ?? {},
     );
   }
 
   /// Create DashboardStatsModel from DashboardStats entity.
   factory DashboardStatsModel.fromEntity(DashboardStats entity) {
     return DashboardStatsModel(
-      totalEnrollments: entity.totalEnrollments,
-      activeEnrollments: entity.activeEnrollments,
-      completedLessons: entity.completedLessons,
-      totalLessons: entity.totalLessons,
-      overallProgress: entity.overallProgress,
       recentActivities: entity.recentActivities
           .map((a) => ActivityModel.fromEntity(a))
           .toList(),

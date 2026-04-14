@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/services/token_service.dart';
@@ -22,18 +23,46 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
 
   @override
   Future<DashboardStatsModel> getDashboard() async {
+    final uri = Uri.parse('$baseUrl/v1/user/dashboard');
+
+    // DEBUG: Print API Request
+    debugPrint('🔵 GET DASHBOARD REQUEST');
+    debugPrint('URL: $uri');
+
     final response = await client.get(
-      Uri.parse('$baseUrl/v1/dashboard'),
+      uri,
       headers: await _buildHeaders(),
+    ).timeout(
+      const Duration(seconds: 30),
     );
+
+    // DEBUG: Print API Response
+    debugPrint('🟢 GET DASHBOARD RESPONSE');
+    debugPrint('Status Code: ${response.statusCode}');
+    debugPrint('Response Body: ${response.body}');
 
     if (response.statusCode == 200) {
       final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-      final data = jsonData['data'] as Map<String, dynamic>;
-      return DashboardStatsModel.fromJson(data);
+
+      // Handle wrapped response
+      if (jsonData['data'] is Map) {
+        final data = jsonData['data'] as Map<String, dynamic>;
+        debugPrint('✅ Successfully parsed dashboard data');
+        return DashboardStatsModel.fromJson(data);
+      }
+
+      throw ServerException(message: 'Invalid data format received');
     } else if (response.statusCode == 401) {
-      throw UnauthorizedException();
+      debugPrint('❌ Unauthorized: 401');
+      throw const UnauthorizedException();
+    } else if (response.statusCode == 403) {
+      debugPrint('❌ Forbidden: 403');
+      throw const UnauthorizedException();
+    } else if (response.statusCode == 404) {
+      debugPrint('❌ Not Found: 404');
+      throw const NotFoundException(message: 'Dashboard not found');
     } else {
+      debugPrint('❌ Server Error: ${response.statusCode}');
       throw ServerException(
         message: 'Failed to get dashboard',
         statusCode: response.statusCode,

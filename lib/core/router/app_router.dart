@@ -5,15 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
-import '../../features/auth/presentation/bloc/auth_state.dart';
-import '../../features/auth/presentation/bloc/auth_event.dart';
 import '../../features/course_browsing/presentation/pages/courses_page.dart';
 import '../../features/course_browsing/presentation/pages/course_details_page.dart';
 import '../../features/course_browsing/presentation/pages/course_search_page.dart';
 import '../../features/course_browsing/presentation/pages/categories_page.dart';
 import '../../features/course_browsing/presentation/bloc/course_bloc.dart';
 import '../../features/enrollment/presentation/bloc/enrollment_bloc.dart';
-import '../../features/enrollment/presentation/pages/my_courses_page.dart';
 import '../../features/enrollment/presentation/pages/course_lessons_page.dart';
 import '../../features/enrollment/presentation/pages/student_lesson_player_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
@@ -24,6 +21,7 @@ import '../../features/profile/presentation/bloc/profile_event.dart';
 import '../../features/profile/presentation/bloc/dashboard_bloc.dart';
 import '../../features/profile/presentation/bloc/dashboard_event.dart';
 import '../../features/home/presentation/pages/home_shell_page.dart';
+import '../../features/home/domain/entities/home_tab.dart';
 import '../presentation/pages/splash_page.dart';
 import '../di/injection_container.dart' as di;
 
@@ -101,7 +99,30 @@ class AppRouter {
         GoRoute(
           path: appShellPath,
           name: appShell,
-          builder: (context, state) => const HomeShellPage(),
+          builder: (context, state) {
+            // Check for tab query parameter
+            final tabParam = state.uri.queryParameters['tab'];
+            HomeTab? initialTab;
+
+            if (tabParam != null) {
+              switch (tabParam.toLowerCase()) {
+                case 'home':
+                  initialTab = HomeTab.home;
+                  break;
+                case 'courses':
+                  initialTab = HomeTab.courses;
+                  break;
+                case 'my_learning':
+                  initialTab = HomeTab.myLearning;
+                  break;
+                case 'profile':
+                  initialTab = HomeTab.profile;
+                  break;
+              }
+            }
+
+            return HomeShellPage(initialTab: initialTab);
+          },
         ),
 
         // Authentication Routes

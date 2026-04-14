@@ -8,9 +8,6 @@ import '../../domain/entities/course_filter.dart';
 import '../../domain/entities/lesson_preview.dart';
 import '../../domain/repositories/course_repository.dart';
 import '../datasources/course_remote_datasource.dart';
-import '../models/course_model.dart';
-import '../models/category_model.dart';
-import '../models/lesson_preview_model.dart';
 
 /// Course Repository Implementation
 class CourseRepositoryImpl implements CourseRepository {

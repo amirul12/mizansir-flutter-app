@@ -3,6 +3,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/enrolled_course.dart';
+import '../../domain/entities/my_course_entity.dart';
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/course_progress.dart';
 import '../../domain/repositories/enrollment_repository.dart';
@@ -15,7 +16,7 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
   EnrollmentRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<EnrolledCourse>>> getMyCourses() async {
+  Future<Either<Failure, List<MyCourseEntity>>> getMyCourses() async {
     try {
       final courseModels = await remoteDataSource.getMyCourses();
       return Right(courseModels.map((model) => model.toEntity()).toList());

@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/services/token_service.dart';
 import '../models/enrolled_course_model.dart';
+import '../models/my_course_model.dart';
 import '../models/lesson_model.dart';
 import '../models/course_progress_model.dart';
 import 'enrollment_remote_datasource.dart';
@@ -30,7 +31,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
   }
 
   @override
-  Future<List<EnrolledCourseModel>> getMyCourses() async {
+  Future<List<MyCourseModel>> getMyCourses() async {
     try {
       final token = await tokenService.getAuthHeader();
       final uri = Uri.parse('$baseUrl/v1/my-courses');
@@ -55,27 +56,27 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        
+
+        // Handle wrapped response (CommonResponseModel format)
+        if (jsonData is Map && jsonData['data'] is List) {
+          debugPrint('✅ Successfully parsed ${jsonData['data'].length} enrolled courses');
+          return (jsonData['data'] as List)
+              .map((course) => MyCourseModel.fromJson(course))
+              .toList();
+        }
+
         // Handle direct list response
         if (jsonData is List) {
           debugPrint('✅ Successfully parsed ${jsonData.length} enrolled courses');
           return jsonData
-              .map((course) => EnrolledCourseModel.fromJson(course))
+              .map((course) => MyCourseModel.fromJson(course))
               .toList();
         }
-        
-        // Handle wrapped response (CommonResponseModel format)
-        if (jsonData is Map && jsonData['data'] is List) {
-          debugPrint('✅ Successfully parsed ${(jsonData['data'] as List).length} enrolled courses');
-          return (jsonData['data'] as List)
-              .map((course) => EnrolledCourseModel.fromJson(course))
-              .toList();
-        }
-        
+
         throw ServerException(message: 'Invalid data format received');
       } else if (response.statusCode == 401) {
         debugPrint('❌ Unauthorized: 401');
-        throw const UnauthorizedException();
+        throw const UnauthorizedException(message: 'Unauthorized');
       } else {
         debugPrint('❌ Error: ${response.statusCode}');
         throw ServerException(
@@ -85,7 +86,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
       }
     } on UnauthorizedException {
       rethrow;
-    } on AppException {
+    } on ServerException {
       rethrow;
     } catch (e) {
       debugPrint('❌ Exception: $e');

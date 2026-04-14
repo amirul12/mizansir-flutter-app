@@ -1,7 +1,6 @@
 // File: lib/features/course_browsing/data/models/course_model.dart
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/course.dart';
-import '../../domain/entities/category.dart';
 import 'category_model.dart' show CategoryModel;
 
 /// Course Model

@@ -8,23 +8,23 @@ part of 'dashboard_stats_model.dart';
 
 DashboardStatsModel _$DashboardStatsModelFromJson(Map<String, dynamic> json) =>
     DashboardStatsModel(
-      totalEnrollments: (json['total_enrollments'] as num).toInt(),
-      activeEnrollments: (json['active_enrollments'] as num).toInt(),
-      completedLessons: (json['completed_lessons'] as num).toInt(),
-      totalLessons: (json['total_lessons'] as num).toInt(),
-      overallProgress: (json['overall_progress'] as num).toDouble(),
-      recentActivities: (json['recent_activities'] as List<dynamic>)
-          .map((e) => ActivityModel.fromJson(e as Map<String, dynamic>))
+      user: json['user'] as Map<String, dynamic>?,
+      enrollmentStats: json['enrollment_stats'] as Map<String, dynamic>?,
+      recentEnrollments: json['recent_enrollments'] as List<dynamic>?,
+      expiringSoon: json['expiring_soon'] as List<dynamic>?,
+      notifications: json['notifications'] as Map<String, dynamic>?,
+      recentActivities: (json['recent_activities'] as List<dynamic>?)
+          ?.map((e) => ActivityModel.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
 Map<String, dynamic> _$DashboardStatsModelToJson(
   DashboardStatsModel instance,
 ) => <String, dynamic>{
-  'total_enrollments': instance.totalEnrollments,
-  'active_enrollments': instance.activeEnrollments,
-  'completed_lessons': instance.completedLessons,
-  'total_lessons': instance.totalLessons,
-  'overall_progress': instance.overallProgress,
+  'user': instance.user,
+  'enrollment_stats': instance.enrollmentStats,
+  'recent_enrollments': instance.recentEnrollments,
+  'expiring_soon': instance.expiringSoon,
+  'notifications': instance.notifications,
   'recent_activities': instance.recentActivities,
 };

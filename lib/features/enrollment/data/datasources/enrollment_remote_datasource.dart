@@ -1,12 +1,13 @@
 // File: lib/features/enrollment/data/datasources/enrollment_remote_datasource.dart
 import '../models/enrolled_course_model.dart';
+import '../models/my_course_model.dart';
 import '../models/lesson_model.dart';
 import '../models/course_progress_model.dart';
 
 /// Enrollment Remote Data Source Interface
 abstract class EnrollmentRemoteDataSource {
   /// Get user's enrolled courses
-  Future<List<EnrolledCourseModel>> getMyCourses();
+  Future<List<MyCourseModel>> getMyCourses();
 
   /// Get enrolled course details with lessons
   Future<EnrolledCourseModel> getEnrolledCourseDetails(String courseId);
