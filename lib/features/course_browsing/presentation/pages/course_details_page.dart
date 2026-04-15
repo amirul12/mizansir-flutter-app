@@ -33,11 +33,33 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: BlocListener<CourseBloc, CourseState>(
-        listener: (context, state) {
-          // Handle enrollment required error for lessons
-          if (state is CourseError) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
+        // Show dialog to guide user to use the app's back button
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Navigate Back'),
+            content: const Text(
+              'Please use the back button in the app bar to navigate back to the courses list.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      },
+      child: Scaffold(
+        body: BlocListener<CourseBloc, CourseState>(
+          listener: (context, state) {
+            // Handle enrollment required error for lessons
+            if (state is CourseError) {
             final message = state.message.toLowerCase();
             if (message.contains('enrollment') ||
                 message.contains('enroll') ||
@@ -86,6 +108,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
 
             return const Center(child: CircularProgressIndicator());
           },
+        ),
         ),
       ),
     );

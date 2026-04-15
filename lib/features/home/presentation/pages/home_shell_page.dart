@@ -31,19 +31,14 @@ import '../../../../core/di/injection_container.dart' as di;
 class HomeShellPage extends StatelessWidget {
   final HomeTab? initialTab;
 
-  const HomeShellPage({
-    super.key,
-    this.initialTab,
-  });
+  const HomeShellPage({super.key, this.initialTab});
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
         // Home shell cubit for tab management
-        BlocProvider(
-          create: (context) => HomeShellCubit(),
-        ),
+        BlocProvider(create: (context) => HomeShellCubit()),
         // Auth bloc for logout functionality
         BlocProvider(create: (context) => di.sl<AuthBloc>()),
         // Initialize profile and dashboard blocs
@@ -51,8 +46,8 @@ class HomeShellPage extends StatelessWidget {
           create: (context) => di.sl<ProfileBloc>()..add(LoadProfileEvent()),
         ),
         BlocProvider(
-          create: (context) => di.sl<DashboardBloc>()
-            ..add(LoadDashboardEvent()),
+          create: (context) =>
+              di.sl<DashboardBloc>()..add(LoadDashboardEvent()),
         ),
         // Initialize enrollment bloc for my courses
         BlocProvider(
@@ -81,7 +76,7 @@ class _HomeShellView extends StatelessWidget {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        
+
         final shouldExit = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
@@ -196,7 +191,8 @@ class _HomeShellViewWithInitialTab extends StatefulWidget {
       _HomeShellViewWithInitialTabState();
 }
 
-class _HomeShellViewWithInitialTabState extends State<_HomeShellViewWithInitialTab> {
+class _HomeShellViewWithInitialTabState
+    extends State<_HomeShellViewWithInitialTab> {
   @override
   void initState() {
     super.initState();
@@ -414,8 +410,8 @@ class _CoursesTabPage extends StatelessWidget {
         final courses = state is CoursesLoaded
             ? state.courses
             : state is FeaturedCoursesLoaded
-                ? state.courses
-                : null;
+            ? state.courses
+            : null;
 
         if (courses != null && courses.isNotEmpty) {
           return RefreshIndicator(
@@ -473,7 +469,6 @@ class _CoursesTabPage extends StatelessWidget {
     );
   }
 
-
   Widget _buildCourseCard(BuildContext context, Course course) {
     return Container(
       decoration: BoxDecoration(
@@ -499,11 +494,14 @@ class _CoursesTabPage extends StatelessWidget {
             children: [
               // Thumbnail Image
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
                 child: Stack(
                   children: [
                     // Thumbnail or gradient placeholder
-                    if (course.thumbnail != null && course.thumbnail!.isNotEmpty)
+                    if (course.thumbnail != null &&
+                        course.thumbnail!.isNotEmpty)
                       CachedNetworkImage(
                         imageUrl: course.thumbnail!,
                         height: 180,
@@ -516,15 +514,21 @@ class _CoursesTabPage extends StatelessWidget {
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                                Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                                Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.3),
+                                Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.1),
                               ],
                             ),
                           ),
                           child: const Center(
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -536,7 +540,9 @@ class _CoursesTabPage extends StatelessWidget {
                               end: Alignment.bottomRight,
                               colors: [
                                 Theme.of(context).primaryColor,
-                                Theme.of(context).primaryColor.withValues(alpha: 0.7),
+                                Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.7),
                               ],
                             ),
                           ),
@@ -556,7 +562,9 @@ class _CoursesTabPage extends StatelessWidget {
                             end: Alignment.bottomRight,
                             colors: [
                               Theme.of(context).primaryColor,
-                              Theme.of(context).primaryColor.withValues(alpha: 0.7),
+                              Theme.of(
+                                context,
+                              ).primaryColor.withValues(alpha: 0.7),
                             ],
                           ),
                         ),
@@ -592,7 +600,9 @@ class _CoursesTabPage extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: course.isFree ? Colors.white : Theme.of(context).primaryColor,
+                            color: course.isFree
+                                ? Colors.white
+                                : Theme.of(context).primaryColor,
                           ),
                         ),
                       ),
@@ -611,9 +621,9 @@ class _CoursesTabPage extends StatelessWidget {
                     Text(
                       course.title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            height: 1.3,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        height: 1.3,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -632,9 +642,8 @@ class _CoursesTabPage extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           '${course.totalLessonsCount} lessons',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.grey[600],
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: Colors.grey[600]),
                         ),
                       ],
                     ),
@@ -645,9 +654,9 @@ class _CoursesTabPage extends StatelessWidget {
                       Text(
                         course.description,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Colors.grey[700],
-                              height: 1.5,
-                            ),
+                          color: Colors.grey[700],
+                          height: 1.5,
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -830,7 +839,10 @@ class _MyLearningTabPage extends StatelessWidget {
               separatorBuilder: (context, index) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 final course = state.courses[index];
-                return _buildEnrolledCourseCard(context, course as MyCourseEntity);
+                return _buildEnrolledCourseCard(
+                  context,
+                  course as MyCourseEntity,
+                );
               },
             ),
           );
@@ -843,6 +855,319 @@ class _MyLearningTabPage extends StatelessWidget {
   }
 
   Widget _buildEnrolledCourseCard(BuildContext context, MyCourseEntity course) {
+    final courseInfo = course.course;
+    final curriculum = course.curriculum;
+    final enrollment = course.enrollment;
+
+    final progress = curriculum.progressPercentage.clamp(0, 100).toDouble();
+    final progressColor = _getProgressColor(progress);
+
+    void handleNavigation() {
+      if (curriculum.nextLesson != null) {
+        context.go(
+          '/my-courses/${courseInfo.id}/lessons/${curriculum.nextLesson!.id}',
+        );
+      } else {
+        context.go('/my-courses/${courseInfo.id}/lessons');
+      }
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(24),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: handleNavigation,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCourseThumbnail(context, courseInfo.thumbnail),
+
+                    const SizedBox(width: 14),
+
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  courseInfo.title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        height: 1.3,
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              _buildProgressBadge(progressColor, progress),
+                            ],
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          if (courseInfo.description.isNotEmpty)
+                            Text(
+                              courseInfo.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Colors.grey.shade600,
+                                    height: 1.4,
+                                  ),
+                            ),
+
+                          const SizedBox(height: 12),
+
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _buildMiniInfoChip(
+                                icon: Icons.play_circle_outline,
+                                label: '${curriculum.totalLessons} Lessons',
+                                color: Colors.blue,
+                              ),
+                              _buildMiniInfoChip(
+                                icon: Icons.check_circle_outline,
+                                label:
+                                    '${curriculum.completedLessons} Completed',
+                                color: Colors.green,
+                              ),
+                              _buildMiniInfoChip(
+                                icon: Icons.schedule_outlined,
+                                label: courseInfo.formattedDuration,
+                                color: Colors.orange,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Your progress',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade800,
+                              ),
+                        ),
+                        Text(
+                          '${progress.toInt()}%',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: progressColor,
+                              ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: LinearProgressIndicator(
+                        value: progress / 100,
+                        minHeight: 10,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          progressColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          context.go('/my-courses/${courseInfo.id}/lessons');
+                        },
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(46),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          side: BorderSide(
+                            color: Theme.of(
+                              context,
+                            ).primaryColor.withOpacity(0.2),
+                          ),
+                        ),
+                        child: const Text('View Lessons'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: handleNavigation,
+                        icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                        label: Text(
+                          curriculum.nextLesson != null
+                              ? 'Continue'
+                              : 'Start Now',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(46),
+                          backgroundColor: Theme.of(context).primaryColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCourseThumbnail(BuildContext context, String? thumbnail) {
+    final primaryColor = Theme.of(context).primaryColor;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: SizedBox(
+        width: 92,
+        height: 92,
+        child: thumbnail != null && thumbnail.isNotEmpty
+            ? CachedNetworkImage(
+                imageUrl: thumbnail,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        primaryColor.withOpacity(0.35),
+                        primaryColor.withOpacity(0.15),
+                      ],
+                    ),
+                  ),
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                ),
+                errorWidget: (context, url, error) =>
+                    _buildThumbnailFallback(primaryColor),
+              )
+            : _buildThumbnailFallback(primaryColor),
+      ),
+    );
+  }
+
+  Widget _buildThumbnailFallback(Color primaryColor) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [primaryColor, primaryColor.withOpacity(0.7)],
+        ),
+      ),
+      child: const Center(
+        child: Icon(Icons.school_rounded, size: 34, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildProgressBadge(Color color, double progress) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withOpacity(0.20)),
+      ),
+      child: Text(
+        '${progress.toInt()}%',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniInfoChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildEnrolledCourseCard(BuildContext context, MyCourseEntity course) {
     // Extract data from entity
     final courseInfo = course.course;
     final curriculum = course.curriculum;
@@ -876,202 +1201,231 @@ class _MyLearningTabPage extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
               children: [
-                // Thumbnail on the left (avatar size)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: SizedBox(
-                    width: 80,
-                    height: 80,
-                    child: courseInfo.thumbnail != null && courseInfo.thumbnail!.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: courseInfo.thumbnail!,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                                    Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                                  ],
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Thumbnail on the left (avatar size)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        width: 80,
+                        height: 80,
+                        child:
+                            courseInfo.thumbnail != null &&
+                                courseInfo.thumbnail!.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: courseInfo.thumbnail!,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Theme.of(
+                                          context,
+                                        ).primaryColor.withValues(alpha: 0.3),
+                                        Theme.of(
+                                          context,
+                                        ).primaryColor.withValues(alpha: 0.1),
+                                      ],
+                                    ),
+                                  ),
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        Theme.of(context).primaryColor,
+                                        Theme.of(
+                                          context,
+                                        ).primaryColor.withValues(alpha: 0.7),
+                                      ],
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.school,
+                                    size: 32,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Theme.of(context).primaryColor,
+                                      Theme.of(
+                                        context,
+                                      ).primaryColor.withValues(alpha: 0.7),
+                                    ],
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.school,
+                                  size: 32,
+                                  color: Colors.white70,
                                 ),
                               ),
-                              child: const Center(
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              ),
-                            ),
-                            errorWidget: (context, url, error) => Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Theme.of(context).primaryColor,
-                                    Theme.of(context).primaryColor.withValues(alpha: 0.7),
-                                  ],
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.school,
-                                size: 32,
-                                color: Colors.white70,
-                              ),
-                            ),
-                          )
-                        : Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Theme.of(context).primaryColor,
-                                  Theme.of(context).primaryColor.withValues(alpha: 0.7),
-                                ],
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.school,
-                              size: 32,
-                              color: Colors.white70,
-                            ),
-                          ),
-                  ),
-                ),
+                      ),
+                    ),
 
-                const SizedBox(width: 16),
+                    const SizedBox(width: 16),
 
-                // Content on the right
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Title row with progress
-                      Row(
+                    // Content on the right
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text(
-                              courseInfo.title,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
+                          // Title row with progress
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  courseInfo.title,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              // Progress badge
+                              if (curriculum.progressPercentage > 0)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: _getProgressColor(
+                                      curriculum.progressPercentage,
+                                    ).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: _getProgressColor(
+                                        curriculum.progressPercentage,
+                                      ).withValues(alpha: 0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${curriculum.progressPercentage.toInt()}%',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: _getProgressColor(
+                                        curriculum.progressPercentage,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // Status and expiry row
+                          // Row(
+                          //   children: [
+                          //     _buildStatusChip(enrollment.status),
+                          //     const SizedBox(width: 8),
+                          //     _buildDaysRemainingChip(enrollment.expiresAt),
+                          //   ],
+                          // ),
+
+                          // Description
+                          if (courseInfo.description.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              courseInfo.description,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: Colors.grey[600]),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          // Progress badge
-                          if (curriculum.progressPercentage > 0)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _getProgressColor(curriculum.progressPercentage)
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: _getProgressColor(curriculum.progressPercentage)
-                                      .withValues(alpha: 0.3),
-                                  width: 1,
+                          ],
+
+                          const SizedBox(height: 12),
+
+                          // Full width stats section
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: _buildFullWidthStat(
+                                  Icons.play_circle_outline,
+                                  '${curriculum.totalLessons} Lessons',
+                                  Colors.blue,
                                 ),
                               ),
-                              child: Text(
-                                '${curriculum.progressPercentage.toInt()}%',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: _getProgressColor(curriculum.progressPercentage),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildFullWidthStat(
+                                  Icons.check_circle_outline,
+                                  '${curriculum.completedLessons} Completed',
+                                  Colors.green,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: _buildFullWidthStat(
+                                  Icons.schedule,
+                                  courseInfo.formattedDuration,
+                                  Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Continue button
+                          SizedBox(
+                            width: double.infinity,
+                            height: 40,
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                // Navigate to next lesson if available, otherwise show all lessons
+                                if (curriculum.nextLesson != null) {
+                                  context.go(
+                                    '/my-courses/${courseInfo.id}/lessons/${curriculum.nextLesson!.id}',
+                                  );
+                                } else {
+                                  context.go(
+                                    '/my-courses/${courseInfo.id}/lessons',
+                                  );
+                                }
+                              },
+                              icon: const Icon(Icons.play_arrow, size: 18),
+                              label: const Text('Continue Learning'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(context).primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
                                 ),
                               ),
                             ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Status and expiry row
-                      Row(
-                        children: [
-                          _buildStatusChip(enrollment.status),
-                          const SizedBox(width: 8),
-                          _buildDaysRemainingChip(enrollment.expiresAt),
-                        ],
-                      ),
-
-                      // Description
-                      if (courseInfo.description.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          courseInfo.description,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: Colors.grey[600]),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-
-                      const SizedBox(height: 12),
-
-                      // Stats row
-                      Row(
-                        children: [
-                          _buildStat(
-                            Icons.play_circle_outline,
-                            '${curriculum.totalLessons} Lessons',
-                            Colors.blue,
-                          ),
-                          const SizedBox(width: 12),
-                          _buildStat(
-                            Icons.check_circle_outline,
-                            '${curriculum.completedLessons} Completed',
-                            Colors.green,
-                          ),
-                          const SizedBox(width: 12),
-                          _buildStat(
-                            Icons.schedule,
-                            courseInfo.formattedDuration,
-                            Colors.orange,
                           ),
                         ],
                       ),
-
-                      const SizedBox(height: 12),
-
-                      // Continue button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 40,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            // Navigate to next lesson if available, otherwise show all lessons
-                            if (curriculum.nextLesson != null) {
-                              context.go(
-                                '/my-courses/${courseInfo.id}/lessons/${curriculum.nextLesson!.id}',
-                              );
-                            } else {
-                              context.go('/my-courses/${courseInfo.id}/lessons');
-                            }
-                          },
-                          icon: const Icon(Icons.play_arrow, size: 18),
-                          label: const Text('Continue Learning'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).primaryColor,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1167,6 +1521,37 @@ class _MyLearningTabPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildFullWidthStat(IconData icon, String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
