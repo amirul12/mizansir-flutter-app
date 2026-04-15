@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 
 /// About Mizan Sir Page
 /// Displays detailed information about Mizanur Rahman (Mizan Sir)
@@ -17,6 +18,11 @@ class AboutMizanSirPage extends StatelessWidget {
             expandedHeight: 200,
             floating: false,
             pinned: true,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => context.go('/'),
+              tooltip: 'Back',
+            ),
             flexibleSpace: FlexibleSpaceBar(
               title: const Text(
                 'About Mizan Sir',
@@ -30,10 +36,7 @@ class AboutMizanSirPage extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [
-                      Colors.blue.shade700,
-                      Colors.blue.shade900,
-                    ],
+                    colors: [Colors.blue.shade700, Colors.blue.shade900],
                   ),
                 ),
                 child: Center(
@@ -109,9 +112,7 @@ class AboutMizanSirPage extends StatelessWidget {
   Widget _buildProfileSection(BuildContext context) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -123,10 +124,7 @@ class AboutMizanSirPage extends StatelessWidget {
                 height: 150,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.blue.shade700,
-                    width: 4,
-                  ),
+                  border: Border.all(color: Colors.blue.shade700, width: 4),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.blue.withValues(alpha: 0.3),
@@ -137,7 +135,7 @@ class AboutMizanSirPage extends StatelessWidget {
                 ),
                 child: ClipOval(
                   child: Image.asset(
-                    'assets/images/mizan_sir.jpg',
+                    'assets/images/mizan.jpeg',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -204,10 +202,7 @@ class AboutMizanSirPage extends StatelessWidget {
 
             Text(
               'Dhaka Cantonment, Dhaka, Bangladesh',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
 
@@ -237,9 +232,7 @@ class AboutMizanSirPage extends StatelessWidget {
   Widget _buildContactSection(BuildContext context) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -313,10 +306,7 @@ class AboutMizanSirPage extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withValues(alpha: 0.3),
-            width: 1,
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
         child: Row(
           children: [
@@ -363,9 +353,7 @@ class AboutMizanSirPage extends StatelessWidget {
   Widget _buildSocialSection(BuildContext context) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -439,10 +427,7 @@ class AboutMizanSirPage extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withValues(alpha: 0.3),
-            width: 1,
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
         child: Row(
           children: [
@@ -463,10 +448,7 @@ class AboutMizanSirPage extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     handle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[700],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                   ),
                 ],
               ),
@@ -481,9 +463,7 @@ class AboutMizanSirPage extends StatelessWidget {
   Widget _buildEducationSection(BuildContext context) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -547,10 +527,7 @@ class AboutMizanSirPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         children: [
@@ -578,10 +555,7 @@ class AboutMizanSirPage extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   institution,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                 ),
               ],
             ),
@@ -594,9 +568,7 @@ class AboutMizanSirPage extends StatelessWidget {
   Widget _buildExperienceSection(BuildContext context) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -660,10 +632,7 @@ class AboutMizanSirPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -681,7 +650,10 @@ class AboutMizanSirPage extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(12),
@@ -705,10 +677,7 @@ class AboutMizanSirPage extends StatelessWidget {
               Expanded(
                 child: Text(
                   institution,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
                 ),
               ),
             ],
@@ -749,10 +718,7 @@ class AboutMizanSirPage extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   'Call or WhatsApp',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[700],
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                 ),
                 const SizedBox(height: 12),
                 Row(
@@ -789,20 +755,14 @@ class AboutMizanSirPage extends StatelessWidget {
 
   // Helper methods for actions
   Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: phoneNumber,
-    );
+    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
     if (await canLaunchUrl(launchUri)) {
       await launchUrl(launchUri);
     }
   }
 
   Future<void> _sendEmail(String email) async {
-    final Uri launchUri = Uri(
-      scheme: 'mailto',
-      path: email,
-    );
+    final Uri launchUri = Uri(scheme: 'mailto', path: email);
     if (await canLaunchUrl(launchUri)) {
       await launchUrl(launchUri);
     }
