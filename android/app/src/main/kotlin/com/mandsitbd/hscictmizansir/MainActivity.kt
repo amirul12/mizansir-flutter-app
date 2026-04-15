@@ -1,4 +1,4 @@
-package com.example.privatetutor
+package com.mandsitbd.hscictmizansir
 
 import android.os.Bundle
 import android.view.WindowManager.LayoutParams
@@ -46,4 +46,3 @@ class MainActivity : FlutterActivity() {
         }
     }
 }
-

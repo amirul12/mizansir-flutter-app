@@ -47,6 +47,7 @@ dependencies:
 
   # Video Player
   youtube_player_flutter: ^9.1.1
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -58,6 +59,7 @@ dev_dependencies:
   # Code Generation
   build_runner: ^2.4.13
   json_serializable: ^6.8.0
+  change_app_package_name: ^1.5.0
 
 flutter:
 
