@@ -2,9 +2,9 @@
 /// Application-wide constants
 class AppConstants {
   // App Information
-  static const String appName = 'PrivateTutor';
+  static const String appName = 'Mizan Sir';
   static const String appVersion = '1.0.0';
-  static const String appDescription = 'Student Course Management System';
+  static const String appDescription = 'HSC ICT Learning App';
 
   // Pagination
   static const int defaultPageSize = 20;

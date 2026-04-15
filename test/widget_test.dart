@@ -1,15 +1,15 @@
 // File: test/widget_test.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:privatetutor/main.dart';
+import 'package:mizansir/main.dart';
 
 void main() {
   testWidgets('App starts successfully', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const PrivateTutorApp());
+    await tester.pumpWidget(const MizanSirApp());
 
     // Verify app starts with home page
-    expect(find.text('Welcome to PrivateTutor'), findsOneWidget);
+    expect(find.text('Welcome to Mizan Sir'), findsOneWidget);
     expect(find.text('Phase 2 Authentication Complete'), findsOneWidget);
 
     // Verify navigation buttons exist
@@ -19,13 +19,13 @@ void main() {
 
   testWidgets('Home page UI is correct', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const PrivateTutorApp());
+    await tester.pumpWidget(const MizanSirApp());
 
     // Verify app title
-    expect(find.text('PrivateTutor'), findsOneWidget);
+    expect(find.text('Mizan Sir'), findsOneWidget);
 
     // Verify main welcome message
-    expect(find.text('Welcome to PrivateTutor'), findsOneWidget);
+    expect(find.text('Welcome to Mizan Sir'), findsOneWidget);
     expect(find.text('Phase 2 Authentication Complete'), findsOneWidget);
 
     // Verify both authentication buttons are present

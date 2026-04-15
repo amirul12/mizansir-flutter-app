@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
@@ -16,6 +17,7 @@ import '../../features/enrollment/presentation/pages/student_lesson_player_page.
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/dashboard_page.dart';
 import '../../features/profile/presentation/pages/change_password_page.dart';
+import '../../features/profile/presentation/pages/about_mizan_sir_page.dart';
 import '../../features/profile/presentation/bloc/profile_bloc.dart';
 import '../../features/profile/presentation/bloc/profile_event.dart';
 import '../../features/profile/presentation/bloc/dashboard_bloc.dart';
@@ -48,6 +50,7 @@ class AppRouter {
   static const String profile = 'profile';
   static const String dashboard = 'dashboard';
   static const String changePassword = 'change_password';
+  static const String aboutMizanSir = 'about_mizan_sir';
 
   // Route paths
   static const String splashPath = '/splash';
@@ -67,6 +70,7 @@ class AppRouter {
   static const String profilePath = '/profile';
   static const String dashboardPath = '/dashboard';
   static const String changePasswordPath = '/change-password';
+  static const String aboutMizanSirPath = '/about-mizan-sir';
 
   // GoRouter configuration
   static GoRouter get router {
@@ -93,6 +97,13 @@ class AppRouter {
             create: (context) => di.sl<AuthBloc>(),
             child: const _HomePage(),
           ),
+        ),
+
+        // About Mizan Sir Route - Publicly accessible
+        GoRoute(
+          path: aboutMizanSirPath,
+          name: aboutMizanSir,
+          builder: (context, state) => const AboutMizanSirPage(),
         ),
 
         // App Shell Route - Main authenticated experience
@@ -274,84 +285,150 @@ class _HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('PrivateTutor')),
+      appBar: AppBar(title: const Text('Mizan Sir HSC ICT')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // App Logo
               Container(
-                padding: const EdgeInsets.all(24),
+                width: 140,
+                height: 140,
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
+                  color: Colors.white,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 25,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-                child: const Icon(
-                  Icons.school_outlined,
-                  size: 80,
-                  color: Colors.blue,
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/icons/logo.png',
+                    width: 140,
+                    height: 140,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(
+                        Icons.school_outlined,
+                        size: 80,
+                        color: Colors.blue,
+                      );
+                    },
+                  ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 40),
+
+              // Welcome Text
               const Text(
-                'Welcome to PrivateTutor',
+                'HSC ICT with Mizan Sir',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
+                  color: Colors.black87,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+
+              // Private Batch - Simple Text
               Text(
-                'Your Online Learning Platform',
+                'Private Batch',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+
+              // Tagline
+              Text(
+                'Master HSC ICT with Expert Guidance',
                 style: TextStyle(
                   fontSize: 18,
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Subtitle
+              Text(
+                'Your Complete HSC ICT Learning Solution',
+                style: TextStyle(
+                  fontSize: 16,
                   color: Colors.grey[600],
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Please login or register to continue',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[500],
-                ),
-                textAlign: TextAlign.center,
-              ),
               const SizedBox(height: 48),
 
-              // Login button
+              // Login button - Highlighted
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () => context.go('/login'),
-                  icon: const Icon(Icons.login),
-                  label: const Text('Login'),
+                  icon: const Icon(Icons.login, size: 24),
+                  label: const Text('Login', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(fontSize: 18),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    elevation: 8,
+                    shadowColor: Colors.blue.withValues(alpha: 0.4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
-              // Register button
+              // Register button - Highlighted
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => context.go('/register'),
-                  icon: const Icon(Icons.person_add),
-                  label: const Text('Create Account'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    textStyle: const TextStyle(fontSize: 18),
+                child: ElevatedButton.icon(
+                  onPressed: () => _showRegistrationDialog(context),
+                  icon: const Icon(Icons.person_add, size: 24),
+                  label: const Text('Create Account', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    elevation: 8,
+                    shadowColor: Colors.green.withValues(alpha: 0.4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
               ),
 
               const SizedBox(height: 48),
+
+              // About Mizan Sir Button
+              TextButton.icon(
+                onPressed: () => context.go('/about-mizan-sir'),
+                icon: const Icon(Icons.person, size: 20),
+                label: const Text(
+                  'About Mizan Sir',
+                  style: TextStyle(fontSize: 16),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.blue.shade700,
+                ),
+              ),
+
+              const SizedBox(height: 24),
 
               // Features preview
               Row(
@@ -399,6 +476,140 @@ class _HomePage extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
       ],
+    );
+  }
+
+  void _showRegistrationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              color: Colors.green,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Create Account',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'To create a new account, please visit our website.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.blue.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.language,
+                        color: Colors.blue,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Website:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const SelectableText(
+                    'https://ict.mizansir.com/register',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Click the button below to open the registration page.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          ElevatedButton.icon(
+            onPressed: () async {
+              final Uri url = Uri.parse('https://ict.mizansir.com/register');
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              }
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
+            },
+            icon: const Icon(Icons.launch, size: 20),
+            label: const Text(
+              'Open Website',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

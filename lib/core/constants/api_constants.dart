@@ -1,5 +1,5 @@
 // File: lib/core/constants/api_constants.dart
-/// API-related constants for the PrivateTutor application
+/// API-related constants for the Mizan Sir HSC ICT application
 class ApiConstants {
   // Base URL
   static const String baseUrl = 'https://ict.mizansir.com/api';

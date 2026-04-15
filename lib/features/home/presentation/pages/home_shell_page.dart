@@ -122,7 +122,7 @@ class _HomeShellView extends StatelessWidget {
   PreferredSizeWidget _buildAppBar(BuildContext context, HomeTab tab) {
     return switch (tab) {
       HomeTab.home => AppBar(
-        title: const Text('PrivateTutor'),
+        title: const Text('HSC ICT'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -165,7 +165,7 @@ class _HomeShellView extends StatelessWidget {
           ),
         ],
       ),
-      _ => AppBar(title: const Text('PrivateTutor')),
+      _ => AppBar(title: const Text('HSC ICT')),
     };
   }
 
@@ -254,7 +254,7 @@ class _HomeShellViewWithInitialTabState
   PreferredSizeWidget _buildAppBar(BuildContext context, HomeTab tab) {
     return switch (tab) {
       HomeTab.home => AppBar(
-        title: const Text('PrivateTutor'),
+        title: const Text('HSC ICT'),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
@@ -297,7 +297,7 @@ class _HomeShellViewWithInitialTabState
           ),
         ],
       ),
-      _ => AppBar(title: const Text('PrivateTutor')),
+      _ => AppBar(title: const Text('HSC ICT')),
     };
   }
 

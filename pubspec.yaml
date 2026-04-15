@@ -1,5 +1,5 @@
-name: privatetutor
-description: "PrivateTutor - Student Course Management System"
+name: mizansir
+description: "Mizan Sir - HSC ICT Learning App"
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -44,6 +44,7 @@ dependencies:
   uuid: ^4.5.1
   logger: ^2.5.0
   intl: ^0.19.0
+  url_launcher: ^6.3.0
 
   # Video Player
   youtube_player_flutter: ^9.1.1

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 /// Service for preventing screenshots and screen recording
 class ScreenSecurityService {
-  static const MethodChannel _channel = MethodChannel('privatetutor/screen_security');
+  static const MethodChannel _channel = MethodChannel('mizansir/screen_security');
 
   /// Enable screen security (prevent screenshots and screen recording)
   Future<void> enableSecurity() async {

@@ -140,16 +140,35 @@ class _RegisterPageState extends State<RegisterPage> {
       children: [
         // App Icon/Logo
         Container(
-          width: 80,
-          height: 80,
+          width: 100,
+          height: 100,
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: Icon(
-            Icons.person_add,
-            size: 40,
-            color: Theme.of(context).primaryColor,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.asset(
+              'assets/icons/logo.png',
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback to icon if logo not found
+                return Icon(
+                  Icons.person_add,
+                  size: 50,
+                  color: Theme.of(context).primaryColor,
+                );
+              },
+            ),
           ),
         ),
 
@@ -157,7 +176,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
         // App Name
         Text(
-          'Join PrivateTutor',
+          'Join Mizan Sir HSC ICT',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).primaryColor,

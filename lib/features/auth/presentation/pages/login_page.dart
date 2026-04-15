@@ -113,16 +113,35 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         // App Icon/Logo
         Container(
-          width: 80,
-          height: 80,
+          width: 100,
+          height: 100,
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor.withOpacity(0.1),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: Icon(
-            Icons.school,
-            size: 40,
-            color: Theme.of(context).primaryColor,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.asset(
+              'assets/icons/logo.png',
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback to icon if logo not found
+                return Icon(
+                  Icons.school,
+                  size: 50,
+                  color: Theme.of(context).primaryColor,
+                );
+              },
+            ),
           ),
         ),
 
@@ -130,7 +149,7 @@ class _LoginPageState extends State<LoginPage> {
 
         // App Name
         Text(
-          'PrivateTutor',
+          'Mizan Sir HSC ICT',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).primaryColor,

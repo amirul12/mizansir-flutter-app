@@ -10,17 +10,17 @@ void main() async {
   // Initialize dependency injection
   await di.init();
 
-  runApp(const PrivateTutorApp());
+  runApp(const MizanSirApp());
 }
 
-/// PrivateTutor App
-class PrivateTutorApp extends StatelessWidget {
-  const PrivateTutorApp({super.key});
+/// Mizan Sir App
+class MizanSirApp extends StatelessWidget {
+  const MizanSirApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'PrivateTutor',
+      title: 'Mizan Sir',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       // darkTheme: AppTheme.darkTheme, // Uncomment when dark theme is ready

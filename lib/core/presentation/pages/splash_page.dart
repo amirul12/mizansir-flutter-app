@@ -61,22 +61,41 @@ class _SplashPageState extends State<SplashPage> {
                   children: [
                     // Logo/Icon
                     Container(
-                      padding: const EdgeInsets.all(32),
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.school,
-                        size: 100,
                         color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/icons/logo.png',
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback to icon if logo not found
+                            return const Icon(
+                              Icons.school,
+                              size: 80,
+                              color: Colors.blue,
+                            );
+                          },
+                        ),
                       ),
                     ),
                     const SizedBox(height: 48),
 
                     // App Name
                     const Text(
-                      'PrivateTutor',
+                      'Mizan Sir HSC ICT',
                       style: TextStyle(
                         fontSize: 42,
                         fontWeight: FontWeight.bold,
@@ -88,7 +107,7 @@ class _SplashPageState extends State<SplashPage> {
 
                     // Tagline
                     const Text(
-                      'Your Online Learning Platform',
+                      'Your HSC ICT Learning Platform',
                       style: TextStyle(
                         fontSize: 18,
                         color: Colors.white70,

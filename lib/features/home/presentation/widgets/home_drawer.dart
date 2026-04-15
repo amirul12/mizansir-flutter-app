@@ -139,10 +139,10 @@ class HomeDrawer extends StatelessWidget {
             ),
             _DrawerItem(
               icon: Icons.info,
-              title: 'About',
+              title: 'About Mizan Sir',
               onTap: () {
                 Navigator.pop(context);
-                _showAboutDialog(context);
+                context.go('/about-mizan-sir');
               },
             ),
             _DrawerItem(
@@ -202,15 +202,6 @@ class HomeDrawer extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    showAboutDialog(
-      context: context,
-      applicationName: 'PrivateTutor',
-      applicationVersion: '1.0.0',
-      applicationIcon: const Icon(Icons.school, size: 48),
     );
   }
 }
