@@ -50,4 +50,12 @@ abstract class EnrollmentRemoteDataSource {
     required int progressPercentage,
     required int watchTimeSeconds,
   });
+
+  /// Create enrollment for a course
+  Future<Map<String, dynamic>> createEnrollment({
+    required String courseId,
+    required String paymentMethod,
+    String? paymentNotes,
+    String? transactionId,
+  });
 }

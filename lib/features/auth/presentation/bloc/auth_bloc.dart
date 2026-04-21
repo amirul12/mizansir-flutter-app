@@ -201,6 +201,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         return 'Server error. Please try again later.';
       case 'CacheFailure':
         return 'Local storage error. Please restart the app.';
+      case 'RateLimitFailure':
+        // Show rate limit message with retry time if available
+        final retryAfter = (failure as dynamic).retryAfter;
+        if (retryAfter != null) {
+          return 'Too many login attempts. Please try again in $retryAfter seconds.';
+        }
+        return failure.message;
       default:
         return 'An unexpected error occurred. Please try again.';
     }

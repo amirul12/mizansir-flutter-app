@@ -77,6 +77,19 @@ class TimeoutFailure extends Failure {
   const TimeoutFailure([String message = 'Request timeout']) : super(message);
 }
 
+/// Failure representing a rate limit error
+class RateLimitFailure extends Failure {
+  final int? retryAfter;
+
+  const RateLimitFailure([
+    String message = 'Too many attempts. Please try again later.',
+    this.retryAfter,
+  ]) : super(message);
+
+  @override
+  List<Object> get props => [message, retryAfter ?? 0];
+}
+
 /// Failure representing an unknown error
 class UnknownFailure extends Failure {
   const UnknownFailure([String message = 'An unknown error occurred'])

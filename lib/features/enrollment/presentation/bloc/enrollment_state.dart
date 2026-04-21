@@ -115,3 +115,13 @@ class EnrollmentEmpty extends EnrollmentState {
   @override
   List<Object?> get props => [message];
 }
+
+/// Enrollment Created State
+class EnrollmentCreated extends EnrollmentState {
+  final Map<String, dynamic> enrollmentData;
+
+  const EnrollmentCreated({required this.enrollmentData});
+
+  @override
+  List<Object?> get props => [enrollmentData];
+}

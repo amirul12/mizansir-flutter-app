@@ -29,6 +29,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleLogin() {
+    _emailController.text = "amir@email.com";
+    _passwordController.text = "Abcd@1234";
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
         LoginEvent(
@@ -48,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
           listener: (context, state) {
             if (state is AuthLoginSuccess) {
               // Navigate to home shell (dashboard) on successful login
-              
+
               context.go('/home');
             } else if (state is AuthError) {
               // Show error snackbar
@@ -151,9 +153,9 @@ class _LoginPageState extends State<LoginPage> {
         Text(
           'Mizan Sir HSC ICT',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).primaryColor,
-              ),
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).primaryColor,
+          ),
         ),
       ],
     );
@@ -165,16 +167,16 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         Text(
           'Welcome Back!',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
         Text(
           'Sign in to continue learning',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
         ),
       ],
     );

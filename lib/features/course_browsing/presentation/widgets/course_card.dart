@@ -1,6 +1,7 @@
 // File: lib/features/course_browsing/presentation/widgets/course_card.dart
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/constants/api_constants.dart';
 import '../../domain/entities/course.dart';
 
 /// Course Card Widget
@@ -107,36 +108,43 @@ class CourseCard extends StatelessWidget {
   }
 
   Widget _buildThumbnail(BuildContext context) {
+    // Get full URL if thumbnail is relative path
+    String? thumbnailUrl = course.thumbnail;
+    if (thumbnailUrl != null && !thumbnailUrl.startsWith('http')) {
+      // Convert relative path to full URL
+      final baseUrl = ApiConstants.baseUrl;
+      thumbnailUrl = thumbnailUrl.startsWith('/')
+          ? '$baseUrl$thumbnailUrl'
+          : '$baseUrl/$thumbnailUrl';
+    }
+
     return Stack(
       children: [
         Container(
           height: 180,
           width: double.infinity,
-          color: Colors.grey[300],
-          child: course.thumbnail != null
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.blue[400]!,
+                Colors.blue[600]!,
+              ],
+            ),
+          ),
+          child: thumbnailUrl != null
               ? CachedNetworkImage(
-                  imageUrl: course.thumbnail!,
+                  imageUrl: thumbnailUrl,
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Center(
                     child: CircularProgressIndicator(
-                      color: Theme.of(context).primaryColor,
+                      color: Colors.white,
                     ),
                   ),
-                  errorWidget: (context, url, error) => Center(
-                    child: Icon(
-                      Icons.image_not_supported,
-                      size: 48,
-                      color: Colors.grey[400],
-                    ),
-                  ),
+                  errorWidget: (context, url, error) => _buildPlaceholder(context),
                 )
-              : Center(
-                  child: Icon(
-                    Icons.school,
-                    size: 48,
-                    color: Colors.grey[400],
-                  ),
-                ),
+              : _buildPlaceholder(context),
         ),
         // Level badge
         if (course.level != null)
@@ -149,7 +157,7 @@ class CourseCard extends StatelessWidget {
                 vertical: 4,
               ),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.9),
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -166,6 +174,57 @@ class CourseCard extends StatelessWidget {
     );
   }
 
+  Widget _buildPlaceholder(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.school_outlined,
+            size: 56,
+            color: Colors.white.withValues(alpha: 0.9),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            course.title.length > 30
+                ? '${course.title.substring(0, 30)}...'
+                : course.title,
+            style: const TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 8),
+          if (course.hasCategory)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 4,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                course.category!.name,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCategoryChip(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -175,7 +234,7 @@ class CourseCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: (course.category?.color != null)
             ? Color(int.parse('0xFF${course.category!.color!.substring(1)}'))
-            : Theme.of(context).primaryColor.withOpacity(0.1),
+            : Theme.of(context).primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

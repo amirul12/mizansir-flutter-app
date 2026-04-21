@@ -52,4 +52,15 @@ abstract class EnrollmentRepository {
     required int progressPercentage,
     required int watchTimeSeconds,
   });
+
+  /// Create enrollment for a course
+  ///
+  /// Returns [Right] with enrollment data (success, message, data) on success.
+  /// Returns [Left] with [Failure] on failure.
+  Future<Either<Failure, Map<String, dynamic>>> createEnrollment({
+    required String courseId,
+    required String paymentMethod,
+    String? paymentNotes,
+    String? transactionId,
+  });
 }

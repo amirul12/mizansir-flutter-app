@@ -2,7 +2,8 @@
 /// API-related constants for the Mizan Sir HSC ICT application
 class ApiConstants {
   // Base URL
-  static const String baseUrl = 'https://ict.mizansir.com/api';
+  // static const String baseUrl = 'https://ict.mizansir.com/api';
+  static const String baseUrl = 'http://192.168.0.108:8000/api';
 
   // API Version
   static const String apiVersion = '/v1';
@@ -42,9 +43,12 @@ class ApiConstants {
   // Endpoints - My Courses (Enrolled Courses)
   static const String myCoursesPath = '/my-courses';
   static const String myCoursesEndpoint = myCoursesPath;
-  static const String myCourseLessonsEndpoint = myCoursesPath; // /my-courses/{courseId}/lessons
-  static const String myCourseLessonDetailsEndpoint = myCoursesPath; // /my-courses/{courseId}/lessons/{lessonId}
-  static const String myCourseLessonCompleteEndpoint = '/complete'; // /my-courses/{courseId}/lessons/{lessonId}/complete
+  static const String myCourseLessonsEndpoint =
+      myCoursesPath; // /my-courses/{courseId}/lessons
+  static const String myCourseLessonDetailsEndpoint =
+      myCoursesPath; // /my-courses/{courseId}/lessons/{lessonId}
+  static const String myCourseLessonCompleteEndpoint =
+      '/complete'; // /my-courses/{courseId}/lessons/{lessonId}/complete
 
   // Endpoints - User
   static const String userPath = '/user';

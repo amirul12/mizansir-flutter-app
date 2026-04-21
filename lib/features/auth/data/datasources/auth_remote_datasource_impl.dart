@@ -48,6 +48,25 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
         final user = jsonData['data'] as Map<String, dynamic>;
         return AuthUserModel.fromJson(user);
+      } else if (response.statusCode == 429) {
+        // Rate limit error (429 Too Many Requests)
+        debugPrint('⏱️ Registration rate limit exceeded (429)');
+        String errorMessage = 'Too many registration attempts. Please try again later.';
+        int? retryAfter;
+
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          errorMessage = errorData['message'] as String? ?? errorMessage;
+          retryAfter = errorData['retry_after'] as int?;
+          debugPrint('⏱️ Retry after: $retryAfter seconds (${errorData['retry_after_human'] ?? 'N/A'})');
+        } catch (e) {
+          debugPrint('⚠️ Failed to parse rate limit response: $e');
+        }
+
+        throw RateLimitException(
+          message: errorMessage,
+          retryAfter: retryAfter,
+        );
       } else if (response.statusCode == 422) {
         final error = jsonDecode(response.body);
         throw ValidationException(
@@ -63,6 +82,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on ServerException {
       rethrow;
     } on ValidationException {
+      rethrow;
+    } on RateLimitException {
       rethrow;
     } catch (e) {
       throw NetworkException(message: e.toString());
@@ -111,19 +132,66 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
         debugPrint('✅ Login successful! Token saved.');
         return AuthResponseModel.fromJson(data);
-      } else if (response.statusCode == 401) {
-        debugPrint('❌ Unauthorized: 401');
-        throw const UnauthorizedException(message: 'Invalid email or password');
-      } else {
-        debugPrint('❌ Login failed: ${response.statusCode}');
-        throw ServerException(
-          message: 'Login failed',
-          statusCode: response.statusCode,
+      } else if (response.statusCode == 429) {
+        // Rate limit error (429 Too Many Requests)
+        debugPrint('⏱️ Rate limit exceeded (429)');
+        String errorMessage = 'Too many attempts. Please try again later.';
+        int? retryAfter;
+
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          errorMessage = errorData['message'] as String? ?? errorMessage;
+          retryAfter = errorData['retry_after'] as int?;
+          debugPrint('⏱️ Retry after: $retryAfter seconds (${errorData['retry_after_human'] ?? 'N/A'})');
+        } catch (e) {
+          debugPrint('⚠️ Failed to parse rate limit response: $e');
+        }
+
+        throw RateLimitException(
+          message: errorMessage,
+          retryAfter: retryAfter,
         );
+      } else {
+        // Parse other error responses
+        debugPrint('❌ Login failed: ${response.statusCode}');
+        String errorMessage = 'Login failed';
+
+        try {
+          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+          errorMessage = errorData['message'] as String? ?? errorMessage;
+        } catch (e) {
+          debugPrint('⚠️ Failed to parse error response: $e');
+        }
+
+        // Handle other status codes
+        if (response.statusCode == 401) {
+          throw UnauthorizedException(message: errorMessage);
+        } else if (response.statusCode == 422) {
+          // Validation error with field details
+          try {
+            final errorData = jsonDecode(response.body) as Map<String, dynamic>;
+            final errors = errorData['errors'] as Map<String, dynamic>?;
+            throw ValidationException(
+              message: errorMessage,
+              errors: errors,
+            );
+          } catch (e) {
+            throw ValidationException(message: errorMessage);
+          }
+        } else {
+          throw ServerException(
+            message: errorMessage,
+            statusCode: response.statusCode,
+          );
+        }
       }
     } on UnauthorizedException {
       rethrow;
     } on ServerException {
+      rethrow;
+    } on RateLimitException {
+      rethrow;
+    } on ValidationException {
       rethrow;
     } catch (e) {
       debugPrint('❌ Login exception: $e');

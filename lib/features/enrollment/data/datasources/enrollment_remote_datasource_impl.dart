@@ -24,9 +24,6 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
 
   String _getAuthorizationHeader() {
     final token = tokenService.getAccessToken();
-    if (token == null) {
-      throw const UnauthorizedException(message: 'No authentication token found');
-    }
     return 'Bearer $token';
   }
 
@@ -473,6 +470,72 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
     } on AppException {
       rethrow;
     } catch (e) {
+      throw ServerException(message: e.toString());
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> createEnrollment({
+    required String courseId,
+    required String paymentMethod,
+    String? paymentNotes,
+    String? transactionId,
+  }) async {
+    try {
+      final token = await tokenService.getAuthHeader();
+      final uri = Uri.parse('$baseUrl/v1/enrollments');
+
+      final body = {
+        'course_id': courseId,
+        'payment_method': paymentMethod,
+        if (paymentNotes != null) 'payment_notes': paymentNotes,
+        if (transactionId != null) 'transaction_id': transactionId,
+      };
+
+      debugPrint('🔵 CREATE ENROLLMENT REQUEST');
+      debugPrint('URL: $uri');
+      debugPrint('Body: $body');
+
+      final response = await client.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token,
+        },
+        body: jsonEncode(body),
+      ).timeout(const Duration(seconds: 30));
+
+      debugPrint('🟢 CREATE ENROLLMENT RESPONSE');
+      debugPrint('Status Code: ${response.statusCode}');
+      debugPrint('Response Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonData = json.decode(response.body) as Map<String, dynamic>;
+        if (jsonData['success'] == true) {
+          debugPrint('✅ Enrollment created successfully');
+          return jsonData;
+        }
+        throw ServerException(message: 'Invalid response format');
+      } else if (response.statusCode == 401) {
+        throw const UnauthorizedException(message: 'Unauthorized');
+      } else if (response.statusCode == 422) {
+        final errorData = json.decode(response.body);
+        final message = errorData['message'] ?? 'Validation error';
+        throw ServerException(message: message, statusCode: response.statusCode);
+      } else {
+        final errorData = json.decode(response.body);
+        final message = errorData['message'] ?? 'Failed to create enrollment';
+        throw ServerException(
+          message: message,
+          statusCode: response.statusCode,
+        );
+      }
+    } on UnauthorizedException {
+      rethrow;
+    } on ServerException {
+      rethrow;
+    } catch (e) {
+      debugPrint('❌ Exception: $e');
       throw ServerException(message: e.toString());
     }
   }

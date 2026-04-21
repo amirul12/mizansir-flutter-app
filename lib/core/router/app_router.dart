@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../constants/api_constants.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
@@ -65,7 +66,8 @@ class AppRouter {
   static const String myCoursesPath = '/my-courses';
   static const String courseProgressPath = '/my-courses/:courseId';
   static const String lessonPlayerPath = '/my-courses/:courseId/lessons';
-  static const String lessonPlayerWithPath = '/my-courses/:courseId/lessons/:lessonId';
+  static const String lessonPlayerWithPath =
+      '/my-courses/:courseId/lessons/:lessonId';
   static const String enrollmentsPath = '/enrollments';
   static const String profilePath = '/profile';
   static const String dashboardPath = '/dashboard';
@@ -220,12 +222,8 @@ class AppRouter {
             final lessonId = state.pathParameters['lessonId']!;
             return MultiBlocProvider(
               providers: [
-                BlocProvider(
-                  create: (context) => di.sl<AuthBloc>(),
-                ),
-                BlocProvider(
-                  create: (context) => di.sl<EnrollmentBloc>(),
-                ),
+                BlocProvider(create: (context) => di.sl<AuthBloc>()),
+                BlocProvider(create: (context) => di.sl<EnrollmentBloc>()),
               ],
               child: StudentLessonPlayerPage(
                 courseId: courseId,
@@ -257,7 +255,8 @@ class AppRouter {
           path: dashboardPath,
           name: dashboard,
           builder: (context, state) => BlocProvider(
-            create: (context) => di.sl<DashboardBloc>()..add(LoadDashboardEvent()),
+            create: (context) =>
+                di.sl<DashboardBloc>()..add(LoadDashboardEvent()),
             child: const DashboardPage(),
           ),
         ),
@@ -364,10 +363,7 @@ class _HomePage extends StatelessWidget {
               // Subtitle
               Text(
                 'Your Complete HSC ICT Learning Solution',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 48),
@@ -378,7 +374,10 @@ class _HomePage extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () => context.go('/login'),
                   icon: const Icon(Icons.login, size: 24),
-                  label: const Text('Login', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'Login',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     backgroundColor: Colors.blue,
@@ -399,7 +398,10 @@ class _HomePage extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () => _showRegistrationDialog(context),
                   icon: const Icon(Icons.person_add, size: 24),
-                  label: const Text('Create Account', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  label: const Text(
+                    'Create Account',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     backgroundColor: Colors.green,
@@ -439,16 +441,8 @@ class _HomePage extends StatelessWidget {
                     'Video Courses',
                     Colors.blue,
                   ),
-                  _buildFeature(
-                    Icons.quiz,
-                    'Quizzes',
-                    Colors.green,
-                  ),
-                  _buildFeature(
-                    Icons.verified,
-                    'Certificates',
-                    Colors.orange,
-                  ),
+                  _buildFeature(Icons.quiz, 'Quizzes', Colors.green),
+                  _buildFeature(Icons.verified, 'Certificates', Colors.orange),
                 ],
               ),
             ],
@@ -483,23 +477,14 @@ class _HomePage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(
-              Icons.info_outline,
-              color: Colors.green,
-              size: 28,
-            ),
+            Icon(Icons.info_outline, color: Colors.green, size: 28),
             const SizedBox(width: 12),
             const Text(
               'Create Account',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
           ],
         ),
@@ -509,10 +494,7 @@ class _HomePage extends StatelessWidget {
           children: [
             const Text(
               'To create a new account, please visit our website.',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black87,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.black87),
             ),
             const SizedBox(height: 16),
             Container(
@@ -530,11 +512,7 @@ class _HomePage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        Icons.language,
-                        color: Colors.blue,
-                        size: 20,
-                      ),
+                      Icon(Icons.language, color: Colors.blue, size: 20),
                       const SizedBox(width: 8),
                       const Text(
                         'Website:',
@@ -546,8 +524,8 @@ class _HomePage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  const SelectableText(
-                    'https://ict.mizansir.com/register',
+                  SelectableText(
+                    '${ApiConstants.baseUrl.replaceFirst('/api', '')}/register',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.black87,
@@ -560,10 +538,7 @@ class _HomePage extends StatelessWidget {
             const SizedBox(height: 16),
             const Text(
               'Click the button below to open the registration page.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
         ),
@@ -572,15 +547,14 @@ class _HomePage extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
             child: const Text(
               'Cancel',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
           ),
           ElevatedButton.icon(
             onPressed: () async {
-              final Uri url = Uri.parse('https://ict.mizansir.com/register');
+              final Uri url = Uri.parse(
+                '${ApiConstants.baseUrl.replaceFirst('/api', '')}/register',
+              );
               if (await canLaunchUrl(url)) {
                 await launchUrl(url, mode: LaunchMode.externalApplication);
               }
@@ -591,18 +565,12 @@ class _HomePage extends StatelessWidget {
             icon: const Icon(Icons.launch, size: 20),
             label: const Text(
               'Open Website',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -622,9 +590,7 @@ class _MyCoursesPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('My Courses')),
-      body: const Center(
-        child: Text('My Courses Page - Coming Soon'),
-      ),
+      body: const Center(child: Text('My Courses Page - Coming Soon')),
     );
   }
 }
@@ -637,9 +603,7 @@ class _EnrollmentsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Enrollments')),
-      body: const Center(
-        child: Text('Enrollments Page - Coming Soon'),
-      ),
+      body: const Center(child: Text('Enrollments Page - Coming Soon')),
     );
   }
 }

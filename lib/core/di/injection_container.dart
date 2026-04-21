@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/token_service.dart';
 import '../services/storage_service.dart';
 import '../services/connectivity_service.dart';
+import '../constants/api_constants.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource_impl.dart';
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
@@ -39,6 +40,7 @@ import '../../features/enrollment/domain/usecases/get_course_lessons_usecase.dar
 import '../../features/enrollment/domain/usecases/get_course_progress_usecase.dart';
 import '../../features/enrollment/domain/usecases/mark_lesson_complete_usecase.dart';
 import '../../features/enrollment/domain/usecases/get_lesson_details_usecase.dart';
+import '../../features/enrollment/domain/usecases/create_enrollment_usecase.dart';
 import '../../features/enrollment/presentation/bloc/enrollment_bloc.dart';
 // Profile & Dashboard Imports
 import '../../features/profile/data/datasources/profile_remote_datasource.dart';
@@ -116,7 +118,7 @@ Future<void> _initCore() async {
   // API Service
   sl.registerLazySingleton<ApiService>(
     () => ApiService(
-      baseUrl: 'https://ict.mizansir.com/api',
+      baseUrl: ApiConstants.baseUrl,
       client: sl(), // Uses registered http.Client
     ),
   );
@@ -175,7 +177,7 @@ Future<void> _initAuth() async {
     () => AuthRemoteDataSourceImpl(
       client: sl(),
       tokenService: sl(),
-      baseUrl: 'https://ict.mizansir.com/api',
+      baseUrl: ApiConstants.baseUrl,
     ),
   );
 
@@ -194,7 +196,7 @@ Future<void> _initCourseBrowsing() async {
   sl.registerLazySingleton<CourseRemoteDataSource>(
     () => CourseRemoteDataSourceImpl(
       client: sl(),
-      baseUrl: 'https://ict.mizansir.com/api',
+      baseUrl: ApiConstants.baseUrl,
     ),
   );
 
@@ -268,7 +270,7 @@ Future<void> _initEnrollment() async {
     () => EnrollmentRemoteDataSourceImpl(
       client: sl(),
       tokenService: sl(),
-      baseUrl: 'https://ict.mizansir.com/api',
+      baseUrl: ApiConstants.baseUrl,
     ),
   );
 
@@ -313,6 +315,11 @@ Future<void> _initEnrollment() async {
     () => GetLessonDetailsUseCase(sl()),
   );
 
+  // Create Enrollment Use Case
+  sl.registerLazySingleton<CreateEnrollmentUseCase>(
+    () => CreateEnrollmentUseCase(sl()),
+  );
+
   // ==================== BLoC ====================
 
   // Enrollment BLoC - registered as factory since it should be fresh for each scope
@@ -324,6 +331,7 @@ Future<void> _initEnrollment() async {
       getCourseProgressUseCase: sl(),
       markLessonCompleteUseCase: sl(),
       getLessonDetailsUseCase: sl(),
+      createEnrollmentUseCase: sl(),
     ),
   );
 }
@@ -336,7 +344,7 @@ Future<void> _initProfile() async {
   sl.registerLazySingleton<ProfileRemoteDataSource>(
     () => ProfileRemoteDataSourceImpl(
       client: sl(),
-      baseUrl: 'https://ict.mizansir.com/api',
+      baseUrl: ApiConstants.baseUrl,
       tokenService: sl(),
     ),
   );
@@ -346,7 +354,7 @@ Future<void> _initProfile() async {
     () => DashboardRemoteDataSourceImpl(
       client: sl(),
       tokenService: sl(),
-      baseUrl: 'https://ict.mizansir.com/api',
+      baseUrl: ApiConstants.baseUrl,
     ),
   );
 

@@ -94,3 +94,21 @@ class MarkLessonIncompleteEvent extends EnrollmentEvent {
 class ClearEnrollmentErrorEvent extends EnrollmentEvent {
   const ClearEnrollmentErrorEvent();
 }
+
+/// Create Enrollment Event
+class CreateEnrollmentEvent extends EnrollmentEvent {
+  final String courseId;
+  final String paymentMethod;
+  final String? paymentNotes;
+  final String? transactionId;
+
+  const CreateEnrollmentEvent({
+    required this.courseId,
+    required this.paymentMethod,
+    this.paymentNotes,
+    this.transactionId,
+  });
+
+  @override
+  List<Object?> get props => [courseId, paymentMethod, paymentNotes, transactionId];
+}

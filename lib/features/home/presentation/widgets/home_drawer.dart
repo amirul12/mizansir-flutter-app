@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../bloc/home_shell_cubit.dart';
@@ -55,8 +58,8 @@ class HomeDrawer extends StatelessWidget {
               icon: Icons.school,
               title: 'Courses',
               onTap: () {
-                context.read<HomeShellCubit>().goToCourses();
                 Navigator.pop(context);
+                context.go('/courses');
               },
             ),
             _DrawerItem(
@@ -183,6 +186,8 @@ class HomeDrawer extends StatelessWidget {
 
   void _showLogoutDialog(BuildContext context) {
     final authBloc = context.read<AuthBloc>();
+    final navigator = GoRouter.of(context);
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -195,8 +200,32 @@ class HomeDrawer extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              authBloc.add(LogoutEvent());
+              // Close dialog
               Navigator.pop(dialogContext);
+
+              // Listen for logout completion
+              StreamSubscription? subscription;
+              subscription = authBloc.stream.listen((state) {
+                if (state is AuthUnauthenticated) {
+                  // Navigate to login page after logout completes
+                  navigator.go('/login');
+                  subscription?.cancel();
+                } else if (state is AuthError) {
+                  // Show error if logout fails
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(state.message),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                  subscription?.cancel();
+                }
+              });
+
+              // Trigger logout
+              authBloc.add(LogoutEvent());
             },
             child: const Text('Logout'),
           ),

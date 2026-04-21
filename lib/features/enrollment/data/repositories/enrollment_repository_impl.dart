@@ -188,4 +188,30 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
       return Left(UnknownFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, Map<String, dynamic>>> createEnrollment({
+    required String courseId,
+    required String paymentMethod,
+    String? paymentNotes,
+    String? transactionId,
+  }) async {
+    try {
+      final enrollmentData = await remoteDataSource.createEnrollment(
+        courseId: courseId,
+        paymentMethod: paymentMethod,
+        paymentNotes: paymentNotes,
+        transactionId: transactionId,
+      );
+      return Right(enrollmentData);
+    } on ServerException {
+      return Left(ServerFailure());
+    } on NetworkException {
+      return Left(NetworkFailure());
+    } on UnauthorizedException {
+      return Left(UnauthorizedFailure());
+    } catch (e) {
+      return Left(UnknownFailure(e.toString()));
+    }
+  }
 }

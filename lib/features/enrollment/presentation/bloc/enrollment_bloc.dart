@@ -6,6 +6,7 @@ import '../../domain/usecases/get_course_lessons_usecase.dart';
 import '../../domain/usecases/get_course_progress_usecase.dart';
 import '../../domain/usecases/mark_lesson_complete_usecase.dart';
 import '../../domain/usecases/get_lesson_details_usecase.dart';
+import '../../domain/usecases/create_enrollment_usecase.dart';
 import 'enrollment_event.dart';
 import 'enrollment_state.dart';
 
@@ -17,6 +18,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
   final GetCourseProgressUseCase getCourseProgressUseCase;
   final MarkLessonCompleteUseCase markLessonCompleteUseCase;
   final GetLessonDetailsUseCase getLessonDetailsUseCase;
+  final CreateEnrollmentUseCase createEnrollmentUseCase;
 
   EnrollmentBloc({
     required this.getMyCoursesUseCase,
@@ -25,6 +27,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     required this.getCourseProgressUseCase,
     required this.markLessonCompleteUseCase,
     required this.getLessonDetailsUseCase,
+    required this.createEnrollmentUseCase,
   }) : super(EnrollmentInitial()) {
     on<LoadMyCoursesEvent>(_onLoadMyCourses);
     on<LoadEnrolledCourseDetailsEvent>(_onLoadCourseDetails);
@@ -34,6 +37,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     on<MarkLessonIncompleteEvent>(_onMarkLessonIncomplete);
     on<GetLessonDetailsEvent>(_onGetLessonDetails);
     on<ClearEnrollmentErrorEvent>(_onClearError);
+    on<CreateEnrollmentEvent>(_onCreateEnrollment);
   }
 
   Future<void> _onLoadMyCourses(
@@ -176,6 +180,27 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     if (state is EnrollmentError) {
       emit(const EnrollmentInitial());
     }
+  }
+
+  Future<void> _onCreateEnrollment(
+    CreateEnrollmentEvent event,
+    Emitter<EnrollmentState> emit,
+  ) async {
+    emit(const EnrollmentLoading());
+
+    final result = await createEnrollmentUseCase(
+      CreateEnrollmentParams(
+        courseId: event.courseId,
+        paymentMethod: event.paymentMethod,
+        paymentNotes: event.paymentNotes,
+        transactionId: event.transactionId,
+      ),
+    );
+
+    result.fold(
+      (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
+      (enrollmentData) => emit(EnrollmentCreated(enrollmentData: enrollmentData)),
+    );
   }
 
   String _getErrorMessage(dynamic failure) {

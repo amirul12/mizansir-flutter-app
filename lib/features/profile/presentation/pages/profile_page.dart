@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart' as auth_event;
+import '../../../auth/presentation/bloc/auth_state.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -508,22 +513,48 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _showLogoutDialog(BuildContext context) {
-    final profileBloc = context.read<ProfileBloc>();
+    final authBloc = context.read<AuthBloc>();
+    final navigator = GoRouter.of(context);
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Logout'),
         content: const Text('Are you sure you want to logout?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancel', style: TextStyle(color: AppColors.textSecondary)),
           ),
           TextButton(
             onPressed: () {
-              profileBloc.add(LogoutEvent());
-              Navigator.pop(context);
+              // Close dialog
+              Navigator.pop(dialogContext);
+
+              // Listen for logout completion
+              StreamSubscription? subscription;
+              subscription = authBloc.stream.listen((state) {
+                if (state is AuthUnauthenticated) {
+                  // Navigate to login page after logout completes
+                  navigator.go('/login');
+                  subscription?.cancel();
+                } else if (state is AuthError) {
+                  // Show error if logout fails
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(state.message),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                  subscription?.cancel();
+                }
+              });
+
+              // Trigger logout
+              authBloc.add(auth_event.LogoutEvent());
             },
             child: const Text('Logout', style: TextStyle(color: AppColors.error)),
           ),

@@ -111,3 +111,20 @@ class TimeoutException extends AppException {
     String message = 'Request timeout',
   }) : super(message: message);
 }
+
+/// Exception thrown when rate limit is exceeded
+class RateLimitException extends AppException {
+  final int? retryAfter;
+
+  const RateLimitException({
+    required String message,
+    this.retryAfter,
+    int statusCode = 429,
+  }) : super(
+          message: message,
+          statusCode: statusCode,
+        );
+
+  @override
+  List<Object?> get props => [message, statusCode, retryAfter];
+}

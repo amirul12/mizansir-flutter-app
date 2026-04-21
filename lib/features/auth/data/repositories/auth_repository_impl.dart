@@ -47,6 +47,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(NetworkFailure(e.message));
     } on ValidationException catch (e) {
       return Left(ValidationFailure(e.message, e.errors));
+    } on RateLimitException catch (e) {
+      return Left(RateLimitFailure(e.message, e.retryAfter));
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));
     } catch (e) {
@@ -80,6 +82,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(UnauthorizedFailure(e.message));
     } on ValidationException catch (e) {
       return Left(ValidationFailure(e.message, e.errors));
+    } on RateLimitException catch (e) {
+      return Left(RateLimitFailure(e.message, e.retryAfter));
     } on CacheException catch (e) {
       return Left(CacheFailure(e.message));
     } catch (e) {
