@@ -21,6 +21,7 @@ class Course {
   final String? duration;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool? isEnrolled;
   final Map<String, dynamic>? stats;
   final Map<String, dynamic>? meta;
   final Map<String, dynamic>? curriculum;
@@ -44,6 +45,7 @@ class Course {
     this.duration,
     required this.createdAt,
     required this.updatedAt,
+    this.isEnrolled,
     this.stats,
     this.meta,
     this.curriculum,

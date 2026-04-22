@@ -38,8 +38,8 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => sl<EnrollmentBloc>(),
+    return BlocProvider.value(
+      value: sl<EnrollmentBloc>(),
       child: PopScope(
         canPop: context.canPop(),
         onPopInvokedWithResult: (didPop, result) {

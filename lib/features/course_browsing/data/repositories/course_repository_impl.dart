@@ -47,9 +47,7 @@ class CourseRepositoryImpl implements CourseRepository {
     int limit = 10,
   }) async {
     try {
-      final courseModels = await remoteDataSource.getFeaturedCourses(
-        limit: limit,
-      );
+      final courseModels = await remoteDataSource.getCourses(limit: limit);
       return Right(courseModels.map((model) => model.toEntity()).toList());
     } on ServerException {
       return Left(ServerFailure());

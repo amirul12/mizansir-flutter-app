@@ -1,10 +1,9 @@
-// File: lib/features/course_browsing/presentation/widgets/course_card.dart
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../../core/constants/api_constants.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/course.dart';
 
-/// Course Card Widget
+/// Course Card Widget - Modern and informative
 class CourseCard extends StatelessWidget {
   final Course course;
   final VoidCallback? onTap;
@@ -19,282 +18,373 @@ class CourseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Thumbnail
-            _buildThumbnail(context),
-
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(24),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Thumbnail Image with Overlay Badges
+              Stack(
                 children: [
-                  // Category
-                  if (course.hasCategory)
-                    _buildCategoryChip(context),
-
-                  const SizedBox(height: 8),
-
-                  // Title
-                  Text(
-                    course.title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                    child: _buildThumbnailImage(context),
                   ),
 
-                  const SizedBox(height: 8),
-
-                  // Description
-                  Text(
-                    course.description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Meta info row
-                  _buildMetaInfo(context),
-
-                  const SizedBox(height: 12),
-
-                  // Price and enroll button row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Price
-                      _buildPrice(context),
-
-                      // Enroll button
-                      if (onEnroll != null)
-                        ElevatedButton(
-                          onPressed: onEnroll,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                  // Category & Level Badges
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    right: 16,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (course.category != null)
+                          _buildModernBadge(
+                            course.category!.name,
+                            _getCategoryColor(course.category!.name),
                           ),
-                          child: const Text('Enroll'),
+                        _buildLevelBadge(course.levelLabel),
+                      ],
+                    ),
+                  ),
+
+                  // Price badge overlay
+                  Positioned(
+                    bottom: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.15),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        course.displayPrice,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: course.isFree
+                              ? AppColors.secondary
+                              : AppColors.primary,
                         ),
-                    ],
+                      ),
+                    ),
                   ),
                 ],
               ),
+
+              // 2. Course Info Content
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Rating & Enrollments Row
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 18,
+                          color: AppColors.starActive,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          course.rating?.toStringAsFixed(1) ?? '0.0',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '(${course.reviewCount})',
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const Spacer(),
+                        const Icon(
+                          Icons.people_outline_rounded,
+                          size: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${course.enrolledCount}',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Title
+                    Text(
+                      course.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        height: 1.3,
+                        fontSize: 18,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Instructor
+                    if (course.instructor != null)
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.person_rounded,
+                              size: 14,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            course.instructor!,
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    const SizedBox(height: 16),
+                    Divider(color: Colors.grey.shade100, height: 1),
+                    const SizedBox(height: 16),
+
+                    // Meta Info: Lessons & Duration
+                    Row(
+                      children: [
+                        _buildMetaItem(
+                          Icons.play_circle_fill_rounded,
+                          '${course.totalLessonsCount} Lessons',
+                          Colors.blue.shade600,
+                        ),
+                        const SizedBox(width: 16),
+                        _buildMetaItem(
+                          Icons.schedule_rounded,
+                          course.formattedDuration ?? 'N/A',
+                          Colors.orange.shade600,
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // CTA Button - Primary Action
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: onTap ?? onEnroll,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: course.isEnrolled == true
+                              ? AppColors.secondary
+                              : AppColors.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shadowColor: Colors.transparent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              course.isEnrolled == true
+                                  ? 'Continue Learning'
+                                  : 'Enroll Now',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              course.isEnrolled == true
+                                  ? Icons.play_circle_fill_rounded
+                                  : Icons.arrow_forward_rounded,
+                              size: 18,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThumbnailImage(BuildContext context) {
+    if (course.thumbnail != null && course.thumbnail!.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: course.thumbnail!,
+        height: 200,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        placeholder:
+            (context, url) => Container(
+              height: 200,
+              color: AppColors.primary.withOpacity(0.05),
+              child: const Center(
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             ),
+        errorWidget: (context, url, error) => _buildPlaceholderThumbnail(),
+      );
+    }
+    return _buildPlaceholderThumbnail();
+  }
+
+  Widget _buildPlaceholderThumbnail() {
+    return Container(
+      height: 200,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primary.withOpacity(0.8),
+            AppColors.primary,
           ],
         ),
       ),
+      child: const Icon(Icons.school, size: 64, color: Colors.white24),
     );
   }
 
-  Widget _buildThumbnail(BuildContext context) {
-    // Get full URL if thumbnail is relative path
-    String? thumbnailUrl = course.thumbnail;
-    if (thumbnailUrl != null && !thumbnailUrl.startsWith('http')) {
-      // Convert relative path to full URL
-      final baseUrl = ApiConstants.baseUrl;
-      thumbnailUrl = thumbnailUrl.startsWith('/')
-          ? '$baseUrl$thumbnailUrl'
-          : '$baseUrl/$thumbnailUrl';
-    }
-
-    return Stack(
-      children: [
-        Container(
-          height: 180,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.blue[400]!,
-                Colors.blue[600]!,
-              ],
-            ),
-          ),
-          child: thumbnailUrl != null
-              ? CachedNetworkImage(
-                  imageUrl: thumbnailUrl,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => _buildPlaceholder(context),
-                )
-              : _buildPlaceholder(context),
-        ),
-        // Level badge
-        if (course.level != null)
-          Positioned(
-            top: 8,
-            left: 8,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                course.levelLabel,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildPlaceholder(BuildContext context) {
+  Widget _buildModernBadge(String label, Color color) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.school_outlined,
-            size: 56,
-            color: Colors.white.withValues(alpha: 0.9),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            course.title.length > 30
-                ? '${course.title.substring(0, 30)}...'
-                : course.title,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 8),
-          if (course.hasCategory)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 4,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                course.category!.name,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryChip(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 4,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: (course.category?.color != null)
-            ? Color(int.parse('0xFF${course.category!.color!.substring(1)}'))
-            : Theme.of(context).primaryColor.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4),
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Text(
-        course.category!.name,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: (course.category?.color != null)
-                  ? Colors.white
-                  : Theme.of(context).primaryColor,
-              fontWeight: FontWeight.w500,
-            ),
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
 
-  Widget _buildMetaInfo(BuildContext context) {
+  Widget _buildLevelBadge(String level) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        level.toUpperCase(),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetaItem(IconData icon, String label, Color color) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Rating
-        if (course.rating != null) ...[
-          Icon(
-            Icons.star,
-            size: 16,
-            color: Colors.amber,
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey.shade700,
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
           ),
-          const SizedBox(width: 4),
-          Text(
-            course.rating!.toStringAsFixed(1),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(width: 8),
-        ],
-
-        const Spacer(),
-
-        // Duration
-        if (course.duration != null) ...[
-          Icon(
-            Icons.access_time,
-            size: 16,
-            color: Colors.grey[600],
-          ),
-          const SizedBox(width: 4),
-          Text(
-            course.duration!,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
+        ),
       ],
     );
   }
 
-  Widget _buildPrice(BuildContext context) {
-    return Text(
-      course.displayPrice,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: course.isFree
-                ? Colors.green
-                : Theme.of(context).primaryColor,
-            fontWeight: FontWeight.bold,
-          ),
-    );
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'math':
+      case 'mathematics':
+        return AppColors.categoryMath;
+      case 'physics':
+        return AppColors.categoryPhysics;
+      case 'chemistry':
+        return AppColors.categoryChemistry;
+      case 'biology':
+        return AppColors.categoryBiology;
+      case 'english':
+        return AppColors.categoryEnglish;
+      default:
+        return AppColors.primary;
+    }
   }
 }

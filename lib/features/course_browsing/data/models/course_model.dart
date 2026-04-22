@@ -23,6 +23,7 @@ class CourseModel extends Equatable {
   final String? duration;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool? isEnrolled;
   final Map<String, dynamic>? stats;
   final Map<String, dynamic>? meta;
   final Map<String, dynamic>? curriculum;
@@ -46,6 +47,7 @@ class CourseModel extends Equatable {
     this.duration,
     required this.createdAt,
     required this.updatedAt,
+    this.isEnrolled,
     this.stats,
     this.meta,
     this.curriculum,
@@ -61,6 +63,11 @@ class CourseModel extends Equatable {
       enrolledCount = json['enrolled_count'] as int;
     } else if (json['enrollment_count'] is int) {
       enrolledCount = json['enrollment_count'] as int;
+    }
+
+    bool? isEnrolled;
+    if (json['is_enrolled'] is bool) {
+      isEnrolled = json['is_enrolled'] as bool;
     }
 
     // Handle price - can be string or number
@@ -112,9 +119,13 @@ class CourseModel extends Equatable {
       duration: json['duration'],
       createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updated_at'] ?? '') ?? DateTime.now(),
-      stats: json['stats'] is Map ? json['stats'] as Map<String, dynamic> : null,
+      stats: json['stats'] is Map
+          ? json['stats'] as Map<String, dynamic>
+          : null,
       meta: json['meta'] is Map ? json['meta'] as Map<String, dynamic> : null,
-      curriculum: json['curriculum'] is Map ? json['curriculum'] as Map<String, dynamic> : null,
+      curriculum: json['curriculum'] is Map
+          ? json['curriculum'] as Map<String, dynamic>
+          : null,
     );
   }
 
@@ -137,6 +148,7 @@ class CourseModel extends Equatable {
       'rating': rating,
       'review_count': reviewCount,
       'duration': duration,
+      'is_enrolled': isEnrolled,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       if (stats != null) 'stats': stats,
@@ -154,7 +166,9 @@ class CourseModel extends Equatable {
       thumbnail: thumbnail,
       price: price,
       formattedPrice: formattedPrice,
-      category: category != null ? CategoryModel.fromJson(category!).toEntity() : null,
+      category: category != null
+          ? CategoryModel.fromJson(category!).toEntity()
+          : null,
       instructor: instructor,
       status: status,
       level: level,
@@ -166,6 +180,7 @@ class CourseModel extends Equatable {
       duration: duration,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      isEnrolled: isEnrolled,
       stats: stats,
       meta: meta,
       curriculum: curriculum,

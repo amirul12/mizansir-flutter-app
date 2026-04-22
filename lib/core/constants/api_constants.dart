@@ -3,7 +3,7 @@
 class ApiConstants {
   // Base URL
   // static const String baseUrl = 'https://ict.mizansir.com/api';
-  static const String baseUrl = 'http://192.168.0.108:8000/api';
+  static const String baseUrl = 'http://192.168.0.108:8090/api';
 
   // API Version
   static const String apiVersion = '/v1';
