@@ -129,13 +129,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         showResult: true,
       );
 
-      if (mapResponse == null) {
-        throw Exception('No data received');
-      }
-
-      // Clear tokens
+      // Proceed with token clearing even if request fails or is unauthorized
       await tokenService.clearTokens();
-      debugPrint('✅ Logout successful');
+      
+      if (mapResponse != null) {
+        debugPrint('✅ Logout successful');
+      } else {
+        debugPrint('⚠️ Logout called but no data received (possibly already unauthorized)');
+      }
     } catch (e) {
       debugPrint('Error in logout: $e');
       rethrow;
@@ -153,12 +154,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         showResult: true,
       );
 
-      if (mapResponse == null) {
-        throw Exception('No data received');
-      }
-
+      // Proceed with token clearing even if request fails or is unauthorized
       await tokenService.clearTokens();
-      debugPrint('✅ Logout all successful');
+      
+      if (mapResponse != null) {
+        debugPrint('✅ Logout all successful');
+      } else {
+        debugPrint('⚠️ Logout all called but no data received');
+      }
     } catch (e) {
       debugPrint('Error in logoutAll: $e');
       rethrow;
@@ -283,12 +286,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         showResult: true,
       );
 
-      if (mapResponse == null) {
-        throw Exception('No data received');
-      }
-
+      // Proceed with token clearing even if request fails or is unauthorized
       await tokenService.clearTokens();
-      debugPrint('✅ Account deleted successfully');
+      
+      if (mapResponse != null) {
+        debugPrint('✅ Account deleted successfully');
+      } else {
+        debugPrint('⚠️ Account deleted called but no data received');
+      }
     } catch (e) {
       debugPrint('Error in deleteAccount: $e');
       rethrow;

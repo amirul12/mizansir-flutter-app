@@ -12,7 +12,8 @@ import 'package:mizansir/core/theme/app_colors.dart';
 
 /// Home drawer widget with full navigation menu.
 class HomeDrawer extends StatelessWidget {
-  const HomeDrawer({super.key});
+  final VoidCallback? onLogout;
+  const HomeDrawer({super.key, this.onLogout});
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +98,11 @@ class HomeDrawer extends StatelessWidget {
                   color: Colors.redAccent,
                   onTap: () {
                     Navigator.pop(context);
-                    _showLogoutDialog(context);
+                    if (onLogout != null) {
+                      onLogout!();
+                    } else {
+                      _showLogoutDialog(context);
+                    }
                   },
                 ),
               ],
@@ -241,21 +246,23 @@ class HomeDrawer extends StatelessWidget {
   }
 
   void _showLogoutDialog(BuildContext context) {
+    final authBloc = context.read<AuthBloc>();
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Logout'),
         content: const Text('Are you sure you want to exit?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Stay', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
-              context.read<AuthBloc>().add(LogoutEvent());
+              Navigator.pop(dialogContext);
+              authBloc.add(LogoutEvent());
               context.go('/login');
             },
             style: ElevatedButton.styleFrom(
