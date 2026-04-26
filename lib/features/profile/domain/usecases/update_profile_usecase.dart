@@ -1,7 +1,8 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/error/failures.dart';
-import '../entities/user_profile.dart';
+ 
+import '../../data/models/user_profile_model.dart';
 import '../repositories/profile_repository.dart';
 
 /// Update profile use case parameters.
@@ -34,9 +35,9 @@ class UpdateProfileUseCase {
   ///
   /// [params] contains the fields to update.
   ///
-  /// Returns [Right] with updated [UserProfile] on success.
+  /// Returns [Right] with updated [UserProfileModel] on success.
   /// Returns [Left] with [Failure] on failure.
-  Future<Either<Failure, UserProfile>> call(UpdateProfileParams params) {
+  Future<Either<Failure, UserProfileModel>> call(UpdateProfileParams params) {
     final updateData = <String, dynamic>{};
 
     if (params.name != null) updateData['name'] = params.name;

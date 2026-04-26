@@ -3,7 +3,7 @@ import '../../domain/entities/home_tab.dart';
 
 /// Home shell cubit for managing tab navigation.
 class HomeShellCubit extends Cubit<HomeTab> {
-  HomeShellCubit() : super(HomeTab.home);
+  HomeShellCubit({HomeTab? initialTab}) : super(initialTab ?? HomeTab.home);
 
   /// Change the current tab.
   void setTab(HomeTab tab) {

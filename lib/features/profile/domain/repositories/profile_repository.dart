@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
-import '../entities/user_profile.dart';
+import '../../data/models/user_profile_model.dart';
+ 
 
 /// Profile repository interface.
 ///
@@ -10,7 +11,7 @@ abstract class ProfileRepository {
   ///
   /// Returns [Right] with [UserProfile] on success.
   /// Returns [Left] with [Failure] on failure.
-  Future<Either<Failure, UserProfile>> getProfile();
+  Future<Either<Failure, UserProfileModel>> getProfile();
 
   /// Update user profile.
   ///
@@ -20,17 +21,17 @@ abstract class ProfileRepository {
   /// - collegeName: String? (optional)
   /// - address: String? (optional)
   ///
-  /// Returns [Right] with updated [UserProfile] on success.
+  /// Returns [Right] with updated [UserProfileModel] on success.
   /// Returns [Left] with [Failure] on failure.
-  Future<Either<Failure, UserProfile>> updateProfile(Map<String, dynamic> params);
+  Future<Either<Failure, UserProfileModel>> updateProfile(Map<String, dynamic> params);
 
   /// Upload user avatar.
   ///
   /// [imagePath] is the local path to the image file.
   ///
-  /// Returns [Right] with updated [UserProfile] on success.
+  /// Returns [Right] with updated [UserProfileModel] on success.
   /// Returns [Left] with [Failure] on failure.
-  Future<Either<Failure, UserProfile>> uploadAvatar(String imagePath);
+  Future<Either<Failure, UserProfileModel>> uploadAvatar(String imagePath);
 
   /// Change user password.
   ///

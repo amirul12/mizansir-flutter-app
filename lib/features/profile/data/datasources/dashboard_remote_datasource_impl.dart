@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/services/api_exception.dart';
 import '../../../../core/services/api_service_method.dart';
 import '../../../../core/utils/common_json.dart';
 import '../models/dashboard_stats_model.dart';
@@ -21,12 +22,12 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw Exception('No data received');
+        throw FetchDataException('No data received from dashboard');
       }
 
       final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
-        throw Exception('Invalid data format');
+        throw FetchDataException('Invalid dashboard data format');
       }
 
       debugPrint('✅ Successfully parsed dashboard data');
@@ -52,17 +53,15 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw Exception('No data received');
+        throw FetchDataException('No activity data received');
       }
 
       final dataList = CommonToJson().getString(mapResponse);
       if (dataList == null) {
-        throw Exception('Invalid data format');
+        throw FetchDataException('Invalid activity data format');
       }
 
-      return dataList
-          .map((item) => ActivityModel.fromJson(item as Map<String, dynamic>))
-          .toList();
+      return activityModelFromJson(dataList);
     } catch (e) {
       debugPrint('Error in getActivity: $e');
       rethrow;

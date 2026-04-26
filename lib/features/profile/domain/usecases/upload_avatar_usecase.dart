@@ -1,7 +1,8 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/error/failures.dart';
-import '../entities/user_profile.dart';
+ 
+import '../../data/models/user_profile_model.dart';
 import '../repositories/profile_repository.dart';
 
 /// Upload avatar use case parameters.
@@ -28,7 +29,7 @@ class UploadAvatarUseCase {
   ///
   /// Returns [Right] with updated [UserProfile] on success.
   /// Returns [Left] with [Failure] on failure.
-  Future<Either<Failure, UserProfile>> call(UploadAvatarParams params) {
+  Future<Either<Failure, UserProfileModel>> call(UploadAvatarParams params) {
     return repository.uploadAvatar(params.imagePath);
   }
 }

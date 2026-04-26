@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/user_profile.dart';
+import '../../data/models/user_profile_model.dart';
+ 
 
 /// Abstract base class for all profile states.
 abstract class ProfileState extends Equatable {
@@ -17,7 +18,7 @@ class ProfileLoading extends ProfileState {}
 
 /// Profile loaded state.
 class ProfileLoaded extends ProfileState {
-  final UserProfile profile;
+  final UserProfileModel profile;
 
   const ProfileLoaded(this.profile);
 
@@ -27,7 +28,7 @@ class ProfileLoaded extends ProfileState {
 
 /// Profile updated state.
 class ProfileUpdated extends ProfileState {
-  final UserProfile profile;
+  final UserProfileModel profile;
 
   const ProfileUpdated(this.profile);
 
@@ -37,7 +38,7 @@ class ProfileUpdated extends ProfileState {
 
 /// Avatar uploaded state.
 class AvatarUploaded extends ProfileState {
-  final UserProfile profile;
+  final UserProfileModel profile;
 
   const AvatarUploaded(this.profile);
 

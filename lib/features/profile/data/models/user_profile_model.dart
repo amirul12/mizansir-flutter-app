@@ -1,163 +1,237 @@
-import '../../domain/entities/user_profile.dart';
+// To parse this JSON data, do
+//
+//     final userProfileModel = userProfileModelFromJson(jsonString);
 
-/// User stats model for manual parsing.
-class UserStatsModel {
-  final int totalEnrollments;
-  final int activeEnrollments;
-  final int pendingEnrollments;
+import 'dart:convert';
 
-  UserStatsModel({
-    required this.totalEnrollments,
-    required this.activeEnrollments,
-    required this.pendingEnrollments,
-  });
+UserProfileModel userProfileModelFromJson(String str) => UserProfileModel.fromJson(json.decode(str));
 
-  factory UserStatsModel.fromJson(Map<String, dynamic> json) {
-    return UserStatsModel(
-      totalEnrollments: json['total_enrollments'] as int? ?? 0,
-      activeEnrollments: json['active_enrollments'] as int? ?? 0,
-      pendingEnrollments: json['pending_enrollments'] as int? ?? 0,
-    );
-  }
+String userProfileModelToJson(UserProfileModel data) => json.encode(data.toJson());
 
-  UserStats toEntity() {
-    return UserStats(
-      totalEnrollments: totalEnrollments,
-      activeEnrollments: activeEnrollments,
-      pendingEnrollments: pendingEnrollments,
-    );
-  }
-}
-
-/// Profile completion model for manual parsing.
-class ProfileCompletionModel {
-  final int percentage;
-  final int completedFields;
-  final int totalFields;
-  final List<String> missingFields;
-
-  ProfileCompletionModel({
-    required this.percentage,
-    required this.completedFields,
-    required this.totalFields,
-    required this.missingFields,
-  });
-
-  factory ProfileCompletionModel.fromJson(Map<String, dynamic> json) {
-    return ProfileCompletionModel(
-      percentage: json['percentage'] as int? ?? 0,
-      completedFields: json['completed_fields'] as int? ?? 0,
-      totalFields: json['total_fields'] as int? ?? 0,
-      missingFields: (json['missing_fields'] as List?)?.map((e) => e.toString()).toList() ?? [],
-    );
-  }
-
-  ProfileCompletion toEntity() {
-    return ProfileCompletion(
-      percentage: percentage,
-      completedFields: completedFields,
-      totalFields: totalFields,
-      missingFields: missingFields,
-    );
-  }
-}
-
-/// User profile model for manual parsing.
 class UserProfileModel {
-  final int id;
-  final String name;
-  final String email;
-  final String? phone;
-  final String? avatar;
-  final String? collegeName;
-  final String? address;
-  final String? role;
-  final bool isAdmin;
-  final bool isStudent;
-  final DateTime? emailVerifiedAt;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final UserStatsModel? stats;
-  final ProfileCompletionModel? profileCompletion;
+    final User? user;
+    final ProfileCompletion? profileCompletion;
 
-  UserProfileModel({
-    required this.id,
-    required this.name,
-    required this.email,
-    this.phone,
-    this.avatar,
-    this.collegeName,
-    this.address,
-    this.role,
-    this.isAdmin = false,
-    this.isStudent = false,
-    this.emailVerifiedAt,
-    required this.createdAt,
-    required this.updatedAt,
-    this.stats,
-    this.profileCompletion,
-  });
+    UserProfileModel({
+        this.user,
+        this.profileCompletion,
+    });
 
-  factory UserProfileModel.fromJson(Map<String, dynamic> json) {
-    return UserProfileModel(
-      id: json['id'] as int? ?? 0,
-      name: json['name'] as String? ?? '',
-      email: json['email'] as String? ?? '',
-      phone: json['phone'] as String?,
-      avatar: json['avatar_url'] as String? ?? json['avatar'] as String?,
-      collegeName: json['college_name'] as String?,
-      address: json['address'] as String?,
-      role: json['role'] as String?,
-      isAdmin: json['is_admin'] as bool? ?? false,
-      isStudent: json['is_student'] as bool? ?? true,
-      emailVerifiedAt: json['email_verified_at'] != null 
-          ? DateTime.tryParse(json['email_verified_at'].toString()) 
-          : null,
-      createdAt: json['created_at'] != null 
-          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
-          : DateTime.now(),
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.tryParse(json['updated_at'].toString()) ?? DateTime.now()
-          : DateTime.now(),
-      stats: json['stats'] != null ? UserStatsModel.fromJson(json['stats'] as Map<String, dynamic>) : null,
-      profileCompletion: json['profile_completion'] != null 
-          ? ProfileCompletionModel.fromJson(json['profile_completion'] as Map<String, dynamic>) 
-          : null,
+    factory UserProfileModel.fromJson(Map<String, dynamic> json) => UserProfileModel(
+        user: json["user"] == null ? null : User.fromJson(json["user"]),
+        profileCompletion: json["profile_completion"] == null ? null : ProfileCompletion.fromJson(json["profile_completion"]),
     );
-  }
 
-  /// Create from API response wrapper.
-  ///
-  /// The API returns { data: { user: {...}, profile_completion: {...} } }
-  factory UserProfileModel.fromApiResponse(Map<String, dynamic> responseData) {
-    final userData = responseData['user'] as Map<String, dynamic>? ?? {};
-    final profileCompletionData = responseData['profile_completion'] as Map<String, dynamic>?;
+    Map<String, dynamic> toJson() => {
+        "user": user?.toJson(),
+        "profile_completion": profileCompletion?.toJson(),
+    };
+}
 
-    final userDataWithExtras = Map<String, dynamic>.from(userData);
-    
-    // If stats is not already in userData but is somewhere else in responseData, 
-    // we could add it, but based on user example it is inside user.
-    
-    if (profileCompletionData != null) {
-      userDataWithExtras['profile_completion'] = profileCompletionData;
-    }
+class ProfileCompletion {
+    final int? percentage;
+    final int? completedFields;
+    final int? totalFields;
+    final List<String>? missingFields;
 
-    return UserProfileModel.fromJson(userDataWithExtras);
-  }
+    ProfileCompletion({
+        this.percentage,
+        this.completedFields,
+        this.totalFields,
+        this.missingFields,
+    });
 
-  UserProfile toEntity() {
-    return UserProfile(
-      id: id,
-      name: name,
-      email: email,
-      phone: phone,
-      avatar: avatar,
-      collegeName: collegeName,
-      address: address,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-      stats: stats?.toEntity(),
-      profileCompletion: profileCompletion?.toEntity(),
+    factory ProfileCompletion.fromJson(Map<String, dynamic> json) => ProfileCompletion(
+        percentage: json["percentage"],
+        completedFields: json["completed_fields"],
+        totalFields: json["total_fields"],
+        missingFields: json["missing_fields"] == null ? [] : List<String>.from(json["missing_fields"]!.map((x) => x)),
     );
-  }
+
+    Map<String, dynamic> toJson() => {
+        "percentage": percentage,
+        "completed_fields": completedFields,
+        "total_fields": totalFields,
+        "missing_fields": missingFields == null ? [] : List<dynamic>.from(missingFields!.map((x) => x)),
+    };
+}
+
+class User {
+    final int? id;
+    final String? name;
+    final String? email;
+    final String? phone;
+    final String? role;
+    final dynamic emailVerifiedAt;
+    final DateTime? createdAt;
+    final DateTime? updatedAt;
+    final String? collegeName;
+    final dynamic address;
+    final String? userClass;
+    final dynamic session;
+    final dynamic avatarUrl;
+    final Version? version;
+    final HscBatch? hscBatch;
+    final BatchTime? batchTime;
+    final bool? isAdmin;
+    final bool? isStudent;
+    final Stats? stats;
+
+    User({
+        this.id,
+        this.name,
+        this.email,
+        this.phone,
+        this.role,
+        this.emailVerifiedAt,
+        this.createdAt,
+        this.updatedAt,
+        this.collegeName,
+        this.address,
+        this.userClass,
+        this.session,
+        this.avatarUrl,
+        this.version,
+        this.hscBatch,
+        this.batchTime,
+        this.isAdmin,
+        this.isStudent,
+        this.stats,
+    });
+
+    factory User.fromJson(Map<String, dynamic> json) => User(
+        id: json["id"],
+        name: json["name"],
+        email: json["email"],
+        phone: json["phone"],
+        role: json["role"],
+        emailVerifiedAt: json["email_verified_at"],
+        createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
+        updatedAt: json["updated_at"] == null ? null : DateTime.parse(json["updated_at"]),
+        collegeName: json["college_name"],
+        address: json["address"],
+        userClass: json["class"],
+        session: json["session"],
+        avatarUrl: json["avatar_url"],
+        version: json["version"] == null ? null : Version.fromJson(json["version"]),
+        hscBatch: json["hsc_batch"] == null ? null : HscBatch.fromJson(json["hsc_batch"]),
+        batchTime: json["batch_time"] == null ? null : BatchTime.fromJson(json["batch_time"]),
+        isAdmin: json["is_admin"],
+        isStudent: json["is_student"],
+        stats: json["stats"] == null ? null : Stats.fromJson(json["stats"]),
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "email": email,
+        "phone": phone,
+        "role": role,
+        "email_verified_at": emailVerifiedAt,
+        "created_at": createdAt?.toIso8601String(),
+        "updated_at": updatedAt?.toIso8601String(),
+        "college_name": collegeName,
+        "address": address,
+        "class": userClass,
+        "session": session,
+        "avatar_url": avatarUrl,
+        "version": version?.toJson(),
+        "hsc_batch": hscBatch?.toJson(),
+        "batch_time": batchTime?.toJson(),
+        "is_admin": isAdmin,
+        "is_student": isStudent,
+        "stats": stats?.toJson(),
+    };
+}
+
+class BatchTime {
+    final int? id;
+    final String? name;
+    final dynamic time;
+
+    BatchTime({
+        this.id,
+        this.name,
+        this.time,
+    });
+
+    factory BatchTime.fromJson(Map<String, dynamic> json) => BatchTime(
+        id: json["id"],
+        name: json["name"],
+        time: json["time"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "time": time,
+    };
+}
+
+class HscBatch {
+    final int? id;
+    final String? name;
+    final int? year;
+
+    HscBatch({
+        this.id,
+        this.name,
+        this.year,
+    });
+
+    factory HscBatch.fromJson(Map<String, dynamic> json) => HscBatch(
+        id: json["id"],
+        name: json["name"],
+        year: json["year"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "year": year,
+    };
+}
+
+class Stats {
+    final int? totalEnrollments;
+    final int? activeEnrollments;
+    final int? pendingEnrollments;
+
+    Stats({
+        this.totalEnrollments,
+        this.activeEnrollments,
+        this.pendingEnrollments,
+    });
+
+    factory Stats.fromJson(Map<String, dynamic> json) => Stats(
+        totalEnrollments: json["total_enrollments"],
+        activeEnrollments: json["active_enrollments"],
+        pendingEnrollments: json["pending_enrollments"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "total_enrollments": totalEnrollments,
+        "active_enrollments": activeEnrollments,
+        "pending_enrollments": pendingEnrollments,
+    };
+}
+
+class Version {
+    final int? id;
+    final String? name;
+
+    Version({
+        this.id,
+        this.name,
+    });
+
+    factory Version.fromJson(Map<String, dynamic> json) => Version(
+        id: json["id"],
+        name: json["name"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+    };
 }

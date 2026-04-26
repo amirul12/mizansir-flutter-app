@@ -1,7 +1,8 @@
 import 'package:equatable/equatable.dart';
+import 'package:mizansir/features/profile/data/models/activity_model.dart' show ActivityModel;
 import 'package:mizansir/features/profile/data/models/dashboard_stats_model.dart';
  
-import '../../domain/entities/activity.dart';
+ 
 
 /// Abstract base class for all dashboard states.
 abstract class DashboardState extends Equatable {
@@ -28,7 +29,7 @@ class DashboardLoading extends DashboardState {
 /// Consolidated Dashboard loaded state to hold both stats and activities.
 class DashboardLoaded extends DashboardState {
   final DashboardStatsModel? stats;
-  final List<Activity>? activities;
+  final List<ActivityModel>? activities;
   final bool hasMoreActivities;
   final String? message;
 
@@ -41,7 +42,7 @@ class DashboardLoaded extends DashboardState {
 
   DashboardLoaded copyWith({
     DashboardStatsModel? stats,
-    List<Activity>? activities,
+    List<ActivityModel>? activities,
     bool? hasMoreActivities,
     String? message,
   }) {

@@ -12,6 +12,10 @@ import 'package:mizansir/core/services/error_response.dart' show ErrorResponse;
 import 'package:mizansir/core/services/token_service.dart' show TokenService;
 import 'package:mizansir/core/utils/logger.dart' show logger;
 import 'package:mizansir/core/utils/testing.dart' show amirPrint;
+import 'package:mizansir/core/di/injection_container.dart' as di;
+import 'package:mizansir/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:mizansir/features/auth/presentation/bloc/auth_event.dart';
+import 'package:go_router/go_router.dart';
 import 'package:nb_utils/nb_utils.dart' as QContext;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Add this import
@@ -103,6 +107,32 @@ class ApiMethod {
   ApiMethod({required this.isBasic});
 
   bool isBasic;
+  static bool _isSessionOutShowing = false;
+
+  void _handleUnauthorized() {
+    if (_isSessionOutShowing) return;
+    _isSessionOutShowing = true;
+
+    final context = QContext.navigatorKey.currentState?.context;
+    if (context != null) {
+      // Clear token/auth state
+      di.sl<AuthBloc>().add(LogoutEvent());
+
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.warning,
+        animType: AnimType.scale,
+        title: 'Session Expired',
+        desc: 'Session out, please login',
+        dismissOnTouchOutside: false,
+        dismissOnBackKeyPress: false,
+        btnOkOnPress: () {
+          _isSessionOutShowing = false;
+          context.go('/');
+        },
+      ).show();
+    }
+  }
 
   static Future<bool> hasInternet() async {
     bool hasInternet = false;
@@ -175,7 +205,8 @@ class ApiMethod {
           );
 
       if (response.statusCode == 401) {
-        amirPrint("401 Unauthorized - returning null");
+        amirPrint("401 Unauthorized - showing dialog");
+        _handleUnauthorized();
         return null;
       }
 
@@ -279,7 +310,8 @@ class ApiMethod {
           '|📒📒📒|-----------------[[ POST ]] method response end --------------------|📒📒📒|');
 
       if (response.statusCode == 401) {
-        amirPrint("401 Unauthorized - returning null");
+        amirPrint("401 Unauthorized - showing dialog");
+        _handleUnauthorized();
         return null;
       }
 
@@ -342,6 +374,10 @@ class ApiMethod {
       log.i(
           '|📒📒📒| ----------------[[ Get ]] Peram Response End **-----------------|📒📒📒|');
 
+      if (response.statusCode == 401) {
+        _handleUnauthorized();
+        return null;
+      }
       if (response.statusCode == code) {
         return jsonDecode(response.body);
       } else {
@@ -409,7 +445,8 @@ class ApiMethod {
           '|📒📒📒|-----------------[[ UPLOAD ]] method response end --------------------|📒📒📒|');
 
       if (response.statusCode == 401) {
-        log.e("401 Unauthorized - returning null");
+        log.e("401 Unauthorized - showing dialog");
+        _handleUnauthorized();
         return null;
       }
 
@@ -505,6 +542,10 @@ class ApiMethod {
       log.i(
           '|📒📒📒|-----------------[[ POST ]] method response end --------------------|📒📒📒|');
 
+      if (response.statusCode == 401) {
+        _handleUnauthorized();
+        return null;
+      }
       if (response.statusCode == code) {
         return jsonDecode(jsonData.body) as Map<String, dynamic>;
       } else {
@@ -576,6 +617,10 @@ class ApiMethod {
       log.i(
           '|📒📒📒|----------------- [[ DELETE ]] method response start-----------------|📒📒📒|');
 
+      if (response.statusCode == 401) {
+        _handleUnauthorized();
+        return null;
+      }
       if (response.statusCode == code) {
         return jsonDecode(response.body);
       } else {
@@ -640,6 +685,10 @@ class ApiMethod {
       log.i(
           '|📒📒📒|-----------------[[ PUT ]] AKA Update method response End -----------------|📒📒📒|');
 
+      if (response.statusCode == 401) {
+        _handleUnauthorized();
+        return null;
+      }
       if (response.statusCode == code) {
         return jsonDecode(response.body);
       } else {
@@ -713,28 +762,8 @@ class ApiMethod {
           '|📒📒📒|-----------------[[ UPLOAD ]] method response end --------------------|📒📒📒|');
 
       if (response.statusCode == 401) {
-        var res = await getAccesstokenFile();
-        if (res != null) {
-          request.headers[HttpHeaders.authorizationHeader] = 'Bearer $res';
-          // UPDATED: Add language header in retry
-          final currentLang = await getCurrentLanguage();
-          final platformName = await getPlateformName();
-          final appVersion = await getAppVertion();
-
-          request.headers['lang'] = currentLang;
-          request.headers['clienttype'] = platformName;
-          request.headers['appversion'] = appVersion;
-
-          amirPrint("🔄 Upload File Retry (401) - Updated Headers:");
-          amirPrint("  ├─ clienttype: $platformName");
-          amirPrint("  ├─ appversion: $appVersion");
-          amirPrint("  └─ lang: $currentLang");
-
-          response = await request.send();
-        } else {
-          log.e("res is null");
-          return null;
-        }
+        _handleUnauthorized();
+        return null;
       }
 
       return _response(response, hasLoader: false);
@@ -784,6 +813,7 @@ class ApiMethod {
 
         throw BadRequestException(message);
       case 401:
+        _handleUnauthorized();
         throw UnauthorizedException();
       case 422:
         var errorResponse = jsonDecode(res.body.toString());

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/services/api_exception.dart';
 import '../../../../core/services/api_service_method.dart';
 import '../../../../core/utils/common_json.dart';
 import '../models/user_profile_model.dart';
@@ -20,15 +21,15 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw Exception('No data received');
+        throw FetchDataException('No data received');
       }
 
       final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
-        throw Exception('Invalid data format');
+        throw FetchDataException('Invalid data format');
       }
 
-      return UserProfileModel.fromApiResponse(dataMap);
+      return userProfileModelFromJson(dataMap);
     } catch (e) {
       debugPrint('Error in getProfile: $e');
       rethrow;
@@ -47,15 +48,15 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw Exception('No data received');
+        throw FetchDataException('No data received');
       }
 
       final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
-        throw Exception('Invalid data format');
+        throw FetchDataException('Invalid data format');
       }
 
-      return UserProfileModel.fromApiResponse(dataMap);
+      return userProfileModelFromJson(dataMap);
     } catch (e) {
       debugPrint('Error in updateProfile: $e');
       rethrow;
@@ -76,15 +77,15 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw Exception('No data received');
+        throw FetchDataException('No data received');
       }
 
       final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
-        throw Exception('Invalid data format');
+        throw FetchDataException('Invalid data format');
       }
 
-      return UserProfileModel.fromApiResponse(dataMap);
+      return userProfileModelFromJson(dataMap);
     } catch (e) {
       debugPrint('Error in uploadAvatar: $e');
       rethrow;
@@ -110,7 +111,7 @@ class ProfileRemoteDataSourceImpl implements ProfileRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw Exception('No data received');
+        throw FetchDataException('No data received');
       }
 
       debugPrint('✅ Password changed successfully');

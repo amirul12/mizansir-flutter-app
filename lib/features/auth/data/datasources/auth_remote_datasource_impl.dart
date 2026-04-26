@@ -4,7 +4,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/services/api_service_method.dart';
 import '../../../../core/services/token_service.dart';
-import '../../../../core/utils/common_json.dart';
 import '../models/auth_response_model.dart';
 import '../models/auth_user_model.dart';
 import '../models/session_model.dart';
@@ -43,12 +42,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception('No data received');
       }
 
-      final dataMap = CommonToJson().getString(mapResponse);
-      if (dataMap == null) {
-        throw Exception('Invalid data format');
-      }
+      // Check if response is wrapped in success/data or direct
+      final data = mapResponse.containsKey('data') ? mapResponse['data'] : mapResponse;
 
-      return AuthUserModel.fromJson(dataMap);
+      return AuthUserModel.fromJson(data);
     } catch (e) {
       debugPrint('Error in register: $e');
       rethrow;
@@ -78,21 +75,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception('No data received');
       }
 
-      final dataMap = CommonToJson().getString(mapResponse);
-      if (dataMap == null) {
-        throw Exception('Invalid data format');
-      }
+      // Check if response is wrapped in success/data or direct
+      final data = mapResponse.containsKey('data') ? mapResponse['data'] : mapResponse;
 
       // Save token
-      if (dataMap['token'] is String) {
+      if (data['token'] is String) {
         await tokenService.saveTokens(
-          accessToken: dataMap['token'] as String,
-          refreshToken: dataMap['refresh_token'] as String?,
+          accessToken: data['token'] as String,
+          refreshToken: data['refresh_token'] as String?,
         );
         debugPrint('✅ Login successful! Token saved.');
       }
 
-      return AuthResponseModel.fromJson(dataMap);
+      return AuthResponseModel.fromJson(data);
     } catch (e) {
       debugPrint('Error in login: $e');
       rethrow;
@@ -113,13 +108,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception('No data received');
       }
 
-      final dataMap = CommonToJson().getString(mapResponse);
-      if (dataMap == null) {
-        throw Exception('Invalid data format');
-      }
+      final data = mapResponse.containsKey('data') ? mapResponse['data'] : mapResponse;
 
       debugPrint('✅ User data loaded successfully');
-      return AuthUserModel.fromJson(dataMap);
+      return AuthUserModel.fromJson(data);
     } catch (e) {
       debugPrint('Error in getCurrentUser: $e');
       rethrow;
@@ -193,13 +185,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception('No data received');
       }
 
-      final dataMap = CommonToJson().getString(mapResponse);
-      if (dataMap == null) {
-        throw Exception('Invalid data format');
-      }
+      final data = mapResponse.containsKey('data') ? mapResponse['data'] : mapResponse;
 
       // Extract new token
-      final newToken = dataMap['token'] as String?;
+      final newToken = data['token'] as String?;
       if (newToken == null) {
         throw Exception('No token in response');
       }
@@ -207,8 +196,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       await tokenService.saveAccessToken(newToken);
 
       // Extract and cache user data
-      if (dataMap['user'] is Map) {
-        final userMap = dataMap['user'] as Map<String, dynamic>;
+      if (data['user'] is Map) {
+        final userMap = data['user'] as Map<String, dynamic>;
         final userModel = AuthUserModel.fromJson(userMap);
 
         // Cache the updated user data locally
@@ -269,12 +258,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception('No data received');
       }
 
-      final dataList = CommonToJson().getString(mapResponse);
-      if (dataList == null) {
-        throw Exception('Invalid data format');
+      final data = mapResponse.containsKey('data') ? mapResponse['data'] : mapResponse;
+
+      if (data is! List) {
+        throw Exception('Invalid data format: Expected a list');
       }
 
-      return dataList
+      return data
           .map((session) => SessionModel.fromJson(session as Map<String, dynamic>))
           .toList();
     } catch (e) {

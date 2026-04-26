@@ -1,9 +1,10 @@
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/profile/data/models/activity_model.dart' show ActivityModel;
 import 'package:mizansir/features/profile/data/models/dashboard_stats_model.dart' show DashboardStatsModel;
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/error/failures.dart';
-import '../../domain/entities/activity.dart';
+ 
  
 import '../../domain/repositories/dashboard_repository.dart';
 import '../datasources/dashboard_remote_datasource.dart';
@@ -37,7 +38,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
   }
 
   @override
-  Future<Either<Failure, List<Activity>>> getActivity({
+  Future<Either<Failure, List<ActivityModel>>> getActivity({
     int page = 1,
     int limit = 20,
   }) async {
@@ -50,9 +51,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
         page: page,
         limit: limit,
       );
-      return Right(activityModels.map((model) => model.toEntity()).toList());
+      return Right(activityModels);
     } on CustomException catch (e) {
-      final failure = parseCustomException<List<Activity>>(e);
+      final failure = parseCustomException<List<ActivityModel>>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }

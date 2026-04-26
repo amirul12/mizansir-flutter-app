@@ -1,7 +1,8 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/no_params.dart';
-import '../entities/user_profile.dart';
+ 
+import '../../data/models/user_profile_model.dart';
 import '../repositories/profile_repository.dart';
 
 /// Get profile use case.
@@ -16,7 +17,7 @@ class GetProfileUseCase {
   ///
   /// Returns [Right] with [UserProfile] on success.
   /// Returns [Left] with [Failure] on failure.
-  Future<Either<Failure, UserProfile>> call(NoParams params) {
+  Future<Either<Failure, UserProfileModel>> call(NoParams params) {
     return repository.getProfile();
   }
 }

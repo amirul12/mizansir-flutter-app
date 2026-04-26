@@ -1,7 +1,8 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:mizansir/features/profile/data/models/activity_model.dart' show ActivityModel;
 import '../../../../core/error/failures.dart';
-import '../entities/activity.dart';
+ 
 import '../repositories/dashboard_repository.dart';
 
 /// Get activity use case parameters.
@@ -32,7 +33,7 @@ class GetActivityUseCase {
   ///
   /// Returns [Right] with List of [Activity] on success.
   /// Returns [Left] with [Failure] on failure.
-  Future<Either<Failure, List<Activity>>> call(GetActivityParams params) {
+  Future<Either<Failure, List<ActivityModel>>> call(GetActivityParams params) {
     return repository.getActivity(
       page: params.page,
       limit: params.limit,

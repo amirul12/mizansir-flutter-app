@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+ 
+import 'package:mizansir/features/profile/data/models/user_profile_model.dart' show UserProfileModel, Stats, User;
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart' as auth_event;
 import '../../../auth/presentation/bloc/auth_state.dart';
@@ -11,7 +13,7 @@ import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/user_profile.dart';
+ 
 
 /// Profile Page - Modern, visually rich profile management.
 class ProfilePage extends StatefulWidget {
@@ -98,7 +100,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildProfileView(BuildContext context, UserProfile profile) {
+  Widget _buildProfileView(BuildContext context, UserProfileModel profile) {
     return RefreshIndicator(
       onRefresh: () async {
         context.read<ProfileBloc>().add(LoadProfileEvent());
@@ -109,18 +111,18 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           children: [
             // Header Card (Avatar + Name + Bio)
-            _buildHeaderCard(context, profile),
+            _buildHeaderCard(context, profile!.user!),
             
             const SizedBox(height: 20),
             
             // Stats Row
-            if (profile.stats != null) _buildStatsRow(context, profile.stats!),
+            // if (profile.user!.stats!.activeEnrollments != null) _buildStatsRow(context, profile.stats!),
             
             const SizedBox(height: 20),
             
             // Profile Completion Card
             if (profile.profileCompletion != null) 
-              _buildCompletionCard(context, profile.profileCompletion!),
+              // _buildCompletionCard(context, profile.profileCompletion!),
 
             const SizedBox(height: 20),
 
@@ -158,7 +160,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildHeaderCard(BuildContext context, UserProfile profile) {
+  Widget _buildHeaderCard(BuildContext context, User profile) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
@@ -177,27 +179,27 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           Stack(
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 4),
-                ),
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: AppColors.primaryLight.withValues(alpha: 0.1),
-                  backgroundImage: profile.hasAvatar ? NetworkImage(profile.avatar!) : null,
-                  child: !profile.hasAvatar
-                      ? Text(
-                          profile.initials,
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        )
-                      : null,
-                ),
-              ),
+              // Container(
+              //   decoration: BoxDecoration(
+              //     shape: BoxShape.circle,
+              //     border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 4),
+              //   ),
+              //   child: CircleAvatar(
+              //     radius: 50,
+              //     backgroundColor: AppColors.primaryLight.withValues(alpha: 0.1),
+              //   //  backgroundImage: profile.avatar != null ? NetworkImage(profile.avatar!) : null,
+              //     child: !profile.avatar != null
+              //         ? Text(
+              //             profile.name!.substring(0, 1),
+              //             style: const TextStyle(
+              //               fontSize: 32,
+              //               fontWeight: FontWeight.bold,
+              //               color: AppColors.primary,
+              //             ),
+              //           )
+              //         : null,
+              //   ),
+              // ),
               Positioned(
                 bottom: 0,
                 right: 0,
@@ -217,7 +219,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 16),
           Text(
-            profile.name,
+            profile.name!,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
@@ -225,7 +227,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 4),
           Text(
-            profile.email,
+            profile.email!,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: AppColors.textSecondary,
             ),
@@ -251,7 +253,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildStatsRow(BuildContext context, UserStats stats) {
+  Widget _buildStatsRow(BuildContext context, Stats stats) {
     return Row(
       children: [
         Expanded(child: _buildStatItem(context, stats.totalEnrollments.toString(), 'Courses', AppColors.primary)),
@@ -298,7 +300,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildCompletionCard(BuildContext context, ProfileCompletion completion) {
+  Widget _buildCompletionCard(BuildContext context, UserProfileModel completion) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -320,7 +322,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
               ),
               Text(
-                '${completion.percentage}%',
+                '${completion.profileCompletion!.percentage!}%',
                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
               ),
             ],
@@ -329,7 +331,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
-              value: completion.percentage / 100,
+              value: completion.profileCompletion!.percentage! / 100,
               backgroundColor: Colors.white.withValues(alpha: 0.2),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
               minHeight: 8,
@@ -345,22 +347,22 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildInfoSection(BuildContext context, UserProfile profile) {
+  Widget _buildInfoSection(BuildContext context, UserProfileModel profile) {
     return _buildCardWrapper(
       context,
       title: 'Personal Information',
-      onEdit: () => _showEditDialog(context, profile),
+      onEdit: () => _showEditDialog(context, profile.user!),
       children: [
-        _buildInfoTile(Icons.phone_rounded, 'Phone', profile.phone ?? 'Not provided', AppColors.primary),
+        _buildInfoTile(Icons.phone_rounded, 'Phone', profile.user!.phone ?? 'Not provided', AppColors.primary),
         _buildDivider(),
-        _buildInfoTile(Icons.school_rounded, 'College', profile.collegeName ?? 'Not provided', AppColors.secondary),
+        _buildInfoTile(Icons.school_rounded, 'College', profile.user!.name ?? 'Not provided', AppColors.secondary),
         _buildDivider(),
-        _buildInfoTile(Icons.location_on_rounded, 'Address', profile.address ?? 'Not provided', AppColors.accent),
+        _buildInfoTile(Icons.location_on_rounded, 'Address', profile.user!.email ?? 'Not provided', AppColors.accent),
       ],
     );
   }
 
-  Widget _buildActionsSection(BuildContext context, UserProfile profile) {
+  Widget _buildActionsSection(BuildContext context, UserProfileModel profile) {
     return _buildCardWrapper(
       context,
       title: 'Settings',
@@ -623,12 +625,12 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _showEditDialog(BuildContext context, UserProfile profile) {
+  void _showEditDialog(BuildContext context, User profile) {
     final profileBloc = context.read<ProfileBloc>();
     final nameController = TextEditingController(text: profile.name);
     final phoneController = TextEditingController(text: profile.phone ?? '');
-    final collegeController = TextEditingController(text: profile.collegeName ?? '');
-    final addressController = TextEditingController(text: profile.address ?? '');
+    final collegeController = TextEditingController(text:   '');
+    final addressController = TextEditingController(text:   '');
 
     showDialog(
       context: context,

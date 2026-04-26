@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/profile/data/models/user_profile_model.dart' show UserProfileModel;
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/error/failures.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
-import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../datasources/profile_remote_datasource.dart';
 
@@ -23,22 +23,22 @@ class ProfileRepositoryImpl implements ProfileRepository {
   });
 
   @override
-  Future<Either<Failure, UserProfile>> getProfile() async {
+  Future<Either<Failure, UserProfileModel>> getProfile() async {
     try {
       if (!await connectivityService.isConnected) {
         throw NoInternetException();
       }
 
       final profileModel = await remoteDataSource.getProfile();
-      return Right(profileModel.toEntity());
+      return Right(profileModel);
     } on CustomException catch (e) {
-      final failure = parseCustomException<UserProfile>(e);
+      final failure = parseCustomException<UserProfileModel>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
-  Future<Either<Failure, UserProfile>> updateProfile(
+  Future<Either<Failure, UserProfileModel>> updateProfile(
       Map<String, dynamic> params) async {
     try {
       if (!await connectivityService.isConnected) {
@@ -46,24 +46,24 @@ class ProfileRepositoryImpl implements ProfileRepository {
       }
 
       final profileModel = await remoteDataSource.updateProfile(params);
-      return Right(profileModel.toEntity());
+      return Right(profileModel);
     } on CustomException catch (e) {
-      final failure = parseCustomException<UserProfile>(e);
+      final failure = parseCustomException<UserProfileModel>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
-  Future<Either<Failure, UserProfile>> uploadAvatar(String imagePath) async {
+  Future<Either<Failure, UserProfileModel>> uploadAvatar(String imagePath) async {
     try {
       if (!await connectivityService.isConnected) {
         throw NoInternetException();
       }
 
       final profileModel = await remoteDataSource.uploadAvatar(imagePath);
-      return Right(profileModel.toEntity());
+      return Right(profileModel);
     } on CustomException catch (e) {
-      final failure = parseCustomException<UserProfile>(e);
+      final failure = parseCustomException<UserProfileModel>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }

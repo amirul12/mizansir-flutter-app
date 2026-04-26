@@ -1,10 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mizansir/features/profile/data/models/activity_model.dart' show ActivityModel;
 import 'package:mizansir/features/profile/data/models/dashboard_stats_model.dart' show DashboardStatsModel;
 import '../../../../core/usecases/no_params.dart';
 import '../../domain/usecases/get_dashboard_usecase.dart';
 import '../../domain/usecases/get_activity_usecase.dart';
  
-import '../../domain/entities/activity.dart';
+ 
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 
@@ -30,7 +31,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   ) async {
     final currentState = state;
     DashboardStatsModel? existingStats;
-    List<Activity>? existingActivities;
+    List<ActivityModel>? existingActivities;
 
     if (currentState is DashboardLoaded) {
       existingStats = currentState.stats;
@@ -69,7 +70,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   ) async {
     final currentState = state;
     DashboardStatsModel? existingStats;
-    List<Activity>? existingActivities;
+    List<ActivityModel>? existingActivities;
 
     if (currentState is DashboardLoaded) {
       existingStats = currentState.stats;
