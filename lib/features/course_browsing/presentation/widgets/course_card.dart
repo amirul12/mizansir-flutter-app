@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../domain/entities/course.dart';
 
 /// Course Card Widget - Modern and informative
 class CourseCard extends StatelessWidget {
-  final Course course;
+  final CourseModel course;
   final VoidCallback? onTap;
   final VoidCallback? onEnroll;
 
@@ -57,10 +57,10 @@ class CourseCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        if (course.category != null)
+                        if (course.category != null && course.category!.name != null)
                           _buildModernBadge(
-                            course.category!.name,
-                            _getCategoryColor(course.category!.name),
+                            course.category!.name!,
+                            _getCategoryColor(course.category!.name!),
                           ),
                         _buildLevelBadge(course.levelLabel),
                       ],
@@ -154,7 +154,7 @@ class CourseCard extends StatelessWidget {
 
                     // Title
                     Text(
-                      course.title,
+                      course.title ?? 'Untitled Course',
                       style: const TextStyle(
                         fontWeight: FontWeight.w800,
                         color: AppColors.textPrimary,
@@ -275,14 +275,11 @@ class CourseCard extends StatelessWidget {
         height: 200,
         width: double.infinity,
         fit: BoxFit.cover,
-        placeholder:
-            (context, url) => Container(
-              height: 200,
-              color: AppColors.primary.withOpacity(0.05),
-              child: const Center(
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
+        placeholder: (context, url) => Container(
+          height: 200,
+          color: AppColors.primary.withOpacity(0.05),
+          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+        ),
         errorWidget: (context, url, error) => _buildPlaceholderThumbnail(),
       );
     }
@@ -297,10 +294,7 @@ class CourseCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.8),
-            AppColors.primary,
-          ],
+          colors: [AppColors.primary.withOpacity(0.8), AppColors.primary],
         ),
       ),
       child: const Icon(Icons.school, size: 64, color: Colors.white24),

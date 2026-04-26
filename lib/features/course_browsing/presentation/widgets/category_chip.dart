@@ -1,6 +1,7 @@
 // File: lib/features/course_browsing/presentation/widgets/category_chip.dart
 import 'package:flutter/material.dart';
-import '../../domain/entities/category.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
+ 
 
 /// Category Chip Widget
 class CategoryChip extends StatelessWidget {
@@ -42,7 +43,7 @@ class CategoryChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (category.hasIcon) ...[
+            if (category.icon) ...[
               Icon(
                 _getIconData(category.icon!),
                 size: 18,
@@ -51,14 +52,14 @@ class CategoryChip extends StatelessWidget {
               const SizedBox(width: 8),
             ],
             Text(
-              category.name,
+              category.name!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: isSelected ? Colors.white : Colors.grey[800],
                     fontWeight:
                         isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
             ),
-            if (category.courseCount > 0) ...[
+            if (category.courseCount! > 0) ...[
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(

@@ -1,8 +1,9 @@
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/error/failures.dart';
-import '../../domain/entities/course.dart';
-import '../../domain/entities/category.dart';
+ 
+ 
 import '../../domain/entities/course_filter.dart';
 import '../../domain/entities/lesson_preview.dart';
 import '../../domain/repositories/course_repository.dart';
@@ -15,7 +16,7 @@ class CourseRepositoryImpl implements CourseRepository {
   CourseRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<Course>>> getCourses({
+  Future<Either<Failure, List<CourseModel>>> getCourses({
     CourseFilter? filter,
     int page = 1,
     int limit = 20,
@@ -27,39 +28,39 @@ class CourseRepositoryImpl implements CourseRepository {
         page: page,
         limit: limit,
       );
-      return Right(courseModels.map((model) => model.toEntity()).toList());
+      return Right(courseModels);
     } on CustomException catch (e) {
-      final failure = parseCustomException<List<Course>>(e);
+      final failure = parseCustomException<List<CourseModel>>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
-  Future<Either<Failure, List<Course>>> getFeaturedCourses({
+  Future<Either<Failure, List<CourseModel>>> getFeaturedCourses({
     int limit = 10,
   }) async {
     try {
       final courseModels = await remoteDataSource.getFeaturedCourses(limit: limit);
-      return Right(courseModels.map((model) => model.toEntity()).toList());
+      return Right(courseModels);
     } on CustomException catch (e) {
-      final failure = parseCustomException<List<Course>>(e);
+      final failure = parseCustomException<List<CourseModel>>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
-  Future<Either<Failure, Course>> getCourseDetails(String courseId) async {
+  Future<Either<Failure, CourseModel>> getCourseDetails(String courseId) async {
     try {
       final courseModel = await remoteDataSource.getCourseDetails(courseId);
-      return Right(courseModel.toEntity());
+      return Right(courseModel);
     } on CustomException catch (e) {
-      final failure = parseCustomException<Course>(e);
+      final failure = parseCustomException<CourseModel>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
-  Future<Either<Failure, List<Course>>> searchCourses(
+  Future<Either<Failure, List<CourseModel>>> searchCourses(
     String query, {
     int page = 1,
     int limit = 20,
@@ -70,9 +71,9 @@ class CourseRepositoryImpl implements CourseRepository {
         page: page,
         limit: limit,
       );
-      return Right(courseModels.map((model) => model.toEntity()).toList());
+      return Right(courseModels);
     } on CustomException catch (e) {
-      final failure = parseCustomException<List<Course>>(e);
+      final failure = parseCustomException<List<CourseModel>>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }

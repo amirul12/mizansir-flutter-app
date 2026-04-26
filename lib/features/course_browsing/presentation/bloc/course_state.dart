@@ -1,7 +1,7 @@
 // File: lib/features/course_browsing/presentation/bloc/course_state.dart
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/course.dart';
-import '../../domain/entities/category.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
+ 
 import '../../domain/entities/lesson_preview.dart';
 
 /// Base Course State
@@ -24,7 +24,7 @@ class CourseLoading extends CourseState {
 
 /// Courses Loaded State
 class CoursesLoaded extends CourseState {
-  final List<Course> courses;
+  final List<CourseModel> courses;
   final bool hasMore;
 
   const CoursesLoaded({
@@ -38,7 +38,7 @@ class CoursesLoaded extends CourseState {
 
 /// Featured Courses Loaded State
 class FeaturedCoursesLoaded extends CourseState {
-  final List<Course> courses;
+  final List<CourseModel> courses;
 
   const FeaturedCoursesLoaded({required this.courses});
 
@@ -48,7 +48,7 @@ class FeaturedCoursesLoaded extends CourseState {
 
 /// Course Details Loaded State
 class CourseDetailsLoaded extends CourseState {
-  final Course course;
+  final CourseModel course;
 
   const CourseDetailsLoaded({required this.course});
 
@@ -58,7 +58,7 @@ class CourseDetailsLoaded extends CourseState {
 
 /// Search Results Loaded State
 class SearchResultsLoaded extends CourseState {
-  final List<Course> courses;
+  final List<CourseModel> courses;
   final String query;
 
   const SearchResultsLoaded({

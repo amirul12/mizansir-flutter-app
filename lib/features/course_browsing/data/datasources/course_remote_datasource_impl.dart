@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../../../../core/services/api_service_method.dart';
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/constants/api_constants.dart';
-import '../../../../core/utils/common_json.dart';
 import '../models/course_model.dart';
 import '../models/category_model.dart';
 import '../models/lesson_preview_model.dart';
@@ -18,15 +17,12 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     int page = 1,
     int limit = 20,
   }) async {
-    Map<String, dynamic>? mapResponse;
-
     try {
-      // Build query parameters
       final params = queryParams ?? {};
       params['page'] = page.toString();
       params['limit'] = limit.toString();
 
-      mapResponse = await ApiMethod(isBasic: false).get(
+      final mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.coursesPath}',
         query: params,
         showResult: true,
@@ -36,13 +32,16 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      // Extract data from response
-      final dataList = CommonToJson().getString(mapResponse);
-      if (dataList == null) {
-        throw ServerException('Invalid data format');
+      final data = mapResponse['data'] ?? mapResponse;
+      
+      if (data is Map && data.containsKey('items')) {
+        final items = data['items'] as List;
+        return items.map((course) => CourseModel.fromJson(course)).toList();
+      } else if (data is List) {
+        return data.map((course) => CourseModel.fromJson(course)).toList();
       }
 
-      return dataList.map((course) => CourseModel.fromJson(course)).toList();
+      throw ServerException('Invalid data format');
     } catch (e) {
       debugPrint('Error in getCourses: $e');
       rethrow;
@@ -51,10 +50,8 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
   @override
   Future<List<CourseModel>> getFeaturedCourses({int limit = 10}) async {
-    Map<String, dynamic>? mapResponse;
-
     try {
-      mapResponse = await ApiMethod(isBasic: false).get(
+      final mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.featuredCoursesEndpoint}',
         query: {'limit': limit.toString()},
         showResult: true,
@@ -64,12 +61,16 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataList = CommonToJson().getString(mapResponse);
-      if (dataList == null) {
-        throw ServerException('Invalid data format');
+      final data = mapResponse['data'] ?? mapResponse;
+      
+      if (data is Map && data.containsKey('items')) {
+        final items = data['items'] as List;
+        return items.map((course) => CourseModel.fromJson(course)).toList();
+      } else if (data is List) {
+        return data.map((course) => CourseModel.fromJson(course)).toList();
       }
 
-      return dataList.map((course) => CourseModel.fromJson(course)).toList();
+      throw ServerException('Invalid data format');
     } catch (e) {
       debugPrint('Error in getFeaturedCourses: $e');
       rethrow;
@@ -78,10 +79,8 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
   @override
   Future<CourseModel> getCourseDetails(String courseId) async {
-    Map<String, dynamic>? mapResponse;
-
     try {
-      mapResponse = await ApiMethod(isBasic: false).get(
+      final mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.coursesPath}/$courseId',
         showResult: true,
       );
@@ -90,17 +89,15 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataMap = CommonToJson().getString(mapResponse);
-      if (dataMap == null) {
-        throw ServerException('Invalid data format');
+      final data = mapResponse['data'] ?? mapResponse;
+      
+      if (data is Map && data.containsKey('course')) {
+        return CourseModel.fromJson(data['course'] as Map<String, dynamic>);
+      } else if (data is Map<String, dynamic>) {
+        return CourseModel.fromJson(data);
       }
 
-      // Handle nested course object
-      if (dataMap['course'] is Map) {
-        return CourseModel.fromJson(dataMap['course'] as Map<String, dynamic>);
-      }
-
-      return CourseModel.fromJson(dataMap);
+      throw ServerException('Invalid data format');
     } catch (e) {
       debugPrint('Error in getCourseDetails: $e');
       rethrow;
@@ -113,10 +110,8 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     int page = 1,
     int limit = 20,
   }) async {
-    Map<String, dynamic>? mapResponse;
-
     try {
-      mapResponse = await ApiMethod(isBasic: false).get(
+      final mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.searchCoursesEndpoint}',
         query: {
           'q': query,
@@ -130,12 +125,16 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataList = CommonToJson().getString(mapResponse);
-      if (dataList == null) {
-        throw ServerException('Invalid data format');
+      final data = mapResponse['data'] ?? mapResponse;
+      
+      if (data is Map && data.containsKey('items')) {
+        final items = data['items'] as List;
+        return items.map((course) => CourseModel.fromJson(course)).toList();
+      } else if (data is List) {
+        return data.map((course) => CourseModel.fromJson(course)).toList();
       }
 
-      return dataList.map((course) => CourseModel.fromJson(course)).toList();
+      throw ServerException('Invalid data format');
     } catch (e) {
       debugPrint('Error in searchCourses: $e');
       rethrow;
@@ -144,10 +143,8 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
   @override
   Future<List<CategoryModel>> getCategories() async {
-    Map<String, dynamic>? mapResponse;
-
     try {
-      mapResponse = await ApiMethod(isBasic: false).get(
+      final mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.categoriesEndpoint}',
         showResult: true,
       );
@@ -156,14 +153,16 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataList = CommonToJson().getString(mapResponse);
-      if (dataList == null) {
-        throw ServerException('Invalid data format');
+      final data = mapResponse['data'] ?? mapResponse;
+      
+      if (data is List) {
+        return data.map((category) => CategoryModel.fromJson(category)).toList();
+      } else if (data is Map && data.containsKey('categories')) {
+        final categories = data['categories'] as List;
+        return categories.map((category) => CategoryModel.fromJson(category)).toList();
       }
 
-      return dataList
-          .map((category) => CategoryModel.fromJson(category))
-          .toList();
+      throw ServerException('Invalid data format');
     } catch (e) {
       debugPrint('Error in getCategories: $e');
       rethrow;
@@ -172,10 +171,8 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
   @override
   Future<List<LessonPreviewModel>> getPreviewLessons(String courseId) async {
-    Map<String, dynamic>? mapResponse;
-
     try {
-      mapResponse = await ApiMethod(isBasic: false).get(
+      final mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.coursesPath}/$courseId/lessons',
         showResult: true,
       );
@@ -184,14 +181,16 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataList = CommonToJson().getString(mapResponse);
-      if (dataList == null) {
-        throw ServerException('Invalid data format');
+      final data = mapResponse['data'] ?? mapResponse;
+      
+      if (data is List) {
+        return data.map((lesson) => LessonPreviewModel.fromJson(lesson)).toList();
+      } else if (data is Map && data.containsKey('lessons')) {
+        final lessons = data['lessons'] as List;
+        return lessons.map((lesson) => LessonPreviewModel.fromJson(lesson)).toList();
       }
 
-      return dataList
-          .map((lesson) => LessonPreviewModel.fromJson(lesson))
-          .toList();
+      throw ServerException('Invalid data format');
     } catch (e) {
       debugPrint('Error in getPreviewLessons: $e');
       rethrow;
@@ -200,10 +199,8 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
 
   @override
   Future<bool> isEnrolled(String courseId) async {
-    Map<String, dynamic>? mapResponse;
-
     try {
-      mapResponse = await ApiMethod(isBasic: false).get(
+      final mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.coursesPath}/$courseId/check-enrollment',
         showResult: true,
       );
@@ -212,7 +209,12 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         return false;
       }
 
-      return mapResponse['enrolled'] ?? false;
+      final data = mapResponse['data'] ?? mapResponse;
+      if (data is Map) {
+        return data['enrolled'] ?? false;
+      }
+
+      return false;
     } catch (e) {
       debugPrint('Error in isEnrolled: $e');
       return false;

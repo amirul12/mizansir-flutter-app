@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
 import '../bloc/course_bloc.dart';
 import '../bloc/course_event.dart';
 import '../bloc/course_state.dart';
-import '../../domain/entities/course.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../enrollment/presentation/bloc/enrollment_bloc.dart';
@@ -250,7 +250,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildCourseDetails(Course course) {
+  Widget _buildCourseDetails(CourseModel course) {
     return CustomScrollView(
       slivers: [
         // Custom app bar with image
@@ -303,7 +303,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               bottom: 60,
             ),
             title: Text(
-              course.title,
+              course.title ?? 'Course Details',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -376,7 +376,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildCourseImage(Course course) {
+  Widget _buildCourseImage(CourseModel course) {
     String? imageUrl = course.thumbnail;
     if (imageUrl != null && !imageUrl.startsWith('http')) {
       final baseUrl = ApiConstants.baseUrl;
@@ -411,7 +411,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     return _buildPlaceholder(course);
   }
 
-  Widget _buildPlaceholder(Course course) {
+  Widget _buildPlaceholder(CourseModel course) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -436,7 +436,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                course.title,
+                course.title ?? '',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -469,7 +469,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildQuickInfo(Course course) {
+  Widget _buildQuickInfo(CourseModel course) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Wrap(
@@ -485,7 +485,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           if (course.hasCategory)
             _buildInfoChip(
               icon: Icons.category,
-              label: course.category!.name,
+              label: course.category!.name!,
               color: Colors.purple,
             ),
           if (course.language != null)
@@ -529,7 +529,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildPriceSection(Course course) {
+  Widget _buildPriceSection(CourseModel course) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(20),
@@ -601,7 +601,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildStatsSection(Course course) {
+  Widget _buildStatsSection(CourseModel course) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -677,7 +677,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildDescriptionSection(Course course) {
+  Widget _buildDescriptionSection(CourseModel course) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -708,7 +708,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            course.description,
+            course.description ?? '',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               height: 1.6,
               color: Colors.grey[700],
@@ -719,8 +719,8 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildCurriculumSection(Course course) {
-    final modules = course.modules!;
+  Widget _buildCurriculumSection(CourseModel course) {
+    final modules = course.modules ?? [];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -753,7 +753,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           Padding(
             padding: const EdgeInsets.only(left: 50),
             child: Text(
-              '${course.totalLessonsCount} lessons in ${course.modulesCount} modules',
+              '${course.totalLessonsCount} lessons in ${course.totalLessons} modules',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -976,7 +976,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildMetaInfoSection(Course course) {
+  Widget _buildMetaInfoSection(CourseModel course) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -1068,7 +1068,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildEnrollSection(Course course) {
+  Widget _buildEnrollSection(CourseModel course) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: BlocListener<EnrollmentBloc, EnrollmentState>(
@@ -1120,7 +1120,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Course: ${course.title}',
+              'Course: ${course.title ?? 'Untitled'}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
@@ -1185,7 +1185,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              _submitEnrollment(course.id, course.isFree);
+              _submitEnrollment(course.id ?? '', course.isFree);
             },
             child: Text(course.isFree ? 'Enroll Now' : 'Submit Enrollment'),
           ),

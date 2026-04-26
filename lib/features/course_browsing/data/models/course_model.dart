@@ -1,221 +1,310 @@
-// File: lib/features/course_browsing/data/models/course_model.dart
-import 'package:equatable/equatable.dart';
-import '../../domain/entities/course.dart';
-import 'category_model.dart' show CategoryModel;
+// To parse this JSON data, do
+//
+//     final courseListResponse = courseListResponseFromJson(jsonString);
 
-/// Course Model
-class CourseModel extends Equatable {
-  final String id;
-  final String title;
-  final String description;
-  final String? thumbnail;
-  final double price;
-  final String? formattedPrice;
-  final Map<String, dynamic>? category;
-  final String? instructor;
-  final String status;
-  final String? level;
-  final String? language;
-  final int totalLessons;
-  final int enrolledCount;
-  final double? rating;
-  final int reviewCount;
-  final String? duration;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final bool? isEnrolled;
-  final Map<String, dynamic>? stats;
-  final Map<String, dynamic>? meta;
-  final Map<String, dynamic>? curriculum;
+import 'dart:convert';
 
-  const CourseModel({
-    required this.id,
-    required this.title,
-    required this.description,
-    this.thumbnail,
-    required this.price,
-    this.formattedPrice,
-    this.category,
-    this.instructor,
-    required this.status,
-    this.level,
-    this.language,
-    required this.totalLessons,
-    required this.enrolledCount,
-    this.rating,
-    required this.reviewCount,
-    this.duration,
-    required this.createdAt,
-    required this.updatedAt,
-    this.isEnrolled,
-    this.stats,
-    this.meta,
-    this.curriculum,
-  });
+CourseListResponse courseListResponseFromJson(String str) => CourseListResponse.fromJson(json.decode(str));
 
-  /// Convert from JSON
-  factory CourseModel.fromJson(Map<String, dynamic> json) {
-    // Handle nested stats object for enrollment count
-    int enrolledCount = 0;
-    if (json['stats'] is Map && json['stats']['total_enrollments'] is int) {
-      enrolledCount = json['stats']['total_enrollments'] as int;
-    } else if (json['enrolled_count'] is int) {
-      enrolledCount = json['enrolled_count'] as int;
-    } else if (json['enrollment_count'] is int) {
-      enrolledCount = json['enrollment_count'] as int;
-    }
+String courseListResponseToJson(CourseListResponse data) => json.encode(data.toJson());
 
-    bool? isEnrolled;
-    if (json['is_enrolled'] is bool) {
-      isEnrolled = json['is_enrolled'] as bool;
-    }
+class CourseListResponse {
+    final List<CourseModel>? items;
+    final Pagination? pagination;
 
-    // Handle price - can be string or number
-    double price = 0.0;
-    if (json['price'] is num) {
-      price = (json['price'] as num).toDouble();
-    } else if (json['price'] is String) {
-      price = double.tryParse(json['price']) ?? 0.0;
-    }
+    CourseListResponse({
+        this.items,
+        this.pagination,
+    });
 
-    // Handle formatted_price
-    String? formattedPrice;
-    if (json['formatted_price'] is String) {
-      formattedPrice = json['formatted_price'];
-    }
-
-    // Handle rating - can be in stats or root
-    double? rating;
-    if (json['stats'] is Map && json['stats']['average_rating'] is num) {
-      rating = (json['stats']['average_rating'] as num).toDouble();
-    } else if (json['rating'] is num) {
-      rating = (json['rating'] as num).toDouble();
-    }
-
-    // Handle review count
-    int reviewCount = 0;
-    if (json['stats'] is Map && json['stats']['total_reviews'] is int) {
-      reviewCount = json['stats']['total_reviews'] as int;
-    } else if (json['review_count'] is int) {
-      reviewCount = json['review_count'] as int;
-    }
-
-    return CourseModel(
-      id: json['id']?.toString() ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      thumbnail: json['thumbnail'],
-      price: price,
-      formattedPrice: formattedPrice,
-      category: json['category'],
-      instructor: json['instructor'],
-      status: json['status'] ?? 'draft',
-      level: json['level'],
-      language: json['language'],
-      totalLessons: json['total_lessons'] ?? 0,
-      enrolledCount: enrolledCount,
-      rating: rating,
-      reviewCount: reviewCount,
-      duration: json['duration'],
-      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updated_at'] ?? '') ?? DateTime.now(),
-      stats: json['stats'] is Map
-          ? json['stats'] as Map<String, dynamic>
-          : null,
-      meta: json['meta'] is Map ? json['meta'] as Map<String, dynamic> : null,
-      curriculum: json['curriculum'] is Map
-          ? json['curriculum'] as Map<String, dynamic>
-          : null,
+    factory CourseListResponse.fromJson(Map<String, dynamic> json) => CourseListResponse(
+        items: json["items"] == null ? [] : List<CourseModel>.from(json["items"]!.map((x) => CourseModel.fromJson(x))),
+        pagination: json["pagination"] == null ? null : Pagination.fromJson(json["pagination"]),
     );
-  }
 
-  /// Convert to JSON
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'thumbnail': thumbnail,
-      'price': price,
-      if (formattedPrice != null) 'formatted_price': formattedPrice,
-      'category': category,
-      'instructor': instructor,
-      'status': status,
-      'level': level,
-      'language': language,
-      'total_lessons': totalLessons,
-      'enrolled_count': enrolledCount,
-      'rating': rating,
-      'review_count': reviewCount,
-      'duration': duration,
-      'is_enrolled': isEnrolled,
-      'created_at': createdAt.toIso8601String(),
-      'updated_at': updatedAt.toIso8601String(),
-      if (stats != null) 'stats': stats,
-      if (meta != null) 'meta': meta,
-      if (curriculum != null) 'curriculum': curriculum,
+    Map<String, dynamic> toJson() => {
+        "items": items == null ? [] : List<dynamic>.from(items!.map((x) => x.toJson())),
+        "pagination": pagination?.toJson(),
     };
-  }
+}
 
-  /// Convert to Entity
-  Course toEntity() {
-    return Course(
-      id: id,
-      title: title,
-      description: description,
-      thumbnail: thumbnail,
-      price: price,
-      formattedPrice: formattedPrice,
-      category: category != null
-          ? CategoryModel.fromJson(category!).toEntity()
-          : null,
-      instructor: instructor,
-      status: status,
-      level: level,
-      language: language,
-      totalLessons: totalLessons,
-      enrolledCount: enrolledCount,
-      rating: rating,
-      reviewCount: reviewCount,
-      duration: duration,
-      createdAt: createdAt,
-      updatedAt: updatedAt,
-      isEnrolled: isEnrolled,
-      stats: stats,
-      meta: meta,
-      curriculum: curriculum,
+class CourseModel {
+    final String? id;
+    final String? title;
+    final String? description;
+    final dynamic thumbnail;
+    final int? price;
+    final String? formattedPrice;
+    final Category? category;
+    final String? status;
+    final String? level;
+    final int? totalLessons;
+    final int? enrolledCount;
+    final int? reviewCount;
+    final String? duration;
+    final DateTime? createdAt;
+    final DateTime? updatedAt;
+    final bool? isEnrolled;
+    final Stats? stats;
+    final Curriculum? curriculum;
+    final double? rating;
+    final String? instructor;
+    final List<Map<String, dynamic>>? modules;
+    final int? modulesCount;
+    final String? language;
+
+    CourseModel({
+        this.id,
+        this.title,
+        this.description,
+        this.thumbnail,
+        this.price,
+        this.formattedPrice,
+        this.category,
+        this.status,
+        this.level,
+        this.totalLessons,
+        this.enrolledCount,
+        this.reviewCount,
+        this.duration,
+        this.createdAt,
+        this.updatedAt,
+        this.isEnrolled,
+        this.stats,
+        this.curriculum,
+        this.rating,
+        this.instructor,
+        this.modules,
+        this.modulesCount,
+        this.language,
+    });
+
+    factory CourseModel.fromJson(Map<String, dynamic> json) => CourseModel(
+        id: json["id"]?.toString(),
+        title: json["title"],
+        description: json["description"],
+        thumbnail: json["thumbnail"],
+        price: json["price"],
+        formattedPrice: json["formatted_price"],
+        category: json["category"] == null ? null : Category.fromJson(json["category"]),
+        status: json["status"],
+        level: json["level"],
+        totalLessons: json["total_lessons"],
+        enrolledCount: json["enrolled_count"],
+        reviewCount: json["review_count"],
+        duration: json["duration"],
+        createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
+        updatedAt: json["updated_at"] == null ? null : DateTime.parse(json["updated_at"]),
+        isEnrolled: json["is_enrolled"],
+        stats: json["stats"] == null ? null : Stats.fromJson(json["stats"]),
+        curriculum: json["curriculum"] == null ? null : Curriculum.fromJson(json["curriculum"]),
+        rating: json["rating"]?.toDouble(),
+        instructor: json["instructor"] ?? json["instructor_name"],
+        modules: json["modules"] == null ? null : List<Map<String, dynamic>>.from(json["modules"]),
+        modulesCount: json["modules_count"] ?? (json["modules"] as List?)?.length,
+        language: json["language"],
     );
-  }
 
-  /// Convert from Entity
-  factory CourseModel.fromEntity(Course entity) {
-    return CourseModel(
-      id: entity.id,
-      title: entity.title,
-      description: entity.description,
-      thumbnail: entity.thumbnail,
-      price: entity.price,
-      formattedPrice: entity.formattedPrice,
-      category: entity.category != null
-          ? CategoryModel.fromEntity(entity.category!).toJson()
-          : null,
-      instructor: entity.instructor,
-      status: entity.status,
-      level: entity.level,
-      language: entity.language,
-      totalLessons: entity.totalLessons,
-      enrolledCount: entity.enrolledCount,
-      rating: entity.rating,
-      reviewCount: entity.reviewCount,
-      duration: entity.duration,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-      stats: entity.stats,
-      meta: entity.meta,
-      curriculum: entity.curriculum,
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "title": title,
+        "description": description,
+        "thumbnail": thumbnail,
+        "price": price,
+        "formatted_price": formattedPrice,
+        "category": category?.toJson(),
+        "status": status,
+        "level": level,
+        "total_lessons": totalLessons,
+        "enrolled_count": enrolledCount,
+        "review_count": reviewCount,
+        "duration": duration,
+        "created_at": createdAt?.toIso8601String(),
+        "updated_at": updatedAt?.toIso8601String(),
+        "is_enrolled": isEnrolled,
+        "stats": stats?.toJson(),
+        "curriculum": curriculum?.toJson(),
+        "rating": rating,
+        "instructor": instructor,
+        "modules": modules,
+        "modules_count": modulesCount,
+        "language": language,
+    };
+
+    // UI Helpers
+    String get levelLabel => level?.toUpperCase() ?? 'BEGINNER';
+    String get displayPrice => formattedPrice ?? (price == 0 || price == null ? 'Free' : '\$${price}');
+    bool get isFree => price == 0 || price == null;
+    int get totalLessonsCount => totalLessons ?? 0;
+    String? get formattedDuration => duration;
+    bool get hasCurriculum => curriculum != null || (modules != null && modules!.isNotEmpty);
+    bool get hasCategory => category != null && category!.name != null;
+}
+
+class Category {
+    final String? id;
+    final String? name;
+    final String? slug;
+    final String? description;
+    final dynamic icon;
+    final dynamic color;
+    final int? courseCount;
+    final DateTime? createdAt;
+    final DateTime? updatedAt;
+
+    Category({
+        this.id,
+        this.name,
+        this.slug,
+        this.description,
+        this.icon,
+        this.color,
+        this.courseCount,
+        this.createdAt,
+        this.updatedAt,
+    });
+
+    factory Category.fromJson(Map<String, dynamic> json) => Category(
+        id: json["id"]?.toString(),
+        name: json["name"],
+        slug: json["slug"],
+        description: json["description"],
+        icon: json["icon"],
+        color: json["color"],
+        courseCount: json["course_count"],
+        createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
+        updatedAt: json["updated_at"] == null ? null : DateTime.parse(json["updated_at"]),
     );
-  }
 
-  @override
-  List<Object?> get props => [id, title, price];
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "slug": slug,
+        "description": description,
+        "icon": icon,
+        "color": color,
+        "course_count": courseCount,
+        "created_at": createdAt?.toIso8601String(),
+        "updated_at": updatedAt?.toIso8601String(),
+    };
+}
+
+class Curriculum {
+    final int? totalLessons;
+    final int? totalDurationMinutes;
+    final bool? hasDocuments;
+
+    Curriculum({
+        this.totalLessons,
+        this.totalDurationMinutes,
+        this.hasDocuments,
+    });
+
+    factory Curriculum.fromJson(Map<String, dynamic> json) => Curriculum(
+        totalLessons: json["total_lessons"],
+        totalDurationMinutes: json["total_duration_minutes"],
+        hasDocuments: json["has_documents"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "total_lessons": totalLessons,
+        "total_duration_minutes": totalDurationMinutes,
+        "has_documents": hasDocuments,
+    };
+}
+
+class Stats {
+    final int? enrollmentCount;
+    final bool? isPopular;
+    final bool? hasDocuments;
+
+    Stats({
+        this.enrollmentCount,
+        this.isPopular,
+        this.hasDocuments,
+    });
+
+    factory Stats.fromJson(Map<String, dynamic> json) => Stats(
+        enrollmentCount: json["enrollment_count"],
+        isPopular: json["is_popular"],
+        hasDocuments: json["has_documents"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "enrollment_count": enrollmentCount,
+        "is_popular": isPopular,
+        "has_documents": hasDocuments,
+    };
+}
+
+class Pagination {
+    final int? currentPage;
+    final int? from;
+    final int? lastPage;
+    final Links? links;
+    final String? path;
+    final int? perPage;
+    final int? to;
+    final int? total;
+
+    Pagination({
+        this.currentPage,
+        this.from,
+        this.lastPage,
+        this.links,
+        this.path,
+        this.perPage,
+        this.to,
+        this.total,
+    });
+
+    factory Pagination.fromJson(Map<String, dynamic> json) => Pagination(
+        currentPage: json["current_page"],
+        from: json["from"],
+        lastPage: json["last_page"],
+        links: json["links"] == null ? null : Links.fromJson(json["links"]),
+        path: json["path"],
+        perPage: json["per_page"],
+        to: json["to"],
+        total: json["total"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "current_page": currentPage,
+        "from": from,
+        "last_page": lastPage,
+        "links": links?.toJson(),
+        "path": path,
+        "per_page": perPage,
+        "to": to,
+        "total": total,
+    };
+}
+
+class Links {
+    final String? first;
+    final String? last;
+    final dynamic prev;
+    final dynamic next;
+
+    Links({
+        this.first,
+        this.last,
+        this.prev,
+        this.next,
+    });
+
+    factory Links.fromJson(Map<String, dynamic> json) => Links(
+        first: json["first"],
+        last: json["last"],
+        prev: json["prev"],
+        next: json["next"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "first": first,
+        "last": last,
+        "prev": prev,
+        "next": next,
+    };
 }

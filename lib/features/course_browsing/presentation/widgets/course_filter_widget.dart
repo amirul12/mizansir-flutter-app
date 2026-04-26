@@ -1,7 +1,8 @@
 // File: lib/features/course_browsing/presentation/widgets/course_filter_widget.dart
 import 'package:flutter/material.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_model.dart' show Category;
 import '../../domain/entities/course_filter.dart';
-import '../../domain/entities/category.dart';
+ 
 
 /// Course Filter Widget
 class CourseFilterWidget extends StatelessWidget {
@@ -89,7 +90,7 @@ class CourseFilterWidget extends StatelessWidget {
                 // Categories
                 ...categories.map((category) {
                   return FilterChip(
-                    label: Text(category.name),
+                    label: Text(category.name!),
                     selected: filter.categoryId == category.id,
                     onSelected: (selected) {
                       onFilterChanged(
@@ -317,7 +318,7 @@ class CourseFilterWidget extends StatelessWidget {
         (cat) => cat.id == filter.categoryId,
         orElse: () => categories.first,
       );
-      parts.add(category.name);
+      parts.add(category.name!);
     }
 
     if (filter.level != null) {

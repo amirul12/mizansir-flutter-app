@@ -1,5 +1,7 @@
 // File: lib/features/course_browsing/data/models/category_model.dart
-import '../../domain/entities/category.dart';
+ 
+
+import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
 
 /// Category Model
 class CategoryModel {
@@ -65,17 +67,5 @@ class CategoryModel {
     );
   }
 
-  /// Convert from Entity
-  factory CategoryModel.fromEntity(Category entity) {
-    return CategoryModel(
-      id: entity.id,
-      name: entity.name,
-      description: entity.description,
-      icon: entity.icon,
-      color: entity.color,
-      courseCount: entity.courseCount,
-      createdAt: entity.createdAt,
-      updatedAt: entity.updatedAt,
-    );
-  }
+  
 }

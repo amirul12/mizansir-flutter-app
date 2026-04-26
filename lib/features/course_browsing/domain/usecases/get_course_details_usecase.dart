@@ -1,8 +1,9 @@
 // File: lib/features/course_browsing/domain/usecases/get_course_details_usecase.dart
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_model.dart' show CourseModel;
 import '../../../../core/error/failures.dart';
-import '../entities/course.dart';
+ 
 import '../repositories/course_repository.dart';
 
 /// Parameters for getting course details
@@ -21,7 +22,7 @@ class GetCourseDetailsUseCase {
 
   const GetCourseDetailsUseCase(this.repository);
 
-  Future<Either<Failure, Course>> call(GetCourseDetailsParams params) {
+  Future<Either<Failure, CourseModel>> call(GetCourseDetailsParams params) {
     return repository.getCourseDetails(params.courseId);
   }
 }
