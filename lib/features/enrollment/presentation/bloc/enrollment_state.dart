@@ -1,7 +1,7 @@
 // File: lib/features/enrollment/presentation/bloc/enrollment_state.dart
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/enrolled_course.dart';
-import '../../domain/entities/my_course_entity.dart';
+ 
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/course_progress.dart';
 

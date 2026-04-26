@@ -6,7 +6,7 @@ class ApiConstants {
   static const String baseUrl = 'http://192.168.0.104:8000/api/v1';
 
   // API Version
-  static const String apiVersion = '/v1';
+  // static const String apiVersion = '/v1';
 
   // Timeout
   static const Duration connectTimeout = Duration(seconds: 30);
@@ -69,12 +69,12 @@ class ApiConstants {
 
   // Helper method to build full URL
   static String buildEndpoint(String endpoint) {
-    return '$apiVersion$endpoint';
+    return '$endpoint';
   }
 
   // Helper method to build URL with path parameters
   static String buildWithPath(String endpoint, String pathParam) {
-    return '$apiVersion$endpoint/$pathParam';
+    return '$endpoint/$pathParam';
   }
 
   // Helper method to build URL with multiple path parameters
@@ -83,6 +83,6 @@ class ApiConstants {
     List<String> pathParams,
   ) {
     final path = pathParams.join('/');
-    return '$apiVersion$endpoint/$path';
+    return '$endpoint/$path';
   }
 }

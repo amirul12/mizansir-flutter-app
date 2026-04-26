@@ -1,15 +1,16 @@
 // File: lib/features/enrollment/domain/repositories/enrollment_repository.dart
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/enrollment/data/models/my_course_model.dart' show MyCourseModel;
 import '../../../../core/error/failures.dart';
 import '../entities/enrolled_course.dart';
-import '../entities/my_course_entity.dart';
+ 
 import '../entities/lesson.dart';
 import '../entities/course_progress.dart';
 
 /// Enrollment Repository Interface
 abstract class EnrollmentRepository {
   /// Get user's enrolled courses
-  Future<Either<Failure, List<MyCourseEntity>>> getMyCourses();
+  Future<Either<Failure, List<MyCourseModel>>> getMyCourses();
 
   /// Get enrolled course details with lessons
   Future<Either<Failure, EnrolledCourse>> getEnrolledCourseDetails(String courseId);

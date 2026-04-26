@@ -9,10 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:mizansir/core/services/error_response.dart' show ErrorResponse;
-import 'package:mizansir/core/services/local_storage/cache_service.dart' show CacheService;
+import 'package:mizansir/core/services/token_service.dart' show TokenService;
 import 'package:mizansir/core/utils/logger.dart' show logger;
 import 'package:mizansir/core/utils/testing.dart' show amirPrint;
-import 'package:mizansir/core/utils/user_secret.dart' show UserSecret;
 import 'package:nb_utils/nb_utils.dart' as QContext;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Add this import
@@ -71,7 +70,7 @@ Future<Map<String, String>> basicHeaderInfo() async {
 
 // UPDATED: Updated bearerHeaderInfo with dynamic language
 Future<Map<String, String>> bearerHeaderInfo() async {
-  var token = await CacheService.instance.retrieveBearerToken();
+  var token = await TokenService().retrieveBearerToken();
   final currentLang =
       await getCurrentLanguage(); // UPDATED: Get current language
 
@@ -121,37 +120,6 @@ class ApiMethod {
     return hasInternet;
   }
 
-  // UPDATED: getAccesstoken method now uses dynamic language
-  static Future<dynamic> getAccesstoken(http.Request request) async {
-    String accessToken = await UserSecret().getAuthToken();
-    final currentLang =
-        await getCurrentLanguage(); // UPDATED: Get current language
-    final platformName = await getPlateformName(); // Get platform name
-    final appVersion = await getAppVertion(); // Get app version
-
-    if (accessToken.isNotEmpty) {
-      final headers = {
-        HttpHeaders.acceptHeader: "application/json",
-        HttpHeaders.contentTypeHeader: "application/json",
-        "clienttype": platformName, // ADDED: Dynamic client type
-        "appversion": appVersion, // ADDED: Dynamic app version
-        "headerapisecret":
-            "4B57AC7AC8892694D579EE884AD1E44A36CDB3ACA969E18CAF41778A3D18981F9B8296C",
-        "lang": currentLang, // UPDATED: Dynamic language
-        HttpHeaders.authorizationHeader: "Bearer $accessToken",
-      };
-
-      amirPrint("🔄 Retry with Access Token (401 handler):");
-      amirPrint("  ├─ clienttype: $platformName");
-      amirPrint("  ├─ appversion: $appVersion");
-      amirPrint("  ├─ lang: $currentLang");
-      amirPrint("  └─ Full Headers: $headers");
-
-      request.headers.addAll(headers);
-    }
-
-    return request;
-  }
 
   // UPDATED: Get method with dynamic headers
   Future<dynamic> get(
@@ -207,13 +175,8 @@ class ApiMethod {
           );
 
       if (response.statusCode == 401) {
-        var res = await getAccesstoken(request);
-        if (res != null) {
-          response = await res.send();
-        } else {
-          amirPrint("res is null");
-          return null;
-        }
+        amirPrint("401 Unauthorized - returning null");
+        return null;
       }
 
       log.i(response.statusCode);
@@ -274,7 +237,7 @@ class ApiMethod {
       log.e('🐞🐞🐞 Other Error Alert 🐞🐞🐞');
       log.e('❌❌❌ unlisted error received');
       log.e("❌❌❌ $e");
-      throw CustomException(e.toString());
+      throw CustomException(e?.toString() ?? 'Unknown error');
     }
   }
 
@@ -316,13 +279,8 @@ class ApiMethod {
           '|📒📒📒|-----------------[[ POST ]] method response end --------------------|📒📒📒|');
 
       if (response.statusCode == 401) {
-        var res = await getAccesstoken(request);
-        if (res != null) {
-          response = await res.send();
-        } else {
-          amirPrint("res is null");
-          return null;
-        }
+        amirPrint("401 Unauthorized - returning null");
+        return null;
       }
 
       return _response(response, hasLoader: false);
@@ -343,7 +301,7 @@ class ApiMethod {
       log.e('🐞🐞🐞 Other Error Alert 🐞🐞🐞');
       log.e('❌❌❌ unlisted error received');
       log.e("❌❌❌ $e");
-      throw CustomException(e.toString());
+      throw CustomException(e?.toString() ?? 'Unknown error');
     }
   }
 
@@ -451,28 +409,8 @@ class ApiMethod {
           '|📒📒📒|-----------------[[ UPLOAD ]] method response end --------------------|📒📒📒|');
 
       if (response.statusCode == 401) {
-        var res = await getAccesstokenFile();
-        if (res != null) {
-          request.headers[HttpHeaders.authorizationHeader] = 'Bearer $res';
-          // UPDATED: Add language header in retry
-          final currentLang = await getCurrentLanguage();
-          final platformName = await getPlateformName();
-          final appVersion = await getAppVertion();
-
-          request.headers['lang'] = currentLang;
-          request.headers['clienttype'] = platformName;
-          request.headers['appversion'] = appVersion;
-
-          amirPrint("🔄 Multipart Retry (401) - Updated Headers:");
-          amirPrint("  ├─ clienttype: $platformName");
-          amirPrint("  ├─ appversion: $appVersion");
-          amirPrint("  └─ lang: $currentLang");
-
-          response = await request.send();
-        } else {
-          log.e("res is null");
-          return null;
-        }
+        log.e("401 Unauthorized - returning null");
+        return null;
       }
 
       return _response(response, hasLoader: false);
@@ -493,7 +431,7 @@ class ApiMethod {
       log.e('🐞🐞🐞 Other Error Alert 🐞🐞🐞');
       log.e('❌❌❌ unlisted error received');
       log.e("❌❌❌ $e");
-      throw CustomException(e.toString());
+      throw CustomException(e?.toString() ?? 'Unknown error');
     }
   }
 
@@ -521,7 +459,7 @@ class ApiMethod {
       log.i(
           '|📍📍📍|-----------------[[ Multipart ]] method details end ------------|📍📍📍|');
 
-      var token = await UserSecret().getAuthToken();
+      var token = '';
       final currentLang =
           await getCurrentLanguage(); // UPDATED: Get current language
       final platformName = await getPlateformName(); // Get platform name
@@ -735,12 +673,6 @@ class ApiMethod {
 
   // Rest of the methods remain the same...
   Future<String?> getAccesstokenFile() async {
-    String accessToken = await UserSecret().getAuthToken();
-
-    if (accessToken.isNotEmpty) {
-      return accessToken;
-    }
-
     return null;
   }
 
@@ -823,7 +755,7 @@ class ApiMethod {
       log.e('🐞🐞🐞 Other Error Alert 🐞🐞🐞');
       log.e('❌❌❌ unlisted error received');
       log.e("❌❌❌ $e");
-      throw CustomException(e.toString());
+      throw CustomException(e?.toString() ?? 'Unknown error');
     }
   }
 

@@ -18,9 +18,10 @@ class _SplashPageState extends State<SplashPage> {
   void initState() {
     super.initState();
     // Check authentication status on app start
+    // CheckAuthStatusEvent checks token before making API call
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.read<AuthBloc>().add(GetCurrentUserEvent());
+        context.read<AuthBloc>().add(CheckAuthStatusEvent());
       }
     });
   }

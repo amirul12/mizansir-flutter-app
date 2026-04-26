@@ -27,12 +27,12 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataList = CommonToJson.getList(mapResponse);
+      final dataList = CommonToJson().getString(mapResponse);
       if (dataList == null) {
         throw ServerException('Invalid data format');
       }
 
-      return dataList.map((course) => MyCourseModel.fromJson(course)).toList();
+      return myCourseModelFromJson(dataList);
     } catch (e) {
       debugPrint('Error in getMyCourses: $e');
       rethrow;
@@ -53,7 +53,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataMap = CommonToJson.getMap(mapResponse);
+      final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
         throw ServerException('Invalid data format');
       }
@@ -79,7 +79,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataMap = CommonToJson.getMap(mapResponse);
+      final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
         throw ServerException('Invalid data format');
       }
@@ -106,7 +106,9 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
           }
         }
 
-        debugPrint('✅ Successfully parsed ${allLessons.length} lessons from modules');
+        debugPrint(
+          '✅ Successfully parsed ${allLessons.length} lessons from modules',
+        );
         return allLessons;
       }
 
@@ -134,7 +136,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataMap = CommonToJson.getMap(mapResponse);
+      final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
         throw ServerException('Invalid data format');
       }
@@ -187,7 +189,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataMap = CommonToJson.getMap(mapResponse);
+      final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
         throw ServerException('Invalid data format');
       }

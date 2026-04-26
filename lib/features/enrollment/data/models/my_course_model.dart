@@ -1,247 +1,239 @@
-import 'package:json_annotation/json_annotation.dart';
-import '../../domain/entities/my_course_entity.dart';
+// To parse this JSON data, do
+//
+//     final myCourseModel = myCourseModelFromJson(jsonString);
 
-part 'my_course_model.g.dart';
+import 'dart:convert';
 
-/// Model for My Courses API response
-@JsonSerializable()
+List<MyCourseModel> myCourseModelFromJson(String str) =>
+    List<MyCourseModel>.from(
+      json.decode(str).map((x) => MyCourseModel.fromJson(x)),
+    );
+
+String myCourseModelToJson(List<MyCourseModel> data) =>
+    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+
 class MyCourseModel {
-  final int id;
-  @JsonKey(name: 'course')
-  final CourseInfoModel course;
-  @JsonKey(name: 'curriculum')
-  final CurriculumInfoModel curriculum;
-  @JsonKey(name: 'enrollment')
-  final EnrollmentInfoModel enrollment;
+  final int? id;
+  final Course? course;
+  final Curriculum? curriculum;
+  final Enrollment? enrollment;
 
-  MyCourseModel({
-    required this.id,
-    required this.course,
-    required this.curriculum,
-    required this.enrollment,
-  });
+  MyCourseModel({this.id, this.course, this.curriculum, this.enrollment});
 
-  factory MyCourseModel.fromJson(Map<String, dynamic> json) =>
-      _$MyCourseModelFromJson(json);
+  factory MyCourseModel.fromJson(Map<String, dynamic> json) => MyCourseModel(
+    id: json["id"],
+    course: json["course"] == null ? null : Course.fromJson(json["course"]),
+    curriculum: json["curriculum"] == null
+        ? null
+        : Curriculum.fromJson(json["curriculum"]),
+    enrollment: json["enrollment"] == null
+        ? null
+        : Enrollment.fromJson(json["enrollment"]),
+  );
 
-  Map<String, dynamic> toJson() => _$MyCourseModelToJson(this);
-
-  MyCourseEntity toEntity() {
-    return MyCourseEntity(
-      id: id.toString(),
-      course: course.toEntity(),
-      curriculum: curriculum.toEntity(),
-      enrollment: enrollment.toEntity(),
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "course": course?.toJson(),
+    "curriculum": curriculum?.toJson(),
+    "enrollment": enrollment?.toJson(),
+  };
 }
 
-@JsonSerializable()
-class CourseInfoModel {
-  final int id;
-  final String title;
-  final String description;
-  final String? thumbnail;
-  final String price;
-  @JsonKey(name: 'formatted_price')
-  final String formattedPrice;
-  final String status;
-  @JsonKey(name: 'difficulty_level')
-  final String difficultyLevel;
-  @JsonKey(name: 'total_duration_minutes')
-  final int totalDurationMinutes;
-  @JsonKey(name: 'formatted_duration')
-  final String formattedDuration;
+class Course {
+  final int? id;
+  final String? title;
+  final String? description;
+  final dynamic thumbnail;
+  final String? price;
+  final String? formattedPrice;
+  final String? status;
+  final String? difficultyLevel;
+  final int? totalDurationMinutes;
+  final String? formattedDuration;
 
-  CourseInfoModel({
-    required this.id,
-    required this.title,
-    required this.description,
+  Course({
+    this.id,
+    this.title,
+    this.description,
     this.thumbnail,
-    required this.price,
-    required this.formattedPrice,
-    required this.status,
-    required this.difficultyLevel,
-    required this.totalDurationMinutes,
-    required this.formattedDuration,
+    this.price,
+    this.formattedPrice,
+    this.status,
+    this.difficultyLevel,
+    this.totalDurationMinutes,
+    this.formattedDuration,
   });
 
-  factory CourseInfoModel.fromJson(Map<String, dynamic> json) =>
-      _$CourseInfoModelFromJson(json);
+  factory Course.fromJson(Map<String, dynamic> json) => Course(
+    id: json["id"],
+    title: json["title"],
+    description: json["description"],
+    thumbnail: json["thumbnail"],
+    price: json["price"],
+    formattedPrice: json["formatted_price"],
+    status: json["status"],
+    difficultyLevel: json["difficulty_level"],
+    totalDurationMinutes: json["total_duration_minutes"],
+    formattedDuration: json["formatted_duration"],
+  );
 
-  Map<String, dynamic> toJson() => _$CourseInfoModelToJson(this);
-
-  CourseInfo toEntity() {
-    return CourseInfo(
-      id: id.toString(),
-      title: title,
-      description: description,
-      thumbnail: thumbnail,
-      price: price,
-      formattedPrice: formattedPrice,
-      status: status,
-      difficultyLevel: difficultyLevel,
-      totalDurationMinutes: totalDurationMinutes,
-      formattedDuration: formattedDuration,
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "title": title,
+    "description": description,
+    "thumbnail": thumbnail,
+    "price": price,
+    "formatted_price": formattedPrice,
+    "status": status,
+    "difficulty_level": difficultyLevel,
+    "total_duration_minutes": totalDurationMinutes,
+    "formatted_duration": formattedDuration,
+  };
 }
 
-@JsonSerializable()
-class CurriculumInfoModel {
-  @JsonKey(name: 'total_lessons')
-  final int totalLessons;
-  @JsonKey(name: 'completed_lessons')
-  final int completedLessons;
-  @JsonKey(name: 'remaining_lessons')
-  final int remainingLessons;
-  @JsonKey(name: 'progress_percentage')
-  final double progressPercentage;
-  @JsonKey(name: 'modules_count')
-  final int modulesCount;
-  final List<ModuleInfoModel> modules;
-  @JsonKey(name: 'next_lesson')
-  final NextLessonInfoModel? nextLesson;
+class Curriculum {
+  final int? totalLessons;
+  final int? completedLessons;
+  final int? remainingLessons;
+  final double? progressPercentage;
+  final int? modulesCount;
+  final List<Module>? modules;
+  final NextLesson? nextLesson;
 
-  CurriculumInfoModel({
-    required this.totalLessons,
-    required this.completedLessons,
-    required this.remainingLessons,
-    required this.progressPercentage,
-    required this.modulesCount,
-    required this.modules,
+  Curriculum({
+    this.totalLessons,
+    this.completedLessons,
+    this.remainingLessons,
+    this.progressPercentage,
+    this.modulesCount,
+    this.modules,
     this.nextLesson,
   });
 
-  factory CurriculumInfoModel.fromJson(Map<String, dynamic> json) =>
-      _$CurriculumInfoModelFromJson(json);
+  factory Curriculum.fromJson(Map<String, dynamic> json) => Curriculum(
+    totalLessons: json["total_lessons"],
+    completedLessons: json["completed_lessons"],
+    remainingLessons: json["remaining_lessons"],
+    progressPercentage: json["progress_percentage"]?.toDouble(),
+    modulesCount: json["modules_count"],
+    modules: json["modules"] == null
+        ? []
+        : List<Module>.from(json["modules"]!.map((x) => Module.fromJson(x))),
+    nextLesson: json["next_lesson"] == null
+        ? null
+        : NextLesson.fromJson(json["next_lesson"]),
+  );
 
-  Map<String, dynamic> toJson() => _$CurriculumInfoModelToJson(this);
-
-  CurriculumInfo toEntity() {
-    return CurriculumInfo(
-      totalLessons: totalLessons,
-      completedLessons: completedLessons,
-      remainingLessons: remainingLessons,
-      progressPercentage: progressPercentage,
-      modulesCount: modulesCount,
-      modules: modules.map((m) => m.toEntity()).toList(),
-      nextLesson: nextLesson?.toEntity(),
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    "total_lessons": totalLessons,
+    "completed_lessons": completedLessons,
+    "remaining_lessons": remainingLessons,
+    "progress_percentage": progressPercentage,
+    "modules_count": modulesCount,
+    "modules": modules == null
+        ? []
+        : List<dynamic>.from(modules!.map((x) => x.toJson())),
+    "next_lesson": nextLesson?.toJson(),
+  };
 }
 
-@JsonSerializable()
-class ModuleInfoModel {
-  @JsonKey(name: 'module_name')
-  final String moduleName;
-  @JsonKey(name: 'lessons_count')
-  final int lessonsCount;
-  @JsonKey(name: 'duration_minutes')
-  final int durationMinutes;
-
-  ModuleInfoModel({
-    required this.moduleName,
-    required this.lessonsCount,
-    required this.durationMinutes,
-  });
-
-  factory ModuleInfoModel.fromJson(Map<String, dynamic> json) =>
-      _$ModuleInfoModelFromJson(json);
-
-  Map<String, dynamic> toJson() => _$ModuleInfoModelToJson(this);
-
-  ModuleInfo toEntity() {
-    return ModuleInfo(
-      moduleName: moduleName,
-      lessonsCount: lessonsCount,
-      durationMinutes: durationMinutes,
-    );
-  }
-}
-
-@JsonSerializable()
-class NextLessonInfoModel {
-  final int id;
-  final String title;
-  @JsonKey(name: 'duration_minutes')
+class Module {
+  final String? moduleName;
+  final int? lessonsCount;
   final int? durationMinutes;
-  @JsonKey(name: 'module_name')
-  final String moduleName;
 
-  NextLessonInfoModel({
-    required this.id,
-    required this.title,
-    this.durationMinutes,
-    required this.moduleName,
-  });
+  Module({this.moduleName, this.lessonsCount, this.durationMinutes});
 
-  factory NextLessonInfoModel.fromJson(Map<String, dynamic> json) =>
-      _$NextLessonInfoModelFromJson(json);
+  factory Module.fromJson(Map<String, dynamic> json) => Module(
+    moduleName: json["module_name"],
+    lessonsCount: json["lessons_count"],
+    durationMinutes: json["duration_minutes"],
+  );
 
-  Map<String, dynamic> toJson() => _$NextLessonInfoModelToJson(this);
-
-  NextLessonInfo toEntity() {
-    return NextLessonInfo(
-      id: id.toString(),
-      title: title,
-      durationMinutes: durationMinutes,
-      moduleName: moduleName,
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    "module_name": moduleName,
+    "lessons_count": lessonsCount,
+    "duration_minutes": durationMinutes,
+  };
 }
 
-@JsonSerializable()
-class EnrollmentInfoModel {
-  final int id;
-  final String status;
-  @JsonKey(name: 'payment_method')
-  final String paymentMethod;
-  @JsonKey(name: 'payment_notes')
-  final String paymentNotes;
-  @JsonKey(name: 'enrolled_at')
-  final DateTime enrolledAt;
-  @JsonKey(name: 'approved_at')
-  final DateTime approvedAt;
-  @JsonKey(name: 'expires_at')
-  final DateTime expiresAt;
-  @JsonKey(name: 'is_active')
-  final bool isActive;
-  @JsonKey(name: 'days_remaining')
-  final int daysRemaining;
-  @JsonKey(name: 'enrollment_duration_days')
-  final int enrollmentDurationDays;
+class NextLesson {
+  final int? id;
+  final String? title;
+  final int? durationMinutes;
+  final String? moduleName;
 
-  EnrollmentInfoModel({
-    required this.id,
-    required this.status,
-    required this.paymentMethod,
-    required this.paymentNotes,
-    required this.enrolledAt,
-    required this.approvedAt,
-    required this.expiresAt,
-    required this.isActive,
-    required this.daysRemaining,
-    required this.enrollmentDurationDays,
+  NextLesson({this.id, this.title, this.durationMinutes, this.moduleName});
+
+  factory NextLesson.fromJson(Map<String, dynamic> json) => NextLesson(
+    id: json["id"],
+    title: json["title"],
+    durationMinutes: json["duration_minutes"],
+    moduleName: json["module_name"],
+  );
+
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "title": title,
+    "duration_minutes": durationMinutes,
+    "module_name": moduleName,
+  };
+}
+
+class Enrollment {
+  final int? id;
+  final String? status;
+  final String? paymentMethod;
+  final String? paymentNotes;
+  final DateTime? enrolledAt;
+  final DateTime? approvedAt;
+  final DateTime? expiresAt;
+  final bool? isActive;
+  final int? daysRemaining;
+  final int? enrollmentDurationDays;
+
+  Enrollment({
+    this.id,
+    this.status,
+    this.paymentMethod,
+    this.paymentNotes,
+    this.enrolledAt,
+    this.approvedAt,
+    this.expiresAt,
+    this.isActive,
+    this.daysRemaining,
+    this.enrollmentDurationDays,
   });
 
-  factory EnrollmentInfoModel.fromJson(Map<String, dynamic> json) =>
-      _$EnrollmentInfoModelFromJson(json);
+  factory Enrollment.fromJson(Map<String, dynamic> json) => Enrollment(
+    id: json["id"],
+    status: json["status"],
+    paymentMethod: json["payment_method"],
+    paymentNotes: json["payment_notes"],
+    enrolledAt: json["enrolled_at"] == null
+        ? null
+        : DateTime.parse(json["enrolled_at"]),
+    approvedAt: json["approved_at"] == null
+        ? null
+        : DateTime.parse(json["approved_at"]),
+    expiresAt: json["expires_at"] == null
+        ? null
+        : DateTime.parse(json["expires_at"]),
+    isActive: json["is_active"],
+    daysRemaining: json["days_remaining"],
+    enrollmentDurationDays: json["enrollment_duration_days"],
+  );
 
-  Map<String, dynamic> toJson() => _$EnrollmentInfoModelToJson(this);
-
-  EnrollmentInfo toEntity() {
-    return EnrollmentInfo(
-      id: id.toString(),
-      status: status,
-      paymentMethod: paymentMethod,
-      paymentNotes: paymentNotes,
-      enrolledAt: enrolledAt,
-      approvedAt: approvedAt,
-      expiresAt: expiresAt,
-      isActive: isActive,
-      daysRemaining: daysRemaining,
-      enrollmentDurationDays: enrollmentDurationDays,
-    );
-  }
+  Map<String, dynamic> toJson() => {
+    "id": id,
+    "status": status,
+    "payment_method": paymentMethod,
+    "payment_notes": paymentNotes,
+    "enrolled_at": enrolledAt?.toIso8601String(),
+    "approved_at": approvedAt?.toIso8601String(),
+    "expires_at": expiresAt?.toIso8601String(),
+    "is_active": isActive,
+    "days_remaining": daysRemaining,
+    "enrollment_duration_days": enrollmentDurationDays,
+  };
 }

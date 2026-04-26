@@ -1,77 +1,52 @@
-// File: lib/features/auth/data/datasources/auth_local_datasource_impl.dart
 import 'dart:convert';
-import '../../../../core/services/storage_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/storage_constants.dart';
-import '../../../../core/errors/exceptions.dart';
 import 'auth_local_datasource.dart';
 
-/// Authentication local data source implementation
+/// Authentication local data source implementation using SharedPreferences directly
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
-  final StorageService storageService;
+  AuthLocalDataSourceImpl();
 
-  AuthLocalDataSourceImpl({required this.storageService});
+  static Future<SharedPreferences> get _prefs async =>
+      await SharedPreferences.getInstance();
 
   @override
   Future<void> cacheUser(Map<String, dynamic> userJson) async {
-    try {
-      await storageService.setString(
-        StorageConstants.userDataKey,
-        jsonEncode(userJson),
-      );
-    } catch (e) {
-      throw const CacheException(message: 'Failed to cache user');
-    }
+    (await _prefs).setString(
+      StorageConstants.userDataKey,
+      jsonEncode(userJson),
+    );
   }
 
   @override
   Future<Map<String, dynamic>?> getCachedUser() async {
-    try {
-      final userString = storageService.getString(StorageConstants.userDataKey);
-      if (userString == null || userString.isEmpty) {
-        return null;
-      }
-      return jsonDecode(userString) as Map<String, dynamic>;
-    } catch (e) {
-      throw const CacheException(message: 'Failed to get cached user');
+    final userString = (await _prefs).getString(StorageConstants.userDataKey);
+    if (userString == null || userString.isEmpty) {
+      return null;
     }
+    return jsonDecode(userString) as Map<String, dynamic>;
   }
 
   @override
   Future<void> clearCachedUser() async {
-    try {
-      await storageService.remove(StorageConstants.userDataKey);
-    } catch (e) {
-      throw const CacheException(message: 'Failed to clear cached user');
-    }
+    (await _prefs).remove(StorageConstants.userDataKey);
   }
 
   @override
   Future<void> saveAuthState(bool isAuthenticated) async {
-    try {
-      await storageService.setBool(
-        StorageConstants.isLoggedInKey,
-        isAuthenticated,
-      );
-    } catch (e) {
-      throw const CacheException(message: 'Failed to save auth state');
-    }
+    (await _prefs).setBool(
+      StorageConstants.isLoggedInKey,
+      isAuthenticated,
+    );
   }
 
   @override
   Future<bool> getAuthState() async {
-    try {
-      return storageService.getBool(StorageConstants.isLoggedInKey) ?? false;
-    } catch (e) {
-      throw const CacheException(message: 'Failed to get auth state');
-    }
+    return (await _prefs).getBool(StorageConstants.isLoggedInKey) ?? false;
   }
 
   @override
   Future<void> clearAuthState() async {
-    try {
-      await storageService.remove(StorageConstants.isLoggedInKey);
-    } catch (e) {
-      throw const CacheException(message: 'Failed to clear auth state');
-    }
+    (await _prefs).remove(StorageConstants.isLoggedInKey);
   }
 }

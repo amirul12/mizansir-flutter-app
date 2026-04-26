@@ -34,28 +34,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AppStartedEvent event,
     Emitter<AuthState> emit,
   ) async {
-    emit(const AuthLoading());
     final result = await getCurrentUserUseCase(NoParams());
 
-    result.fold(
-      (failure) => emit(const AuthUnauthenticated()),
-      (user) {
-        // Check if user is a student
-        if (user.isStudent) {
-          emit(AuthAuthenticated(user));
-        } else {
-          // Not a student - logout and show error
-          logoutUseCase(NoParams());
-          emit(const AuthError('Access denied. Only students can access this app.'));
-        }
-      },
-    );
+    result.fold((failure) {
+      // On any error (including 401), ensure unauthenticated state
+      emit(const AuthUnauthenticated());
+    }, (user) {
+      // Check if user is a student
+      if (user.isStudent) {
+        emit(AuthAuthenticated(user));
+      } else {
+        // Not a student - logout and show error
+        logoutUseCase(NoParams());
+        emit(
+          const AuthError('Access denied. Only students can access this app.'),
+        );
+      }
+    });
   }
 
-  Future<void> _onLogin(
-    LoginEvent event,
-    Emitter<AuthState> emit,
-  ) async {
+  Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(const AuthLoading());
 
     // Get device name
@@ -69,25 +67,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ),
     );
 
-    result.fold(
-      (failure) => emit(AuthError(_getErrorMessage(failure))),
-      (user) {
-        // Check if user is a student
-        if (user.isStudent) {
-          emit(const AuthLoginSuccess('Login successful'));
-        } else {
-          // Not a student - logout and show error
-          logoutUseCase(NoParams());
-          emit(const AuthError('Access denied. Only students can access this app.'));
-        }
-      },
-    );
+    result.fold((failure) => emit(AuthError(_getErrorMessage(failure))), (
+      user,
+    ) {
+      // Check if user is a student
+      if (user.isStudent) {
+        emit(const AuthLoginSuccess('Login successful'));
+      } else {
+        // Not a student - logout and show error
+        logoutUseCase(NoParams());
+        emit(
+          const AuthError('Access denied. Only students can access this app.'),
+        );
+      }
+    });
   }
 
-  Future<void> _onRegister(
-    RegisterEvent event,
-    Emitter<AuthState> emit,
-  ) async {
+  Future<void> _onRegister(RegisterEvent event, Emitter<AuthState> emit) async {
     emit(const AuthLoading());
 
     final result = await registerUseCase(
@@ -100,25 +96,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ),
     );
 
-    result.fold(
-      (failure) => emit(AuthError(_getErrorMessage(failure))),
-      (user) {
-        // Check if user is a student
-        if (user.isStudent) {
-          emit(const AuthRegisterSuccess('Registration successful'));
-        } else {
-          // Not a student - logout and show error
-          logoutUseCase(NoParams());
-          emit(const AuthError('Access denied. Only students can access this app.'));
-        }
-      },
-    );
+    result.fold((failure) => emit(AuthError(_getErrorMessage(failure))), (
+      user,
+    ) {
+      // Check if user is a student
+      if (user.isStudent) {
+        emit(const AuthRegisterSuccess('Registration successful'));
+      } else {
+        // Not a student - logout and show error
+        logoutUseCase(NoParams());
+        emit(
+          const AuthError('Access denied. Only students can access this app.'),
+        );
+      }
+    });
   }
 
-  Future<void> _onLogout(
-    LogoutEvent event,
-    Emitter<AuthState> emit,
-  ) async {
+  Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
     emit(const AuthLoading());
     final result = await logoutUseCase(NoParams());
 
@@ -135,19 +129,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
     final result = await getCurrentUserUseCase(NoParams());
 
-    result.fold(
-      (failure) => emit(AuthError(_getErrorMessage(failure))),
-      (user) {
-        // Check if user is a student
-        if (user.isStudent) {
-          emit(AuthAuthenticated(user));
-        } else {
-          // Not a student - logout and show error
-          logoutUseCase(NoParams());
-          emit(const AuthError('Access denied. Only students can access this app.'));
-        }
-      },
-    );
+    result.fold((failure) {
+      // On 401 or any error, logout and go to unauthenticated
+      if (failure.toString().contains('UnauthorizedFailure') ||
+          failure.message?.toLowerCase().contains('unauthorized') == true) {
+        logoutUseCase(NoParams());
+      }
+      emit(AuthError(_getErrorMessage(failure)));
+    }, (user) {
+      // Check if user is a student
+      if (user.isStudent) {
+        emit(AuthAuthenticated(user));
+      } else {
+        // Not a student - logout and show error
+        logoutUseCase(NoParams());
+        emit(
+          const AuthError('Access denied. Only students can access this app.'),
+        );
+      }
+    });
   }
 
   Future<void> _onCheckAuthStatus(
@@ -156,19 +156,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     final result = await getCurrentUserUseCase(NoParams());
 
-    result.fold(
-      (failure) => emit(const AuthUnauthenticated()),
-      (user) {
-        // Check if user is a student
-        if (user.isStudent) {
-          emit(AuthAuthenticated(user));
-        } else {
-          // Not a student - logout and show error
-          logoutUseCase(NoParams());
-          emit(const AuthUnauthenticated());
-        }
-      },
-    );
+    result.fold((failure) {
+      // On 401/unauthorized, data is already cleared in repository
+      emit(const AuthUnauthenticated());
+    }, (user) {
+      // Check if user is a student
+      if (user.isStudent) {
+        emit(AuthAuthenticated(user));
+      } else {
+        // Not a student - logout and show error
+        logoutUseCase(NoParams());
+        emit(const AuthUnauthenticated());
+      }
+    });
   }
 
   Future<void> _onClearError(

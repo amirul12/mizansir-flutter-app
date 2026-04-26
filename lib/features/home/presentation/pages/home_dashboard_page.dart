@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../profile/data/models/dashboard_stats_model.dart';
 import '../../../profile/presentation/bloc/dashboard_bloc.dart';
 import '../../../profile/presentation/bloc/dashboard_event.dart';
 import '../../../profile/presentation/bloc/dashboard_state.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../../profile/domain/entities/activity.dart';
-import '../../../profile/domain/entities/dashboard_stats.dart';
+ 
 import '../../../enrollment/presentation/bloc/enrollment_bloc.dart';
 import '../../../enrollment/presentation/bloc/enrollment_event.dart';
 import '../../../enrollment/presentation/bloc/enrollment_state.dart';
@@ -227,12 +228,12 @@ class HomeDashboardPage extends StatelessWidget {
       buildWhen: (previous, current) =>
           current is DashboardLoaded || current is DashboardLoading,
       builder: (context, state) {
-        DashboardStats? stats;
+        DashboardStatsModel? stats;
 
         if (state is DashboardLoaded) {
           stats = state.stats;
         } else if (state is DashboardLoading) {
-          stats = state.existingStats;
+        
         }
 
         if (stats == null) {
@@ -262,7 +263,7 @@ class HomeDashboardPage extends StatelessWidget {
                     context,
                     icon: Icons.school_outlined,
                     title: 'Enrollments',
-                    value: stats.totalEnrollments.toString(),
+                    value: stats.enrollmentStats.toString(),
                     color: AppColors.primary,
                     gradient: AppColors.primaryGradient,
                   ),
@@ -273,22 +274,22 @@ class HomeDashboardPage extends StatelessWidget {
                     context,
                     icon: Icons.play_circle_outline,
                     title: 'Active',
-                    value: stats.activeEnrollments.toString(),
+                    value: stats.recentEnrollments.toString(),
                     color: AppColors.secondary,
                     gradient: AppColors.secondaryGradient,
                   ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _buildModernStatCard(
-                    context,
-                    icon: Icons.check_circle_outline,
-                    title: 'Lessons',
-                    value: stats.completedLessons.toString(),
-                    color: AppColors.accent,
-                    gradient: [AppColors.accent, AppColors.accentLight],
-                  ),
-                ),
+                // Expanded(
+                //   child: _buildModernStatCard(
+                //     context,
+                //     icon: Icons.check_circle_outline,
+                //     title: 'Lessons',
+                //     value: stats.completedLessons.toString(),
+                //     color: AppColors.accent,
+                //     gradient: [AppColors.accent, AppColors.accentLight],
+                //   ),
+                // ),
               ],
             ),
           ],
@@ -1093,7 +1094,7 @@ class HomeDashboardPage extends StatelessWidget {
         if (state is DashboardLoaded) {
           activities = state.activities;
         } else if (state is DashboardLoading) {
-          activities = state.existingActivities;
+        
         }
 
         if (activities == null || activities.isEmpty) {

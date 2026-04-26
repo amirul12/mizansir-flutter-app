@@ -1,7 +1,8 @@
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/profile/data/models/dashboard_stats_model.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/no_params.dart';
-import '../entities/dashboard_stats.dart';
+ 
 import '../repositories/dashboard_repository.dart';
 
 /// Get dashboard use case.
@@ -16,7 +17,7 @@ class GetDashboardUseCase {
   ///
   /// Returns [Right] with [DashboardStats] on success.
   /// Returns [Left] with [Failure] on failure.
-  Future<Either<Failure, DashboardStats>> call(NoParams params) {
+  Future<Either<Failure, DashboardStatsModel>> call(NoParams params) {
     return repository.getDashboard();
   }
 }

@@ -1,83 +1,205 @@
-import 'package:json_annotation/json_annotation.dart';
-import '../../domain/entities/dashboard_stats.dart';
-import 'activity_model.dart';
+// To parse this JSON data, do
+//
+//     final dashboardStatsModel = dashboardStatsModelFromJson(jsonString);
 
-part 'dashboard_stats_model.g.dart';
+import 'dart:convert';
 
-/// Dashboard statistics model for JSON serialization.
-@JsonSerializable()
+DashboardStatsModel dashboardStatsModelFromJson(String str) => DashboardStatsModel.fromJson(json.decode(str));
+
+String dashboardStatsModelToJson(DashboardStatsModel data) => json.encode(data.toJson());
+
 class DashboardStatsModel {
-  // User information
-  @JsonKey(name: 'user')
-  final Map<String, dynamic>? user;
+    final User? user;
+    final EnrollmentStats? enrollmentStats;
+    final List<RecentEnrollment>? recentEnrollments;
+    final List<dynamic>? expiringSoon;
+    final Notifications? notifications;
 
-  // Enrollment statistics
-  @JsonKey(name: 'enrollment_stats')
-  final Map<String, dynamic>? enrollmentStats;
+    DashboardStatsModel({
+        this.user,
+        this.enrollmentStats,
+        this.recentEnrollments,
+        this.expiringSoon,
+        this.notifications,
+    });
 
-  // Recent enrollments
-  @JsonKey(name: 'recent_enrollments')
-  final List<dynamic>? recentEnrollments;
-
-  // Expiring soon courses
-  @JsonKey(name: 'expiring_soon')
-  final List<dynamic>? expiringSoon;
-
-  // Notifications
-  @JsonKey(name: 'notifications')
-  final Map<String, dynamic>? notifications;
-
-  // Recent activities (for activity feed)
-  @JsonKey(name: 'recent_activities')
-  final List<ActivityModel>? recentActivities;
-
-  DashboardStatsModel({
-    this.user,
-    this.enrollmentStats,
-    this.recentEnrollments,
-    this.expiringSoon,
-    this.notifications,
-    this.recentActivities,
-  });
-
-  /// Create DashboardStatsModel from JSON.
-  factory DashboardStatsModel.fromJson(Map<String, dynamic> json) =>
-      _$DashboardStatsModelFromJson(json);
-
-  /// Convert DashboardStatsModel to JSON.
-  Map<String, dynamic> toJson() => _$DashboardStatsModelToJson(this);
-
-  /// Convert to DashboardStats entity.
-  DashboardStats toEntity() {
-    // Extract enrollment stats
-    final stats = enrollmentStats;
-    final totalEnroll = stats?['total'] ?? 0;
-    final activeEnroll = stats?['active'] ?? 0;
-    final pendingEnroll = stats?['pending'] ?? 0;
-    final expiredEnroll = stats?['expired'] ?? 0;
-
-    return DashboardStats(
-      totalEnrollments: totalEnroll,
-      activeEnrollments: activeEnroll,
-      pendingEnrollments: pendingEnroll,
-      expiredEnrollments: expiredEnroll,
-      completedLessons: 0,
-      totalLessons: 0,
-      overallProgress: 0.0,
-      recentActivities: recentActivities?.map((a) => a.toEntity()).toList() ??
-          [],
-      recentEnrollments: recentEnrollments ?? [],
-      expiringSoon: expiringSoon ?? [],
-      notifications: notifications ?? {},
+    factory DashboardStatsModel.fromJson(Map<String, dynamic> json) => DashboardStatsModel(
+        user: json["user"] == null ? null : User.fromJson(json["user"]),
+        enrollmentStats: json["enrollment_stats"] == null ? null : EnrollmentStats.fromJson(json["enrollment_stats"]),
+        recentEnrollments: json["recent_enrollments"] == null ? [] : List<RecentEnrollment>.from(json["recent_enrollments"]!.map((x) => RecentEnrollment.fromJson(x))),
+        expiringSoon: json["expiring_soon"] == null ? [] : List<dynamic>.from(json["expiring_soon"]!.map((x) => x)),
+        notifications: json["notifications"] == null ? null : Notifications.fromJson(json["notifications"]),
     );
-  }
 
-  /// Create DashboardStatsModel from DashboardStats entity.
-  factory DashboardStatsModel.fromEntity(DashboardStats entity) {
-    return DashboardStatsModel(
-      recentActivities: entity.recentActivities
-          .map((a) => ActivityModel.fromEntity(a))
-          .toList(),
+    Map<String, dynamic> toJson() => {
+        "user": user?.toJson(),
+        "enrollment_stats": enrollmentStats?.toJson(),
+        "recent_enrollments": recentEnrollments == null ? [] : List<dynamic>.from(recentEnrollments!.map((x) => x.toJson())),
+        "expiring_soon": expiringSoon == null ? [] : List<dynamic>.from(expiringSoon!.map((x) => x)),
+        "notifications": notifications?.toJson(),
+    };
+}
+
+class EnrollmentStats {
+    final int? total;
+    final int? active;
+    final int? pending;
+    final int? expired;
+
+    EnrollmentStats({
+        this.total,
+        this.active,
+        this.pending,
+        this.expired,
+    });
+
+    factory EnrollmentStats.fromJson(Map<String, dynamic> json) => EnrollmentStats(
+        total: json["total"],
+        active: json["active"],
+        pending: json["pending"],
+        expired: json["expired"],
     );
-  }
+
+    Map<String, dynamic> toJson() => {
+        "total": total,
+        "active": active,
+        "pending": pending,
+        "expired": expired,
+    };
+}
+
+class Notifications {
+    final int? pendingApprovals;
+    final int? expiringCourses;
+
+    Notifications({
+        this.pendingApprovals,
+        this.expiringCourses,
+    });
+
+    factory Notifications.fromJson(Map<String, dynamic> json) => Notifications(
+        pendingApprovals: json["pending_approvals"],
+        expiringCourses: json["expiring_courses"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "pending_approvals": pendingApprovals,
+        "expiring_courses": expiringCourses,
+    };
+}
+
+class RecentEnrollment {
+    final int? id;
+    final String? courseTitle;
+    final String? status;
+    final DateTime? enrolledAt;
+    final DateTime? expiresAt;
+    final bool? isActive;
+
+    RecentEnrollment({
+        this.id,
+        this.courseTitle,
+        this.status,
+        this.enrolledAt,
+        this.expiresAt,
+        this.isActive,
+    });
+
+    factory RecentEnrollment.fromJson(Map<String, dynamic> json) => RecentEnrollment(
+        id: json["id"],
+        courseTitle: json["course_title"],
+        status: json["status"],
+        enrolledAt: json["enrolled_at"] == null ? null : DateTime.parse(json["enrolled_at"]),
+        expiresAt: json["expires_at"] == null ? null : DateTime.parse(json["expires_at"]),
+        isActive: json["is_active"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "course_title": courseTitle,
+        "status": status,
+        "enrolled_at": enrolledAt?.toIso8601String(),
+        "expires_at": expiresAt?.toIso8601String(),
+        "is_active": isActive,
+    };
+}
+
+class User {
+    final int? id;
+    final String? name;
+    final String? email;
+    final String? phone;
+    final String? role;
+    final dynamic emailVerifiedAt;
+    final DateTime? createdAt;
+    final DateTime? updatedAt;
+    final bool? isAdmin;
+    final bool? isStudent;
+    final Stats? stats;
+
+    User({
+        this.id,
+        this.name,
+        this.email,
+        this.phone,
+        this.role,
+        this.emailVerifiedAt,
+        this.createdAt,
+        this.updatedAt,
+        this.isAdmin,
+        this.isStudent,
+        this.stats,
+    });
+
+    factory User.fromJson(Map<String, dynamic> json) => User(
+        id: json["id"],
+        name: json["name"],
+        email: json["email"],
+        phone: json["phone"],
+        role: json["role"],
+        emailVerifiedAt: json["email_verified_at"],
+        createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
+        updatedAt: json["updated_at"] == null ? null : DateTime.parse(json["updated_at"]),
+        isAdmin: json["is_admin"],
+        isStudent: json["is_student"],
+        stats: json["stats"] == null ? null : Stats.fromJson(json["stats"]),
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "email": email,
+        "phone": phone,
+        "role": role,
+        "email_verified_at": emailVerifiedAt,
+        "created_at": createdAt?.toIso8601String(),
+        "updated_at": updatedAt?.toIso8601String(),
+        "is_admin": isAdmin,
+        "is_student": isStudent,
+        "stats": stats?.toJson(),
+    };
+}
+
+class Stats {
+    final int? totalEnrollments;
+    final int? activeEnrollments;
+    final int? pendingEnrollments;
+
+    Stats({
+        this.totalEnrollments,
+        this.activeEnrollments,
+        this.pendingEnrollments,
+    });
+
+    factory Stats.fromJson(Map<String, dynamic> json) => Stats(
+        totalEnrollments: json["total_enrollments"],
+        activeEnrollments: json["active_enrollments"],
+        pendingEnrollments: json["pending_enrollments"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "total_enrollments": totalEnrollments,
+        "active_enrollments": activeEnrollments,
+        "pending_enrollments": pendingEnrollments,
+    };
 }

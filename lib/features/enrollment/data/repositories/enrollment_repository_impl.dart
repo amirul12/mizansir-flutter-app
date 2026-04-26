@@ -1,8 +1,9 @@
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/enrollment/data/models/my_course_model.dart' show MyCourseModel;
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/enrolled_course.dart';
-import '../../domain/entities/my_course_entity.dart';
+
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/course_progress.dart';
 import '../../domain/repositories/enrollment_repository.dart';
@@ -15,12 +16,12 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
   EnrollmentRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<MyCourseEntity>>> getMyCourses() async {
+  Future<Either<Failure, List<MyCourseModel>>> getMyCourses() async {
     try {
       final courseModels = await remoteDataSource.getMyCourses();
-      return Right(courseModels.map((model) => model.toEntity()).toList());
+      return Right(courseModels);
     } on CustomException catch (e) {
-      final failure = parseCustomException<List<MyCourseEntity>>(e);
+      final failure = parseCustomException<List<MyCourseModel>>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }

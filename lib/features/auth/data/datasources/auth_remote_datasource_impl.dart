@@ -5,7 +5,6 @@ import '../../../../core/constants/api_constants.dart';
 import '../../../../core/services/api_service_method.dart';
 import '../../../../core/services/token_service.dart';
 import '../../../../core/utils/common_json.dart';
-import '../../../../core/errors/exceptions.dart';
 import '../models/auth_response_model.dart';
 import '../models/auth_user_model.dart';
 import '../models/session_model.dart';
@@ -41,24 +40,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw const ServerException(message: 'No data received');
+        throw Exception('No data received');
       }
 
-      final dataMap = CommonToJson.getMap(mapResponse);
+      final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
-        throw const ServerException(message: 'Invalid data format');
+        throw Exception('Invalid data format');
       }
 
       return AuthUserModel.fromJson(dataMap);
-    } on RateLimitException {
-      rethrow;
-    } on ValidationException {
-      rethrow;
-    } on AppException {
-      rethrow;
     } catch (e) {
       debugPrint('Error in register: $e');
-      throw NetworkException(message: e.toString());
+      rethrow;
     }
   }
 
@@ -82,12 +75,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw const ServerException(message: 'No data received');
+        throw Exception('No data received');
       }
 
-      final dataMap = CommonToJson.getMap(mapResponse);
+      final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
-        throw const ServerException(message: 'Invalid data format');
+        throw Exception('Invalid data format');
       }
 
       // Save token
@@ -100,15 +93,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       return AuthResponseModel.fromJson(dataMap);
-    } on RateLimitException {
-      rethrow;
-    } on ValidationException {
-      rethrow;
-    } on AppException {
-      rethrow;
     } catch (e) {
       debugPrint('Error in login: $e');
-      throw NetworkException(message: e.toString());
+      rethrow;
     }
   }
 
@@ -123,21 +110,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw const ServerException(message: 'No data received');
+        throw Exception('No data received');
       }
 
-      final dataMap = CommonToJson.getMap(mapResponse);
+      final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
-        throw const ServerException(message: 'Invalid data format');
+        throw Exception('Invalid data format');
       }
 
       debugPrint('✅ User data loaded successfully');
       return AuthUserModel.fromJson(dataMap);
-    } on AppException {
-      rethrow;
     } catch (e) {
       debugPrint('Error in getCurrentUser: $e');
-      throw NetworkException(message: e.toString());
+      rethrow;
     }
   }
 
@@ -153,17 +138,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw const ServerException(message: 'No data received');
+        throw Exception('No data received');
       }
 
       // Clear tokens
       await tokenService.clearTokens();
       debugPrint('✅ Logout successful');
-    } on AppException {
-      rethrow;
     } catch (e) {
       debugPrint('Error in logout: $e');
-      throw NetworkException(message: e.toString());
+      rethrow;
     }
   }
 
@@ -179,16 +162,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw const ServerException(message: 'No data received');
+        throw Exception('No data received');
       }
 
       await tokenService.clearTokens();
       debugPrint('✅ Logout all successful');
-    } on AppException {
-      rethrow;
     } catch (e) {
       debugPrint('Error in logoutAll: $e');
-      throw NetworkException(message: e.toString());
+      rethrow;
     }
   }
 
@@ -199,7 +180,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final refreshToken = await tokenService.getRefreshToken();
       if (refreshToken == null) {
-        throw const TokenException(message: 'No refresh token available');
+        throw Exception('No refresh token available');
       }
 
       mapResponse = await ApiMethod(isBasic: true).post(
@@ -209,18 +190,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw const ServerException(message: 'No data received');
+        throw Exception('No data received');
       }
 
-      final dataMap = CommonToJson.getMap(mapResponse);
+      final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
-        throw const ServerException(message: 'Invalid data format');
+        throw Exception('Invalid data format');
       }
 
       // Extract new token
       final newToken = dataMap['token'] as String?;
       if (newToken == null) {
-        throw const TokenException(message: 'No token in response');
+        throw Exception('No token in response');
       }
 
       await tokenService.saveAccessToken(newToken);
@@ -235,17 +216,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         await prefs.setString('cached_user', jsonEncode(userModel.toJson()));
 
         debugPrint('✅ Token refreshed and user data cached');
-        debugPrint('📊 User: ${userModel.name} (is_student: ${userModel.isStudent})');
       }
 
       return newToken;
-    } on TokenException {
-      rethrow;
-    } on AppException {
-      rethrow;
     } catch (e) {
       debugPrint('Error in refreshToken: $e');
-      throw NetworkException(message: e.toString());
+      rethrow;
     }
   }
 
@@ -269,17 +245,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw const ServerException(message: 'No data received');
+        throw Exception('No data received');
       }
 
       debugPrint('✅ Password changed successfully');
-    } on ValidationException {
-      rethrow;
-    } on AppException {
-      rethrow;
     } catch (e) {
       debugPrint('Error in changePassword: $e');
-      throw NetworkException(message: e.toString());
+      rethrow;
     }
   }
 
@@ -294,22 +266,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw const ServerException(message: 'No data received');
+        throw Exception('No data received');
       }
 
-      final dataList = CommonToJson.getList(mapResponse);
+      final dataList = CommonToJson().getString(mapResponse);
       if (dataList == null) {
-        throw const ServerException(message: 'Invalid data format');
+        throw Exception('Invalid data format');
       }
 
       return dataList
           .map((session) => SessionModel.fromJson(session as Map<String, dynamic>))
           .toList();
-    } on AppException {
-      rethrow;
     } catch (e) {
       debugPrint('Error in getActiveSessions: $e');
-      throw NetworkException(message: e.toString());
+      rethrow;
     }
   }
 
@@ -324,16 +294,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (mapResponse == null) {
-        throw const ServerException(message: 'No data received');
+        throw Exception('No data received');
       }
 
       await tokenService.clearTokens();
       debugPrint('✅ Account deleted successfully');
-    } on AppException {
-      rethrow;
     } catch (e) {
       debugPrint('Error in deleteAccount: $e');
-      throw NetworkException(message: e.toString());
+      rethrow;
     }
   }
 }

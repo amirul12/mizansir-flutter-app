@@ -1,7 +1,8 @@
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/profile/data/models/dashboard_stats_model.dart' show DashboardStatsModel;
 import '../../../../core/error/failures.dart';
 import '../entities/activity.dart';
-import '../entities/dashboard_stats.dart';
+ 
 
 /// Dashboard repository interface.
 ///
@@ -11,7 +12,7 @@ abstract class DashboardRepository {
   ///
   /// Returns [Right] with [DashboardStats] on success.
   /// Returns [Left] with [Failure] on failure.
-  Future<Either<Failure, DashboardStats>> getDashboard();
+  Future<Either<Failure, DashboardStatsModel>> getDashboard();
 
   /// Get user activity history.
   ///

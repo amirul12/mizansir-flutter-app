@@ -1,11 +1,7 @@
 // File: lib/core/di/injection_container.dart
 import 'package:get_it/get_it.dart';
-import 'package:http/http.dart' as http;
-import '../services/api_service.dart';
 import '../services/token_service.dart';
-import '../services/storage_service.dart';
 import '../services/connectivity_service.dart';
-import '../constants/api_constants.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource_impl.dart';
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
@@ -82,23 +78,6 @@ Future<void> init() async {
 Future<void> _initCore() async {
   // ==================== Services ====================
 
-  // HTTP Client
-  sl.registerLazySingleton<http.Client>(
-    () => http.Client(),
-  );
-
-  // Storage Service - must be initialized first
-  sl.registerLazySingleton<StorageService>(
-    () => StorageService(),
-  );
-  // Initialize storage (may fail in test environment)
-  try {
-    await sl<StorageService>().init();
-  } catch (e) {
-    // Ignore initialization failures in test environment
-    // Storage will still work for basic operations
-  }
-
   // Connectivity Service
   sl.registerLazySingleton<ConnectivityService>(
     () => ConnectivityService(),
@@ -110,18 +89,8 @@ Future<void> _initCore() async {
     // Ignore initialization failures in test environment
   }
 
-  // Token Service
-  sl.registerLazySingleton<TokenService>(
-    () => TokenService(),
-  );
-
-  // API Service
-  sl.registerLazySingleton<ApiService>(
-    () => ApiService(
-      baseUrl: ApiConstants.baseUrl,
-      client: sl(), // Uses registered http.Client
-    ),
-  );
+  // Token Service - Singleton (factory pattern)
+  sl.registerLazySingleton<TokenService>(() => TokenService());
 
   // ==================== Features ====================
   // Features will be registered in their respective phases
@@ -180,9 +149,7 @@ Future<void> _initAuth() async {
   );
 
   sl.registerLazySingleton<AuthLocalDataSource>(
-    () => AuthLocalDataSourceImpl(
-      storageService: sl(),
-    ),
+    () => AuthLocalDataSourceImpl(),
   );
 }
 
@@ -333,20 +300,12 @@ Future<void> _initProfile() async {
 
   // Profile Remote Data Source
   sl.registerLazySingleton<ProfileRemoteDataSource>(
-    () => ProfileRemoteDataSourceImpl(
-      client: sl(),
-      baseUrl: ApiConstants.baseUrl,
-      tokenService: sl(),
-    ),
+    () => ProfileRemoteDataSourceImpl(),
   );
 
   // Dashboard Remote Data Source
   sl.registerLazySingleton<DashboardRemoteDataSource>(
-    () => DashboardRemoteDataSourceImpl(
-      client: sl(),
-      tokenService: sl(),
-      baseUrl: ApiConstants.baseUrl,
-    ),
+    () => DashboardRemoteDataSourceImpl(),
   );
 
   // ==================== Repositories ====================

@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
+import 'package:mizansir/features/enrollment/data/models/my_course_model.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_event.dart';
@@ -11,7 +13,7 @@ import '../../../profile/presentation/bloc/dashboard_event.dart';
 import '../../../enrollment/presentation/bloc/enrollment_bloc.dart';
 import '../../../enrollment/presentation/bloc/enrollment_event.dart';
 import '../../../enrollment/presentation/bloc/enrollment_state.dart';
-import '../../../enrollment/domain/entities/my_course_entity.dart';
+ 
 import '../../../course_browsing/presentation/bloc/course_bloc.dart';
 import '../../../course_browsing/presentation/bloc/course_event.dart';
 import '../../../course_browsing/presentation/bloc/course_state.dart';
@@ -470,7 +472,7 @@ class _CoursesTabPage extends StatelessWidget {
     );
   }
 
-  Widget _buildCourseCard(BuildContext context, Course course) {
+  Widget _buildCourseCard(BuildContext context, dynamic course) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -740,7 +742,7 @@ class _CoursesTabPage extends StatelessWidget {
     );
   }
 
-  Widget _buildThumbnailImage(BuildContext context, Course course) {
+  Widget _buildThumbnailImage(BuildContext context, CourseModel course) {
     if (course.thumbnail != null && course.thumbnail!.isNotEmpty) {
       return CachedNetworkImage(
         imageUrl: course.thumbnail!,
@@ -1007,7 +1009,7 @@ class _MyLearningTabPage extends StatelessWidget {
                 final course = state.courses[index];
                 return _buildEnrolledCourseCard(
                   context,
-                  course as MyCourseEntity,
+                  course as MyCourseModel,
                 );
               },
             ),
@@ -1020,21 +1022,21 @@ class _MyLearningTabPage extends StatelessWidget {
     );
   }
 
-  Widget _buildEnrolledCourseCard(BuildContext context, MyCourseEntity course) {
+  Widget _buildEnrolledCourseCard(BuildContext context, MyCourseModel course) {
     final courseInfo = course.course;
     final curriculum = course.curriculum;
     final enrollment = course.enrollment;
 
-    final progress = curriculum.progressPercentage.clamp(0, 100).toDouble();
+    final progress = curriculum?.progressPercentage!.clamp(0, 100).toDouble();
     final progressColor = _getProgressColor(progress);
 
     void handleNavigation() {
-      if (curriculum.nextLesson != null) {
+      if (curriculum?.nextLesson != null) {
         context.go(
-          '/my-courses/${courseInfo.id}/lessons/${curriculum.nextLesson!.id}',
+          '/my-courses/${courseInfo?.id}/lessons/${curriculum?.nextLesson!.id}',
         );
       } else {
-        context.go('/my-courses/${courseInfo.id}/lessons');
+        context.go('/my-courses/${courseInfo?.id}/lessons');
       }
     }
 
@@ -1065,7 +1067,7 @@ class _MyLearningTabPage extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildCourseThumbnail(context, courseInfo.thumbnail),
+                    _buildCourseThumbnail(context, courseInfo!.thumbnail),
 
                     const SizedBox(width: 14),
 
@@ -1078,7 +1080,7 @@ class _MyLearningTabPage extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  courseInfo.title,
+                                  courseInfo!.title!,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: Theme.of(context).textTheme.titleMedium
@@ -1089,15 +1091,15 @@ class _MyLearningTabPage extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              _buildProgressBadge(progressColor, progress),
+                              _buildProgressBadge(progressColor, progress!),
                             ],
                           ),
 
                           const SizedBox(height: 8),
 
-                          if (courseInfo.description.isNotEmpty)
+                          if (courseInfo.description!.isNotEmpty)
                             Text(
-                              courseInfo.description,
+                              courseInfo!.description!,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.bodySmall
@@ -1115,7 +1117,7 @@ class _MyLearningTabPage extends StatelessWidget {
                             children: [
                               _buildMiniInfoChip(
                                 icon: Icons.play_circle_outline,
-                                label: '${curriculum.totalLessons} Lessons',
+                                label: '${curriculum!.totalLessons} Lessons',
                                 color: Colors.blue,
                               ),
                               _buildMiniInfoChip(
@@ -1126,7 +1128,7 @@ class _MyLearningTabPage extends StatelessWidget {
                               ),
                               _buildMiniInfoChip(
                                 icon: Icons.schedule_outlined,
-                                label: courseInfo.formattedDuration,
+                                label: courseInfo!.formattedDuration!,
                                 color: Colors.orange,
                               ),
                             ],
@@ -1333,7 +1335,7 @@ class _MyLearningTabPage extends StatelessWidget {
     );
   }
 
-  Widget buildEnrolledCourseCard(BuildContext context, MyCourseEntity course) {
+  Widget buildEnrolledCourseCard(BuildContext context, MyCourseModel course) {
     // Extract data from entity
     final courseInfo = course.course;
     final curriculum = course.curriculum;
@@ -1356,12 +1358,12 @@ class _MyLearningTabPage extends StatelessWidget {
         child: InkWell(
           onTap: () {
             // Navigate to next lesson if available, otherwise show all lessons
-            if (curriculum.nextLesson != null) {
+            if (curriculum!.nextLesson != null) {
               context.go(
-                '/my-courses/${courseInfo.id}/lessons/${curriculum.nextLesson!.id}',
+                '/my-courses/${courseInfo!.id}/lessons/${curriculum.nextLesson!.id}',
               );
             } else {
-              context.go('/my-courses/${courseInfo.id}/lessons');
+              context.go('/my-courses/${courseInfo!.id}/lessons');
             }
           },
           borderRadius: BorderRadius.circular(16),
@@ -1379,10 +1381,10 @@ class _MyLearningTabPage extends StatelessWidget {
                         width: 80,
                         height: 80,
                         child:
-                            courseInfo.thumbnail != null &&
-                                courseInfo.thumbnail!.isNotEmpty
+                            courseInfo!.thumbnail != null &&
+                                courseInfo!.thumbnail!.isNotEmpty
                             ? CachedNetworkImage(
-                                imageUrl: courseInfo.thumbnail!,
+                                imageUrl: courseInfo!.thumbnail!,
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) => Container(
                                   decoration: BoxDecoration(
@@ -1462,7 +1464,7 @@ class _MyLearningTabPage extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  courseInfo.title,
+                                  courseInfo!.title!,
                                   style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(fontWeight: FontWeight.bold),
                                   maxLines: 2,
@@ -1470,7 +1472,7 @@ class _MyLearningTabPage extends StatelessWidget {
                                 ),
                               ),
                               // Progress badge
-                              if (curriculum.progressPercentage > 0)
+                              if (curriculum!.progressPercentage! > 0)
                                 Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
@@ -1478,7 +1480,7 @@ class _MyLearningTabPage extends StatelessWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     color: _getProgressColor(
-                                      curriculum.progressPercentage,
+                                      curriculum!.progressPercentage,
                                     ).withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
@@ -1489,7 +1491,7 @@ class _MyLearningTabPage extends StatelessWidget {
                                     ),
                                   ),
                                   child: Text(
-                                    '${curriculum.progressPercentage.toInt()}%',
+                                    '${curriculum.progressPercentage!.toInt()}%',
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -1514,10 +1516,10 @@ class _MyLearningTabPage extends StatelessWidget {
                           // ),
 
                           // Description
-                          if (courseInfo.description.isNotEmpty) ...[
+                          if (courseInfo.description!.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             Text(
-                              courseInfo.description,
+                              courseInfo!.description!,
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(color: Colors.grey[600]),
                               maxLines: 2,
@@ -1550,7 +1552,7 @@ class _MyLearningTabPage extends StatelessWidget {
                               Expanded(
                                 child: _buildFullWidthStat(
                                   Icons.schedule,
-                                  courseInfo.formattedDuration,
+                                  courseInfo!.formattedDuration!,
                                   Colors.orange,
                                 ),
                               ),

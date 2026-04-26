@@ -71,6 +71,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, AuthUser>> getCurrentUser() async {
     try {
+      // Check if user has a valid token first
+      final hasToken = await localDataSource.getAuthState();
+      if (!hasToken) {
+        return const Left(UnauthorizedFailure('No token found'));
+      }
+
       // Try to get from cache first
       final cachedUser = await localDataSource.getCachedUser();
       if (cachedUser != null) {
@@ -82,6 +88,11 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.cacheUser(user.toJson());
 
       return Right(user.toEntity());
+    } on UnauthorizedException {
+      // Clear all data on 401
+      await localDataSource.clearCachedUser();
+      await localDataSource.clearAuthState();
+      return const Left(UnauthorizedFailure('Session expired'));
     } on AppException catch (e) {
       return _mapExceptionToFailure(e);
     }

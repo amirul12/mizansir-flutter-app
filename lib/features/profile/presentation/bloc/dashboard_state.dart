@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
-import '../../domain/entities/dashboard_stats.dart';
+import 'package:mizansir/features/profile/data/models/dashboard_stats_model.dart';
+ 
 import '../../domain/entities/activity.dart';
 
 /// Abstract base class for all dashboard states.
@@ -15,18 +16,18 @@ class DashboardInitial extends DashboardState {}
 
 /// Loading state.
 class DashboardLoading extends DashboardState {
-  final DashboardStats? existingStats;
-  final List<Activity>? existingActivities;
+ 
+ 
 
-  const DashboardLoading({this.existingStats, this.existingActivities});
+  const DashboardLoading( );
 
   @override
-  List<Object?> get props => [existingStats, existingActivities];
+  List<Object?> get props => [ ];
 }
 
 /// Consolidated Dashboard loaded state to hold both stats and activities.
 class DashboardLoaded extends DashboardState {
-  final DashboardStats? stats;
+  final DashboardStatsModel? stats;
   final List<Activity>? activities;
   final bool hasMoreActivities;
   final String? message;
@@ -39,7 +40,7 @@ class DashboardLoaded extends DashboardState {
   });
 
   DashboardLoaded copyWith({
-    DashboardStats? stats,
+    DashboardStatsModel? stats,
     List<Activity>? activities,
     bool? hasMoreActivities,
     String? message,
@@ -59,11 +60,10 @@ class DashboardLoaded extends DashboardState {
 /// Error state.
 class DashboardError extends DashboardState {
   final String message;
-  final DashboardStats? stats;
-  final List<Activity>? activities;
+ 
 
-  const DashboardError(this.message, {this.stats, this.activities});
+  const DashboardError(this.message, );
 
   @override
-  List<Object?> get props => [message, stats, activities];
+  List<Object?> get props => [message, ];
 }

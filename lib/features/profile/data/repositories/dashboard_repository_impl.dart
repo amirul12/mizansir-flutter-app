@@ -1,9 +1,10 @@
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/profile/data/models/dashboard_stats_model.dart' show DashboardStatsModel;
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/activity.dart';
-import '../../domain/entities/dashboard_stats.dart';
+ 
 import '../../domain/repositories/dashboard_repository.dart';
 import '../datasources/dashboard_remote_datasource.dart';
 
@@ -21,16 +22,16 @@ class DashboardRepositoryImpl implements DashboardRepository {
   });
 
   @override
-  Future<Either<Failure, DashboardStats>> getDashboard() async {
+  Future<Either<Failure, DashboardStatsModel>> getDashboard() async {
     try {
       if (!await connectivityService.isConnected) {
         throw NoInternetException();
       }
 
       final dashboardModel = await remoteDataSource.getDashboard();
-      return Right(dashboardModel.toEntity());
+      return Right(dashboardModel);
     } on CustomException catch (e) {
-      final failure = parseCustomException<DashboardStats>(e);
+      final failure = parseCustomException<DashboardStatsModel>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }

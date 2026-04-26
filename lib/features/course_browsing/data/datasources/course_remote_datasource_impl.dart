@@ -26,7 +26,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
       params['page'] = page.toString();
       params['limit'] = limit.toString();
 
-      mapResponse = await ApiMethod(isBasic: true).get(
+      mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.coursesPath}',
         query: params,
         showResult: true,
@@ -37,7 +37,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
       }
 
       // Extract data from response
-      final dataList = CommonToJson.getList(mapResponse);
+      final dataList = CommonToJson().getString(mapResponse);
       if (dataList == null) {
         throw ServerException('Invalid data format');
       }
@@ -54,7 +54,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     Map<String, dynamic>? mapResponse;
 
     try {
-      mapResponse = await ApiMethod(isBasic: true).get(
+      mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.featuredCoursesEndpoint}',
         query: {'limit': limit.toString()},
         showResult: true,
@@ -64,7 +64,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataList = CommonToJson.getList(mapResponse);
+      final dataList = CommonToJson().getString(mapResponse);
       if (dataList == null) {
         throw ServerException('Invalid data format');
       }
@@ -81,7 +81,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     Map<String, dynamic>? mapResponse;
 
     try {
-      mapResponse = await ApiMethod(isBasic: true).get(
+      mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.coursesPath}/$courseId',
         showResult: true,
       );
@@ -90,7 +90,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataMap = CommonToJson.getMap(mapResponse);
+      final dataMap = CommonToJson().getString(mapResponse);
       if (dataMap == null) {
         throw ServerException('Invalid data format');
       }
@@ -116,7 +116,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     Map<String, dynamic>? mapResponse;
 
     try {
-      mapResponse = await ApiMethod(isBasic: true).get(
+      mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.searchCoursesEndpoint}',
         query: {
           'q': query,
@@ -130,7 +130,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataList = CommonToJson.getList(mapResponse);
+      final dataList = CommonToJson().getString(mapResponse);
       if (dataList == null) {
         throw ServerException('Invalid data format');
       }
@@ -147,7 +147,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     Map<String, dynamic>? mapResponse;
 
     try {
-      mapResponse = await ApiMethod(isBasic: true).get(
+      mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.categoriesEndpoint}',
         showResult: true,
       );
@@ -156,7 +156,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataList = CommonToJson.getList(mapResponse);
+      final dataList = CommonToJson().getString(mapResponse);
       if (dataList == null) {
         throw ServerException('Invalid data format');
       }
@@ -175,7 +175,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     Map<String, dynamic>? mapResponse;
 
     try {
-      mapResponse = await ApiMethod(isBasic: true).get(
+      mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.coursesPath}/$courseId/lessons',
         showResult: true,
       );
@@ -184,7 +184,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataList = CommonToJson.getList(mapResponse);
+      final dataList = CommonToJson().getString(mapResponse);
       if (dataList == null) {
         throw ServerException('Invalid data format');
       }
