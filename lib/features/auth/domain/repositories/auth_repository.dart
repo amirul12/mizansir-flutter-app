@@ -1,6 +1,6 @@
 // File: lib/features/auth/domain/repositories/auth_repository.dart
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../entities/auth_user.dart';
 import '../entities/session.dart';
 

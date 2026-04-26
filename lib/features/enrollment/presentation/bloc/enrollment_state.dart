@@ -125,3 +125,13 @@ class EnrollmentCreated extends EnrollmentState {
   @override
   List<Object?> get props => [enrollmentData];
 }
+
+/// Already Enrolled State
+class AlreadyEnrolled extends EnrollmentState {
+  final String message;
+
+  const AlreadyEnrolled({this.message = 'You already have an active enrollment for this course'});
+
+  @override
+  List<Object?> get props => [message];
+}

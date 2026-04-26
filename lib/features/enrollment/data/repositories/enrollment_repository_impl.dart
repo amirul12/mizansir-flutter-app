@@ -1,7 +1,6 @@
-// File: lib/features/enrollment/data/repositories/enrollment_repository_impl.dart
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/exceptions.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/services/api_exception.dart';
+import '../../../../core/error/failures.dart';
 import '../../domain/entities/enrolled_course.dart';
 import '../../domain/entities/my_course_entity.dart';
 import '../../domain/entities/lesson.dart';
@@ -20,16 +19,9 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
     try {
       final courseModels = await remoteDataSource.getMyCourses();
       return Right(courseModels.map((model) => model.toEntity()).toList());
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } on NotFoundException {
-      return Left(NotFoundFailure('No enrolled courses found'));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<List<MyCourseEntity>>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -38,16 +30,9 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
     try {
       final courseModel = await remoteDataSource.getEnrolledCourseDetails(courseId);
       return Right(courseModel.toEntity());
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } on NotFoundException {
-      return Left(NotFoundFailure('Course not found'));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<EnrolledCourse>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -56,14 +41,9 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
     try {
       final lessonModels = await remoteDataSource.getCourseLessons(courseId);
       return Right(lessonModels.map((model) => model.toEntity()).toList());
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<List<Lesson>>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -86,16 +66,9 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
       };
 
       return Right(result);
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } on NotFoundException {
-      return Left(NotFoundFailure('Lesson not found'));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<Map<String, Lesson?>>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -104,14 +77,9 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
     try {
       final progressModel = await remoteDataSource.getCourseProgress(courseId);
       return Right(progressModel.toEntity());
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<CourseProgress>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -130,14 +98,9 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
         progressPercentage: progressPercentage,
       );
       return const Right(null);
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<void>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -152,14 +115,9 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
         lessonId: lessonId,
       );
       return const Right(null);
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<void>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -178,21 +136,16 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
         watchTimeSeconds: watchTimeSeconds,
       );
       return const Right(null);
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<void>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
   Future<Either<Failure, Map<String, dynamic>>> createEnrollment({
     required String courseId,
-    required String paymentMethod,
+    String? paymentMethod,
     String? paymentNotes,
     String? transactionId,
   }) async {
@@ -204,14 +157,9 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
         transactionId: transactionId,
       );
       return Right(enrollmentData);
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<Map<String, dynamic>>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 }

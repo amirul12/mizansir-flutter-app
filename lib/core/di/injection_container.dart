@@ -175,9 +175,7 @@ Future<void> _initAuth() async {
   // Data Sources
   sl.registerLazySingleton<AuthRemoteDataSource>(
     () => AuthRemoteDataSourceImpl(
-      client: sl(),
       tokenService: sl(),
-      baseUrl: ApiConstants.baseUrl,
     ),
   );
 
@@ -194,10 +192,7 @@ Future<void> _initCourseBrowsing() async {
 
   // Course Remote Data Source
   sl.registerLazySingleton<CourseRemoteDataSource>(
-    () => CourseRemoteDataSourceImpl(
-      client: sl(),
-      baseUrl: ApiConstants.baseUrl,
-    ),
+    () => CourseRemoteDataSourceImpl(),
   );
 
   // ==================== Repositories ====================
@@ -267,11 +262,7 @@ Future<void> _initEnrollment() async {
 
   // Enrollment Remote Data Source
   sl.registerLazySingleton<EnrollmentRemoteDataSource>(
-    () => EnrollmentRemoteDataSourceImpl(
-      client: sl(),
-      tokenService: sl(),
-      baseUrl: ApiConstants.baseUrl,
-    ),
+    () => EnrollmentRemoteDataSourceImpl(),
   );
 
   // ==================== Repositories ====================
@@ -365,6 +356,7 @@ Future<void> _initProfile() async {
     () => ProfileRepositoryImpl(
       remoteDataSource: sl(),
       authRepository: sl(),
+      connectivityService: sl(),
     ),
   );
 
@@ -372,6 +364,7 @@ Future<void> _initProfile() async {
   sl.registerLazySingleton<DashboardRepository>(
     () => DashboardRepositoryImpl(
       remoteDataSource: sl(),
+      connectivityService: sl(),
     ),
   );
 

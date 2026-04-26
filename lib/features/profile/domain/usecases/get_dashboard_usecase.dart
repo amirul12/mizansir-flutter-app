@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/no_params.dart';
 import '../entities/dashboard_stats.dart';
 import '../repositories/dashboard_repository.dart';

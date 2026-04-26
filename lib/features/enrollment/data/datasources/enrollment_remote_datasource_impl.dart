@@ -1,215 +1,119 @@
-// File: lib/features/enrollment/data/datasources/enrollment_remote_datasource_impl.dart
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import '../../../../core/errors/exceptions.dart';
-import '../../../../core/services/token_service.dart';
+import '../../../../core/services/api_service_method.dart';
+import '../../../../core/services/api_exception.dart';
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/utils/common_json.dart';
 import '../models/enrolled_course_model.dart';
 import '../models/my_course_model.dart';
 import '../models/lesson_model.dart';
 import '../models/course_progress_model.dart';
 import 'enrollment_remote_datasource.dart';
 
-/// Enrollment Remote Data Source Implementation
+/// Enrollment Remote Data Source Implementation using ApiMethod
 class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
-  final http.Client client;
-  final TokenService tokenService;
-  final String baseUrl;
-
-  EnrollmentRemoteDataSourceImpl({
-    required this.client,
-    required this.tokenService,
-    required this.baseUrl,
-  });
-
-  String _getAuthorizationHeader() {
-    final token = tokenService.getAccessToken();
-    return 'Bearer $token';
-  }
+  EnrollmentRemoteDataSourceImpl();
 
   @override
   Future<List<MyCourseModel>> getMyCourses() async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final uri = Uri.parse('$baseUrl/v1/my-courses');
+      mapResponse = await ApiMethod(isBasic: false).get(
+        '${ApiConstants.baseUrl}${ApiConstants.myCoursesEndpoint}',
+        showResult: true,
+      );
 
-      // DEBUG: Print API Request
-      debugPrint('🔵 GET MY COURSES REQUEST');
-      debugPrint('URL: $uri');
-      debugPrint('Authorization: $token');
-
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-      ).timeout(const Duration(seconds: 30));
-
-      // DEBUG: Print API Response
-      debugPrint('🟢 GET MY COURSES RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-
-        // Handle wrapped response (CommonResponseModel format)
-        if (jsonData is Map && jsonData['data'] is List) {
-          debugPrint('✅ Successfully parsed ${jsonData['data'].length} enrolled courses');
-          return (jsonData['data'] as List)
-              .map((course) => MyCourseModel.fromJson(course))
-              .toList();
-        }
-
-        // Handle direct list response
-        if (jsonData is List) {
-          debugPrint('✅ Successfully parsed ${jsonData.length} enrolled courses');
-          return jsonData
-              .map((course) => MyCourseModel.fromJson(course))
-              .toList();
-        }
-
-        throw ServerException(message: 'Invalid data format received');
-      } else if (response.statusCode == 401) {
-        debugPrint('❌ Unauthorized: 401');
-        throw const UnauthorizedException(message: 'Unauthorized');
-      } else {
-        debugPrint('❌ Error: ${response.statusCode}');
-        throw ServerException(
-          message: 'Failed to load enrolled courses',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on UnauthorizedException {
-      rethrow;
-    } on ServerException {
-      rethrow;
+
+      final dataList = CommonToJson.getList(mapResponse);
+      if (dataList == null) {
+        throw ServerException('Invalid data format');
+      }
+
+      return dataList.map((course) => MyCourseModel.fromJson(course)).toList();
     } catch (e) {
-      debugPrint('❌ Exception: $e');
-      throw ServerException(message: e.toString());
+      debugPrint('Error in getMyCourses: $e');
+      rethrow;
     }
   }
 
   @override
   Future<EnrolledCourseModel> getEnrolledCourseDetails(String courseId) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final uri = Uri.parse('$baseUrl/v1/my-courses/$courseId');
+      mapResponse = await ApiMethod(isBasic: false).get(
+        '${ApiConstants.baseUrl}${ApiConstants.myCoursesEndpoint}/$courseId',
+        showResult: true,
+      );
 
-      debugPrint('🔵 GET ENROLLED COURSE DETAILS REQUEST');
-      debugPrint('URL: $uri');
-
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-      ).timeout(const Duration(seconds: 30));
-
-      debugPrint('🟢 GET ENROLLED COURSE DETAILS RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        if (jsonData['data'] is Map) {
-          return EnrolledCourseModel.fromJson(jsonData['data']);
-        }
-        throw ServerException(message: 'Invalid data format received');
-      } else if (response.statusCode == 401) {
-        throw const UnauthorizedException();
-      } else if (response.statusCode == 404) {
-        throw const NotFoundException(message: 'Course not found');
-      } else {
-        throw ServerException(
-          message: 'Failed to load course details',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on AppException {
-      rethrow;
+
+      final dataMap = CommonToJson.getMap(mapResponse);
+      if (dataMap == null) {
+        throw ServerException('Invalid data format');
+      }
+
+      return EnrolledCourseModel.fromJson(dataMap);
     } catch (e) {
-      throw ServerException(message: e.toString());
+      debugPrint('Error in getEnrolledCourseDetails: $e');
+      rethrow;
     }
   }
 
   @override
   Future<List<LessonModel>> getCourseLessons(String courseId) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final uri = Uri.parse('$baseUrl/v1/my-courses/$courseId/lessons');
+      mapResponse = await ApiMethod(isBasic: false).get(
+        '${ApiConstants.baseUrl}${ApiConstants.myCoursesEndpoint}/$courseId/lessons',
+        showResult: true,
+      );
 
-      debugPrint('🔵 GET COURSE LESSONS REQUEST');
-      debugPrint('URL: $uri');
+      if (mapResponse == null) {
+        throw ServerException('No data received');
+      }
 
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-      ).timeout(const Duration(seconds: 30));
+      final dataMap = CommonToJson.getMap(mapResponse);
+      if (dataMap == null) {
+        throw ServerException('Invalid data format');
+      }
 
-      debugPrint('🟢 GET COURSE LESSONS RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
+      // Handle modules structure
+      // API returns: { course, enrollment, modules: [...], progress, navigation }
+      if (dataMap['modules'] is List) {
+        final modules = dataMap['modules'] as List;
+        final List<LessonModel> allLessons = [];
 
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        if (jsonData['data'] is Map) {
-          final data = jsonData['data'] as Map<String, dynamic>;
-
-          // Handle modules structure
-          // API returns: { course, enrollment, modules: [...], progress, navigation }
-          if (data['modules'] is List) {
-            final modules = data['modules'] as List;
-            final List<LessonModel> allLessons = [];
-
-            // Flatten lessons from all modules
-            for (var module in modules) {
-              if (module is Map && module['lessons'] is List) {
-                final lessons = module['lessons'] as List;
-                for (var lesson in lessons) {
-                  if (lesson is Map) {
-                    // Add module_name and course_id to lesson data
-                    final lessonMap = lesson as Map<String, dynamic>;
-                    lessonMap['module_name'] = module['module_name'];
-                    lessonMap['course_id'] = courseId;
-                    allLessons.add(LessonModel.fromJson(lessonMap));
-                  }
-                }
+        // Flatten lessons from all modules
+        for (var module in modules) {
+          if (module is Map && module['lessons'] is List) {
+            final lessons = module['lessons'] as List;
+            for (var lesson in lessons) {
+              if (lesson is Map) {
+                // Add module_name and course_id to lesson data
+                final lessonMap = lesson as Map<String, dynamic>;
+                lessonMap['module_name'] = module['module_name'];
+                lessonMap['course_id'] = courseId;
+                allLessons.add(LessonModel.fromJson(lessonMap));
               }
             }
-
-            debugPrint('✅ Successfully parsed ${allLessons.length} lessons from modules');
-            debugPrint('📊 Lessons with YouTube: ${allLessons.where((l) => l.youtubeVideoId != null).length}');
-            return allLessons;
           }
         }
 
-        // Fallback: if data is a simple list
-        if (jsonData['data'] is List) {
-          return (jsonData['data'] as List)
-              .map((lesson) => LessonModel.fromJson(lesson))
-              .toList();
-        }
-
-        throw ServerException(message: 'Invalid data format received');
-      } else if (response.statusCode == 401) {
-        throw const UnauthorizedException();
-      } else {
-        throw ServerException(
-          message: 'Failed to load lessons',
-          statusCode: response.statusCode,
-        );
+        debugPrint('✅ Successfully parsed ${allLessons.length} lessons from modules');
+        return allLessons;
       }
-    } on AppException {
-      rethrow;
+
+      throw ServerException('Invalid data format');
     } catch (e) {
-      debugPrint('❌ Exception: $e');
-      throw ServerException(message: e.toString());
+      debugPrint('Error in getCourseLessons: $e');
+      rethrow;
     }
   }
 
@@ -218,115 +122,80 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
     required String courseId,
     required String lessonId,
   }) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final uri = Uri.parse('$baseUrl/v1/my-courses/$courseId/lessons/$lessonId');
+      mapResponse = await ApiMethod(isBasic: false).get(
+        '${ApiConstants.baseUrl}${ApiConstants.myCoursesEndpoint}/$courseId/lessons/$lessonId',
+        showResult: true,
+      );
 
-      debugPrint('🔵 GET LESSON DETAILS REQUEST');
-      debugPrint('URL: $uri');
-
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-      ).timeout(const Duration(seconds: 30));
-
-      debugPrint('🟢 GET LESSON DETAILS RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        if (jsonData['data'] is Map) {
-          final data = jsonData['data'] as Map<String, dynamic>;
-
-          // Parse current lesson
-          final lesson = LessonModel.fromJson(data);
-
-          // Parse navigation
-          LessonModel? nextLesson;
-          LessonModel? previousLesson;
-
-          if (data['navigation'] is Map) {
-            final navigation = data['navigation'] as Map<String, dynamic>;
-
-            // Parse next lesson
-            if (navigation['next_lesson'] is Map) {
-              nextLesson = LessonModel.fromJson(navigation['next_lesson']);
-            }
-
-            // Parse previous lesson
-            if (navigation['previous_lesson'] is Map) {
-              previousLesson = LessonModel.fromJson(navigation['previous_lesson']);
-            }
-          }
-
-          debugPrint('✅ Lesson details loaded: ${lesson.title}');
-          debugPrint('📊 Next lesson: ${nextLesson?.title ?? "None"}');
-          debugPrint('📊 Previous lesson: ${previousLesson?.title ?? "None"}');
-
-          return {
-            'lesson': lesson,
-            'nextLesson': nextLesson,
-            'previousLesson': previousLesson,
-          };
-        }
-        throw ServerException(message: 'Invalid data format received');
-      } else if (response.statusCode == 401) {
-        throw const UnauthorizedException();
-      } else {
-        throw ServerException(
-          message: 'Failed to load lesson details',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on AppException {
-      rethrow;
+
+      final dataMap = CommonToJson.getMap(mapResponse);
+      if (dataMap == null) {
+        throw ServerException('Invalid data format');
+      }
+
+      // Parse current lesson
+      final lesson = LessonModel.fromJson(dataMap);
+
+      // Parse navigation
+      LessonModel? nextLesson;
+      LessonModel? previousLesson;
+
+      if (dataMap['navigation'] is Map) {
+        final navigation = dataMap['navigation'] as Map<String, dynamic>;
+
+        // Parse next lesson
+        if (navigation['next_lesson'] is Map) {
+          nextLesson = LessonModel.fromJson(navigation['next_lesson']);
+        }
+
+        // Parse previous lesson
+        if (navigation['previous_lesson'] is Map) {
+          previousLesson = LessonModel.fromJson(navigation['previous_lesson']);
+        }
+      }
+
+      debugPrint('✅ Lesson details loaded: ${lesson.title}');
+
+      return {
+        'lesson': lesson,
+        'nextLesson': nextLesson,
+        'previousLesson': previousLesson,
+      };
     } catch (e) {
-      debugPrint('❌ Exception: $e');
-      throw ServerException(message: e.toString());
+      debugPrint('Error in getLessonDetails: $e');
+      rethrow;
     }
   }
 
   @override
   Future<CourseProgressModel> getCourseProgress(String courseId) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final uri = Uri.parse('$baseUrl/v1/my-courses/$courseId/progress');
+      mapResponse = await ApiMethod(isBasic: false).get(
+        '${ApiConstants.baseUrl}${ApiConstants.myCoursesEndpoint}/$courseId/progress',
+        showResult: true,
+      );
 
-      debugPrint('🔵 GET COURSE PROGRESS REQUEST');
-      debugPrint('URL: $uri');
-
-      final response = await client.get(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-      ).timeout(const Duration(seconds: 30));
-
-      debugPrint('🟢 GET COURSE PROGRESS RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        if (jsonData['data'] is Map) {
-          return CourseProgressModel.fromJson(jsonData['data']);
-        }
-        throw ServerException(message: 'Invalid data format received');
-      } else if (response.statusCode == 401) {
-        throw const UnauthorizedException();
-      } else {
-        throw ServerException(
-          message: 'Failed to load progress',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on AppException {
-      rethrow;
+
+      final dataMap = CommonToJson.getMap(mapResponse);
+      if (dataMap == null) {
+        throw ServerException('Invalid data format');
+      }
+
+      return CourseProgressModel.fromJson(dataMap);
     } catch (e) {
-      throw ServerException(message: e.toString());
+      debugPrint('Error in getCourseProgress: $e');
+      rethrow;
     }
   }
 
@@ -337,11 +206,10 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
     int? watchTimeSeconds,
     int? progressPercentage,
   }) async {
-    try {
-      final token = await tokenService.getAuthHeader();
-      final uri = Uri.parse('$baseUrl/v1/my-courses/$courseId/lessons/$lessonId/complete');
+    Map<String, dynamic>? mapResponse;
 
-      final body = {};
+    try {
+      final body = <String, dynamic>{};
       if (watchTimeSeconds != null) {
         body['watch_time_seconds'] = watchTimeSeconds;
       }
@@ -349,37 +217,20 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         body['progress_percentage'] = progressPercentage;
       }
 
-      debugPrint('🔵 MARK LESSON COMPLETE REQUEST');
-      debugPrint('URL: $uri');
-      debugPrint('Body: $body');
+      mapResponse = await ApiMethod(isBasic: false).post(
+        '${ApiConstants.baseUrl}${ApiConstants.myCoursesEndpoint}/$courseId/lessons/$lessonId/complete',
+        body,
+        showResult: true,
+      );
 
-      final response = await client.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 30));
-
-      debugPrint('🟢 MARK LESSON COMPLETE RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint('✅ Lesson marked as complete');
-        return;
-      } else if (response.statusCode == 401) {
-        throw const UnauthorizedException();
-      } else {
-        throw ServerException(
-          message: 'Failed to mark lesson complete',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on AppException {
-      rethrow;
+
+      debugPrint('✅ Lesson marked as complete');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      debugPrint('Error in markLessonComplete: $e');
+      rethrow;
     }
   }
 
@@ -388,39 +239,23 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
     required String courseId,
     required String lessonId,
   }) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final uri = Uri.parse('$baseUrl/v1/my-courses/$courseId/lessons/$lessonId/incomplete');
+      mapResponse = await ApiMethod(isBasic: false).post(
+        '${ApiConstants.baseUrl}${ApiConstants.myCoursesEndpoint}/$courseId/lessons/$lessonId/incomplete',
+        {},
+        showResult: true,
+      );
 
-      debugPrint('🔵 MARK LESSON INCOMPLETE REQUEST');
-      debugPrint('URL: $uri');
-
-      final response = await client.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-      ).timeout(const Duration(seconds: 30));
-
-      debugPrint('🟢 MARK LESSON INCOMPLETE RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint('✅ Lesson marked as incomplete');
-        return;
-      } else if (response.statusCode == 401) {
-        throw const UnauthorizedException();
-      } else {
-        throw ServerException(
-          message: 'Failed to mark lesson incomplete',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on AppException {
-      rethrow;
+
+      debugPrint('✅ Lesson marked as incomplete');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      debugPrint('Error in markLessonIncomplete: $e');
+      rethrow;
     }
   }
 
@@ -431,112 +266,67 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
     required int progressPercentage,
     required int watchTimeSeconds,
   }) async {
-    try {
-      final token = await tokenService.getAuthHeader();
-      final uri = Uri.parse('$baseUrl/v1/my-courses/$courseId/lessons/$lessonId/progress');
+    Map<String, dynamic>? mapResponse;
 
+    try {
       final body = {
         'progress_percentage': progressPercentage,
         'watch_time_seconds': watchTimeSeconds,
       };
 
-      debugPrint('🔵 UPDATE LESSON PROGRESS REQUEST');
-      debugPrint('URL: $uri');
-      debugPrint('Body: $body');
+      mapResponse = await ApiMethod(isBasic: false).post(
+        '${ApiConstants.baseUrl}${ApiConstants.myCoursesEndpoint}/$courseId/lessons/$lessonId/progress',
+        body,
+        showResult: true,
+      );
 
-      final response = await client.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 30));
-
-      debugPrint('🟢 UPDATE LESSON PROGRESS RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint('✅ Progress updated');
-        return;
-      } else if (response.statusCode == 401) {
-        throw const UnauthorizedException();
-      } else {
-        throw ServerException(
-          message: 'Failed to update progress',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on AppException {
-      rethrow;
+
+      debugPrint('✅ Progress updated');
     } catch (e) {
-      throw ServerException(message: e.toString());
+      debugPrint('Error in updateLessonProgress: $e');
+      rethrow;
     }
   }
 
   @override
   Future<Map<String, dynamic>> createEnrollment({
     required String courseId,
-    required String paymentMethod,
+    String? paymentMethod,
     String? paymentNotes,
     String? transactionId,
   }) async {
-    try {
-      final token = await tokenService.getAuthHeader();
-      final uri = Uri.parse('$baseUrl/v1/enrollments');
+    Map<String, dynamic>? mapResponse;
 
-      final body = {
+    try {
+      final body = <String, dynamic>{
         'course_id': courseId,
-        'payment_method': paymentMethod,
+        if (paymentMethod != null) 'payment_method': paymentMethod,
         if (paymentNotes != null) 'payment_notes': paymentNotes,
         if (transactionId != null) 'transaction_id': transactionId,
       };
 
-      debugPrint('🔵 CREATE ENROLLMENT REQUEST');
-      debugPrint('URL: $uri');
-      debugPrint('Body: $body');
+      mapResponse = await ApiMethod(isBasic: false).post(
+        '${ApiConstants.baseUrl}${ApiConstants.enrollmentsPath}',
+        body,
+        showResult: true,
+      );
 
-      final response = await client.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 30));
-
-      debugPrint('🟢 CREATE ENROLLMENT RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final jsonData = json.decode(response.body) as Map<String, dynamic>;
-        if (jsonData['success'] == true) {
-          debugPrint('✅ Enrollment created successfully');
-          return jsonData;
-        }
-        throw ServerException(message: 'Invalid response format');
-      } else if (response.statusCode == 401) {
-        throw const UnauthorizedException(message: 'Unauthorized');
-      } else if (response.statusCode == 422) {
-        final errorData = json.decode(response.body);
-        final message = errorData['message'] ?? 'Validation error';
-        throw ServerException(message: message, statusCode: response.statusCode);
-      } else {
-        final errorData = json.decode(response.body);
-        final message = errorData['message'] ?? 'Failed to create enrollment';
-        throw ServerException(
-          message: message,
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on UnauthorizedException {
-      rethrow;
-    } on ServerException {
-      rethrow;
+
+      if (mapResponse['success'] == true) {
+        debugPrint('✅ Enrollment created successfully');
+        return mapResponse;
+      }
+
+      throw ServerException('Invalid response format');
     } catch (e) {
-      debugPrint('❌ Exception: $e');
-      throw ServerException(message: e.toString());
+      debugPrint('Error in createEnrollment: $e');
+      rethrow;
     }
   }
 }

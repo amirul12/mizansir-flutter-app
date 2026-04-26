@@ -1,6 +1,6 @@
 // File: lib/features/course_browsing/domain/repositories/course_repository.dart
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../entities/course.dart';
 import '../entities/category.dart';
 import '../entities/course_filter.dart';

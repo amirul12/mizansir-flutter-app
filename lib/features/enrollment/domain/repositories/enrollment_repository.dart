@@ -1,6 +1,6 @@
 // File: lib/features/enrollment/domain/repositories/enrollment_repository.dart
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../entities/enrolled_course.dart';
 import '../entities/my_course_entity.dart';
 import '../entities/lesson.dart';
@@ -59,7 +59,7 @@ abstract class EnrollmentRepository {
   /// Returns [Left] with [Failure] on failure.
   Future<Either<Failure, Map<String, dynamic>>> createEnrollment({
     required String courseId,
-    required String paymentMethod,
+    String? paymentMethod,
     String? paymentNotes,
     String? transactionId,
   });

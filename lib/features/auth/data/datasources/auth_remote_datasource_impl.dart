@@ -1,27 +1,21 @@
-// File: lib/features/auth/data/datasources/auth_remote_datasource_impl.dart
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
+import '../../../../core/services/api_service_method.dart';
 import '../../../../core/services/token_service.dart';
+import '../../../../core/utils/common_json.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../models/auth_response_model.dart';
 import '../models/auth_user_model.dart';
 import '../models/session_model.dart';
 import 'auth_remote_datasource.dart';
 
-/// Authentication remote data source implementation
+/// Authentication remote data source implementation using ApiMethod
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
-  final http.Client client;
   final TokenService tokenService;
-  final String baseUrl;
 
-  AuthRemoteDataSourceImpl({
-    required this.client,
-    required this.tokenService,
-    required this.baseUrl,
-  });
+  AuthRemoteDataSourceImpl({required this.tokenService});
 
   @override
   Future<AuthUserModel> register({
@@ -31,61 +25,39 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String passwordConfirmation,
     required String phone,
   }) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final response = await client.post(
-        Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.registerEndpoint)}'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
+      mapResponse = await ApiMethod(isBasic: true).post(
+        '${ApiConstants.baseUrl}${ApiConstants.buildEndpoint(ApiConstants.registerEndpoint)}',
+        {
           'name': name,
           'email': email,
           'password': password,
           'password_confirmation': passwordConfirmation,
           'phone': phone,
-        }),
+        },
+        showResult: true,
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-        final user = jsonData['data'] as Map<String, dynamic>;
-        return AuthUserModel.fromJson(user);
-      } else if (response.statusCode == 429) {
-        // Rate limit error (429 Too Many Requests)
-        debugPrint('⏱️ Registration rate limit exceeded (429)');
-        String errorMessage = 'Too many registration attempts. Please try again later.';
-        int? retryAfter;
-
-        try {
-          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
-          errorMessage = errorData['message'] as String? ?? errorMessage;
-          retryAfter = errorData['retry_after'] as int?;
-          debugPrint('⏱️ Retry after: $retryAfter seconds (${errorData['retry_after_human'] ?? 'N/A'})');
-        } catch (e) {
-          debugPrint('⚠️ Failed to parse rate limit response: $e');
-        }
-
-        throw RateLimitException(
-          message: errorMessage,
-          retryAfter: retryAfter,
-        );
-      } else if (response.statusCode == 422) {
-        final error = jsonDecode(response.body);
-        throw ValidationException(
-          message: error['message'] ?? 'Validation failed',
-          errors: error['errors'],
-        );
-      } else {
-        throw ServerException(
-          message: 'Registration failed',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw const ServerException(message: 'No data received');
       }
-    } on ServerException {
+
+      final dataMap = CommonToJson.getMap(mapResponse);
+      if (dataMap == null) {
+        throw const ServerException(message: 'Invalid data format');
+      }
+
+      return AuthUserModel.fromJson(dataMap);
+    } on RateLimitException {
       rethrow;
     } on ValidationException {
       rethrow;
-    } on RateLimitException {
+    } on AppException {
       rethrow;
     } catch (e) {
+      debugPrint('Error in register: $e');
       throw NetworkException(message: e.toString());
     }
   }
@@ -96,267 +68,183 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String password,
     required String deviceName,
   }) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final url = Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.loginEndpoint)}');
-      final body = jsonEncode({
-        'email': email,
-        'password': password,
-        'device_name': deviceName,
-      });
-
-      // DEBUG: Print Login Request
-      debugPrint('🟡 LOGIN REQUEST');
-      debugPrint('URL: $url');
-      debugPrint('Body: $body');
-
-      final response = await client.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      mapResponse = await ApiMethod(isBasic: true).post(
+        '${ApiConstants.baseUrl}${ApiConstants.buildEndpoint(ApiConstants.loginEndpoint)}',
+        {
+          'email': email,
+          'password': password,
+          'device_name': deviceName,
+        },
+        showResult: true,
       );
 
-      // DEBUG: Print Login Response
-      debugPrint('🟢 LOGIN RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-        final data = jsonData['data'] as Map<String, dynamic>;
-
-        // Save token
-        await tokenService.saveTokens(
-          accessToken: data['token'] as String,
-          refreshToken: data['refresh_token'] as String?,
-        );
-
-        debugPrint('✅ Login successful! Token saved.');
-        return AuthResponseModel.fromJson(data);
-      } else if (response.statusCode == 429) {
-        // Rate limit error (429 Too Many Requests)
-        debugPrint('⏱️ Rate limit exceeded (429)');
-        String errorMessage = 'Too many attempts. Please try again later.';
-        int? retryAfter;
-
-        try {
-          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
-          errorMessage = errorData['message'] as String? ?? errorMessage;
-          retryAfter = errorData['retry_after'] as int?;
-          debugPrint('⏱️ Retry after: $retryAfter seconds (${errorData['retry_after_human'] ?? 'N/A'})');
-        } catch (e) {
-          debugPrint('⚠️ Failed to parse rate limit response: $e');
-        }
-
-        throw RateLimitException(
-          message: errorMessage,
-          retryAfter: retryAfter,
-        );
-      } else {
-        // Parse other error responses
-        debugPrint('❌ Login failed: ${response.statusCode}');
-        String errorMessage = 'Login failed';
-
-        try {
-          final errorData = jsonDecode(response.body) as Map<String, dynamic>;
-          errorMessage = errorData['message'] as String? ?? errorMessage;
-        } catch (e) {
-          debugPrint('⚠️ Failed to parse error response: $e');
-        }
-
-        // Handle other status codes
-        if (response.statusCode == 401) {
-          throw UnauthorizedException(message: errorMessage);
-        } else if (response.statusCode == 422) {
-          // Validation error with field details
-          try {
-            final errorData = jsonDecode(response.body) as Map<String, dynamic>;
-            final errors = errorData['errors'] as Map<String, dynamic>?;
-            throw ValidationException(
-              message: errorMessage,
-              errors: errors,
-            );
-          } catch (e) {
-            throw ValidationException(message: errorMessage);
-          }
-        } else {
-          throw ServerException(
-            message: errorMessage,
-            statusCode: response.statusCode,
-          );
-        }
+      if (mapResponse == null) {
+        throw const ServerException(message: 'No data received');
       }
-    } on UnauthorizedException {
-      rethrow;
-    } on ServerException {
-      rethrow;
+
+      final dataMap = CommonToJson.getMap(mapResponse);
+      if (dataMap == null) {
+        throw const ServerException(message: 'Invalid data format');
+      }
+
+      // Save token
+      if (dataMap['token'] is String) {
+        await tokenService.saveTokens(
+          accessToken: dataMap['token'] as String,
+          refreshToken: dataMap['refresh_token'] as String?,
+        );
+        debugPrint('✅ Login successful! Token saved.');
+      }
+
+      return AuthResponseModel.fromJson(dataMap);
     } on RateLimitException {
       rethrow;
     } on ValidationException {
       rethrow;
+    } on AppException {
+      rethrow;
     } catch (e) {
-      debugPrint('❌ Login exception: $e');
+      debugPrint('Error in login: $e');
       throw NetworkException(message: e.toString());
     }
   }
 
   @override
   Future<AuthUserModel> getCurrentUser() async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final url = Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.getUserEndpoint)}');
-
-      // DEBUG: Print Get User Request
-      debugPrint('🟡 GET CURRENT USER REQUEST');
-      debugPrint('URL: $url');
-      debugPrint('Authorization: $token');
-
-      final response = await client.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
+      mapResponse = await ApiMethod(isBasic: false).get(
+        '${ApiConstants.baseUrl}${ApiConstants.buildEndpoint(ApiConstants.getUserEndpoint)}',
+        showResult: true,
       );
 
-      // DEBUG: Print Get User Response
-      debugPrint('🟢 GET CURRENT USER RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-        debugPrint('✅ User data loaded successfully');
-        return AuthUserModel.fromJson(jsonData['data'] as Map<String, dynamic>);
-      } else if (response.statusCode == 401) {
-        debugPrint('❌ Unauthorized: 401');
-        throw const UnauthorizedException();
-      } else {
-        throw ServerException(
-          message: 'Failed to get user',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw const ServerException(message: 'No data received');
       }
-    } on UnauthorizedException {
-      rethrow;
-    } on ServerException {
+
+      final dataMap = CommonToJson.getMap(mapResponse);
+      if (dataMap == null) {
+        throw const ServerException(message: 'Invalid data format');
+      }
+
+      debugPrint('✅ User data loaded successfully');
+      return AuthUserModel.fromJson(dataMap);
+    } on AppException {
       rethrow;
     } catch (e) {
+      debugPrint('Error in getCurrentUser: $e');
       throw NetworkException(message: e.toString());
     }
   }
 
   @override
   Future<void> logout() async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final response = await client.post(
-        Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.logoutEndpoint)}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
+      mapResponse = await ApiMethod(isBasic: false).post(
+        '${ApiConstants.baseUrl}${ApiConstants.buildEndpoint(ApiConstants.logoutEndpoint)}',
+        {},
+        showResult: true,
       );
 
-      if (response.statusCode != 200) {
-        throw ServerException(
-          message: 'Logout failed',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw const ServerException(message: 'No data received');
       }
 
       // Clear tokens
       await tokenService.clearTokens();
-    } on ServerException {
+      debugPrint('✅ Logout successful');
+    } on AppException {
       rethrow;
     } catch (e) {
+      debugPrint('Error in logout: $e');
       throw NetworkException(message: e.toString());
     }
   }
 
   @override
   Future<void> logoutAll() async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final response = await client.post(
-        Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.logoutAllEndpoint)}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
+      mapResponse = await ApiMethod(isBasic: false).post(
+        '${ApiConstants.baseUrl}${ApiConstants.buildEndpoint(ApiConstants.logoutAllEndpoint)}',
+        {},
+        showResult: true,
       );
 
-      if (response.statusCode != 200) {
-        throw ServerException(
-          message: 'Logout all failed',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw const ServerException(message: 'No data received');
       }
 
       await tokenService.clearTokens();
-    } on ServerException {
+      debugPrint('✅ Logout all successful');
+    } on AppException {
       rethrow;
     } catch (e) {
+      debugPrint('Error in logoutAll: $e');
       throw NetworkException(message: e.toString());
     }
   }
 
   @override
   Future<String> refreshToken() async {
+    Map<String, dynamic>? mapResponse;
+
     try {
       final refreshToken = await tokenService.getRefreshToken();
       if (refreshToken == null) {
-        throw const TokenException();
+        throw const TokenException(message: 'No refresh token available');
       }
 
-      // DEBUG: Print Refresh Token Request
-      debugPrint('🔵 REFRESH TOKEN REQUEST');
-      debugPrint('URL: $baseUrl${ApiConstants.buildEndpoint(ApiConstants.refreshTokenEndpoint)}');
-
-      final response = await client.post(
-        Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.refreshTokenEndpoint)}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $refreshToken',
-        },
+      mapResponse = await ApiMethod(isBasic: true).post(
+        '${ApiConstants.baseUrl}${ApiConstants.buildEndpoint(ApiConstants.refreshTokenEndpoint)}',
+        {},
+        showResult: true,
       );
 
-      // DEBUG: Print Refresh Token Response
-      debugPrint('🟢 REFRESH TOKEN RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-        final data = jsonData['data'] as Map<String, dynamic>;
-
-        // Extract new token
-        final newToken = data['token'] as String;
-        await tokenService.saveAccessToken(newToken);
-
-        // Extract and cache user data
-        if (data['user'] is Map) {
-          final userMap = data['user'] as Map<String, dynamic>;
-          final userModel = AuthUserModel.fromJson(userMap);
-
-          // Cache the updated user data locally
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('cached_user', jsonEncode(userModel.toJson()));
-
-          debugPrint('✅ Token refreshed and user data cached');
-          debugPrint('📊 User: ${userModel.name} (is_student: ${userModel.isStudent})');
-        }
-
-        return newToken;
-      } else if (response.statusCode == 401) {
-        debugPrint('❌ Token refresh failed: 401 Unauthorized');
-        throw const TokenException(message: 'Token refresh failed');
-      } else {
-        debugPrint('❌ Token refresh failed: ${response.statusCode}');
-        throw const TokenException();
+      if (mapResponse == null) {
+        throw const ServerException(message: 'No data received');
       }
+
+      final dataMap = CommonToJson.getMap(mapResponse);
+      if (dataMap == null) {
+        throw const ServerException(message: 'Invalid data format');
+      }
+
+      // Extract new token
+      final newToken = dataMap['token'] as String?;
+      if (newToken == null) {
+        throw const TokenException(message: 'No token in response');
+      }
+
+      await tokenService.saveAccessToken(newToken);
+
+      // Extract and cache user data
+      if (dataMap['user'] is Map) {
+        final userMap = dataMap['user'] as Map<String, dynamic>;
+        final userModel = AuthUserModel.fromJson(userMap);
+
+        // Cache the updated user data locally
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('cached_user', jsonEncode(userModel.toJson()));
+
+        debugPrint('✅ Token refreshed and user data cached');
+        debugPrint('📊 User: ${userModel.name} (is_student: ${userModel.isStudent})');
+      }
+
+      return newToken;
     } on TokenException {
       rethrow;
+    } on AppException {
+      rethrow;
     } catch (e) {
-      debugPrint('❌ Token refresh exception: $e');
+      debugPrint('Error in refreshToken: $e');
       throw NetworkException(message: e.toString());
     }
   }
@@ -367,100 +255,84 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String newPassword,
     required String newPasswordConfirmation,
   }) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final response = await client.post(
-        Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.changePasswordEndpoint)}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
-        body: jsonEncode({
+      mapResponse = await ApiMethod(isBasic: false).post(
+        '${ApiConstants.baseUrl}${ApiConstants.buildEndpoint(ApiConstants.changePasswordEndpoint)}',
+        {
           'current_password': currentPassword,
           'password': newPassword,
           'password_confirmation': newPasswordConfirmation,
-        }),
+        },
+        showResult: true,
       );
 
-      if (response.statusCode == 422) {
-        final error = jsonDecode(response.body);
-        throw ValidationException(
-          message: error['message'] ?? 'Validation failed',
-          errors: error['errors'],
-        );
-      } else if (response.statusCode != 200) {
-        throw ServerException(
-          message: 'Password change failed',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw const ServerException(message: 'No data received');
       }
+
+      debugPrint('✅ Password changed successfully');
     } on ValidationException {
       rethrow;
-    } on ServerException {
+    } on AppException {
       rethrow;
     } catch (e) {
+      debugPrint('Error in changePassword: $e');
       throw NetworkException(message: e.toString());
     }
   }
 
   @override
   Future<List<SessionModel>> getActiveSessions() async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final response = await client.get(
-        Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.activeSessionsEndpoint)}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
+      mapResponse = await ApiMethod(isBasic: false).get(
+        '${ApiConstants.baseUrl}${ApiConstants.buildEndpoint(ApiConstants.activeSessionsEndpoint)}',
+        showResult: true,
       );
 
-      if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body) as Map<String, dynamic>;
-        final sessions = jsonData['data'] as List;
-        return sessions
-            .map((session) => SessionModel.fromJson(session as Map<String, dynamic>))
-            .toList();
-      } else if (response.statusCode == 401) {
-        throw const UnauthorizedException();
-      } else {
-        throw ServerException(
-          message: 'Failed to get sessions',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw const ServerException(message: 'No data received');
       }
-    } on UnauthorizedException {
-      rethrow;
-    } on ServerException {
+
+      final dataList = CommonToJson.getList(mapResponse);
+      if (dataList == null) {
+        throw const ServerException(message: 'Invalid data format');
+      }
+
+      return dataList
+          .map((session) => SessionModel.fromJson(session as Map<String, dynamic>))
+          .toList();
+    } on AppException {
       rethrow;
     } catch (e) {
+      debugPrint('Error in getActiveSessions: $e');
       throw NetworkException(message: e.toString());
     }
   }
 
   @override
   Future<void> deleteAccount() async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final token = await tokenService.getAuthHeader();
-      final response = await client.delete(
-        Uri.parse('$baseUrl${ApiConstants.buildEndpoint(ApiConstants.deleteAccountEndpoint)}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token,
-        },
+      mapResponse = await ApiMethod(isBasic: false).delete(
+        '${ApiConstants.baseUrl}${ApiConstants.buildEndpoint(ApiConstants.deleteAccountEndpoint)}',
+        showResult: true,
       );
 
-      if (response.statusCode != 200) {
-        throw ServerException(
-          message: 'Account deletion failed',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw const ServerException(message: 'No data received');
       }
 
       await tokenService.clearTokens();
-    } on ServerException {
+      debugPrint('✅ Account deleted successfully');
+    } on AppException {
       rethrow;
     } catch (e) {
+      debugPrint('Error in deleteAccount: $e');
       throw NetworkException(message: e.toString());
     }
   }

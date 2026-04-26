@@ -1075,6 +1075,8 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
         listener: (context, state) {
           if (state is EnrollmentCreated) {
             _showEnrollmentSuccessDialog(state.enrollmentData);
+          } else if (state is AlreadyEnrolled) {
+            _showAlreadyEnrolledDialog(state.message);
           } else if (state is EnrollmentError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -1104,8 +1106,10 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
   }
 
   void _showEnrollmentDialog() {
-    final course = context.read<CourseBloc>().state;
-    if (course is! CourseDetailsLoaded) return;
+    final courseState = context.read<CourseBloc>().state;
+    if (courseState is! CourseDetailsLoaded) return;
+
+    final course = courseState.course;
 
     showDialog(
       context: context,
@@ -1116,51 +1120,61 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Course: ${course.course.title}',
+              'Course: ${course.title}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'Price: ${course.course.displayPrice}',
+              'Price: ${course.displayPrice}',
               style: TextStyle(
-                color: course.course.isFree ? Colors.green : Theme.of(context).primaryColor,
+                color: course.isFree
+                    ? Colors.green
+                    : Theme.of(context).primaryColor,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 16),
-            const Text('Payment Method:'),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: 'bkash',
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            if (!course.isFree) ...[
+              const SizedBox(height: 16),
+              const Text('Payment Method:'),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                initialValue: 'bkash',
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 16,
+                  ),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'bkash', child: Text('bKash')),
+                  DropdownMenuItem(value: 'nagad', child: Text('Nagad')),
+                  DropdownMenuItem(value: 'rocket', child: Text('Rocket')),
+                  DropdownMenuItem(value: 'bank', child: Text('Bank Transfer')),
+                ],
+                onChanged: (value) {},
               ),
-              items: const [
-                DropdownMenuItem(value: 'bkash', child: Text('bKash')),
-                DropdownMenuItem(value: 'nagad', child: Text('Nagad')),
-                DropdownMenuItem(value: 'rocket', child: Text('Rocket')),
-                DropdownMenuItem(value: 'bank', child: Text('Bank Transfer')),
-              ],
-              onChanged: (value) {},
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: const InputDecoration(
-                labelText: 'Transaction ID (optional)',
-                border: OutlineInputBorder(),
-                helperText: 'Enter your transaction ID after payment',
+              const SizedBox(height: 16),
+              TextField(
+                decoration: const InputDecoration(
+                  labelText: 'Transaction ID (optional)',
+                  border: OutlineInputBorder(),
+                  helperText: 'Enter your transaction ID after payment',
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              decoration: const InputDecoration(
-                labelText: 'Payment Notes (optional)',
-                border: OutlineInputBorder(),
-                helperText: 'Your phone number or any notes',
+              const SizedBox(height: 16),
+              TextField(
+                decoration: const InputDecoration(
+                  labelText: 'Payment Notes (optional)',
+                  border: OutlineInputBorder(),
+                  helperText: 'Your phone number or any notes',
+                ),
+                maxLines: 2,
               ),
-              maxLines: 2,
-            ),
+            ] else ...[
+              const SizedBox(height: 16),
+              const Text('This course is free! No payment required.'),
+            ],
           ],
         ),
         actions: [
@@ -1171,28 +1185,31 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              _submitEnrollment(course.course.id);
+              _submitEnrollment(course.id, course.isFree);
             },
-            child: const Text('Submit Enrollment'),
+            child: Text(course.isFree ? 'Enroll Now' : 'Submit Enrollment'),
           ),
         ],
       ),
     );
   }
 
-  void _submitEnrollment(String courseId) {
+  void _submitEnrollment(String courseId, bool isFree) {
     context.read<EnrollmentBloc>().add(
-          CreateEnrollmentEvent(
-            courseId: courseId,
-            paymentMethod: 'bkash',
-            paymentNotes: 'Sent from app',
-            transactionId: 'TXN${DateTime.now().millisecondsSinceEpoch}',
-          ),
-        );
+      CreateEnrollmentEvent(
+        courseId: courseId,
+        paymentMethod: isFree ? "bkash" : 'bkash',
+        paymentNotes: isFree ? "Sent from app Free" : 'Sent from app',
+        transactionId: isFree
+            ? 'TXN${DateTime.now().millisecondsSinceEpoch}'
+            : 'TXN${DateTime.now().millisecondsSinceEpoch}',
+      ),
+    );
   }
 
   void _showEnrollmentSuccessDialog(Map<String, dynamic> enrollmentData) {
-    final message = enrollmentData['message'] ?? 'Enrollment submitted successfully';
+    final message =
+        enrollmentData['message'] ?? 'Enrollment submitted successfully';
     final nextSteps = enrollmentData['next_steps'] as Map<String, dynamic>?;
 
     showDialog(
@@ -1224,16 +1241,18 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                   Text(nextSteps['payment_instructions']['title'] ?? ''),
                   const SizedBox(height: 8),
                   ...(nextSteps['payment_instructions']['steps'] as List? ?? [])
-                      .map((step) => Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('• '),
-                                Expanded(child: Text(step.toString())),
-                              ],
-                            ),
-                          )),
+                      .map(
+                        (step) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('• '),
+                              Expanded(child: Text(step.toString())),
+                            ],
+                          ),
+                        ),
+                      ),
                 ],
               ],
             ],
@@ -1246,6 +1265,37 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               context.go('/my-courses');
             },
             child: const Text('View My Courses'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAlreadyEnrolledDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.blue.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.info_outline, size: 48, color: Colors.blue),
+        ),
+        title: const Text('Already Enrolled'),
+        content: Text(message),
+        actions: [
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.go('/my-courses');
+            },
+            child: const Text('View My Courses'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
           ),
         ],
       ),

@@ -98,13 +98,13 @@ class ClearEnrollmentErrorEvent extends EnrollmentEvent {
 /// Create Enrollment Event
 class CreateEnrollmentEvent extends EnrollmentEvent {
   final String courseId;
-  final String paymentMethod;
+  final String? paymentMethod;
   final String? paymentNotes;
   final String? transactionId;
 
   const CreateEnrollmentEvent({
     required this.courseId,
-    required this.paymentMethod,
+    this.paymentMethod,
     this.paymentNotes,
     this.transactionId,
   });

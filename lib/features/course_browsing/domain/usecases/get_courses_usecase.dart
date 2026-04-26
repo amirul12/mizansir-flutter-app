@@ -1,7 +1,7 @@
 // File: lib/features/course_browsing/domain/usecases/get_courses_usecase.dart
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../entities/course.dart';
 import '../entities/course_filter.dart';
 import '../repositories/course_repository.dart';

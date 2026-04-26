@@ -1,18 +1,18 @@
 // File: lib/features/enrollment/domain/usecases/create_enrollment_usecase.dart
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../repositories/enrollment_repository.dart';
 
 /// Parameters for creating enrollment
 class CreateEnrollmentParams {
   final String courseId;
-  final String paymentMethod;
+  final String? paymentMethod;
   final String? paymentNotes;
   final String? transactionId;
 
   const CreateEnrollmentParams({
     required this.courseId,
-    required this.paymentMethod,
+    this.paymentMethod,
     this.paymentNotes,
     this.transactionId,
   });

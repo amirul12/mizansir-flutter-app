@@ -170,8 +170,11 @@ class AppRouter {
           name: courseDetails,
           builder: (context, state) {
             final courseId = state.pathParameters['id']!;
-            return BlocProvider(
-              create: (context) => di.sl<CourseBloc>(),
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider(create: (context) => di.sl<CourseBloc>()),
+                BlocProvider(create: (context) => di.sl<EnrollmentBloc>()),
+              ],
               child: CourseDetailsPage(courseId: courseId),
             );
           },

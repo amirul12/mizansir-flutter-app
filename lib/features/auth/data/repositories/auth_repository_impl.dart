@@ -1,7 +1,6 @@
-// File: lib/features/auth/data/repositories/auth_repository_impl.dart
 import 'package:dartz/dartz.dart';
 import '../../../../core/errors/exceptions.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../../domain/entities/auth_user.dart';
 import '../../domain/entities/session.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -41,18 +40,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.saveAuthState(true);
 
       return Right(user.toEntity());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message, e.errors));
-    } on RateLimitException catch (e) {
-      return Left(RateLimitFailure(e.message, e.retryAfter));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on AppException catch (e) {
+      return _mapExceptionToFailure(e);
     }
   }
 
@@ -74,20 +63,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.saveAuthState(true);
 
       return Right(authResponse.user.toEntity());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message, e.errors));
-    } on RateLimitException catch (e) {
-      return Left(RateLimitFailure(e.message, e.retryAfter));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on AppException catch (e) {
+      return _mapExceptionToFailure(e);
     }
   }
 
@@ -105,16 +82,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.cacheUser(user.toJson());
 
       return Right(user.toEntity());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on AppException catch (e) {
+      return _mapExceptionToFailure(e);
     }
   }
 
@@ -125,14 +94,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.clearCachedUser();
       await localDataSource.clearAuthState();
       return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on AppException catch (e) {
+      return _mapExceptionToFailure(e);
     }
   }
 
@@ -143,14 +106,8 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.clearCachedUser();
       await localDataSource.clearAuthState();
       return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on AppException catch (e) {
+      return _mapExceptionToFailure(e);
     }
   }
 
@@ -159,14 +116,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final token = await remoteDataSource.refreshToken();
       return Right(token);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on TokenException catch (e) {
-      return Left(TokenFailure(e.message));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on AppException catch (e) {
+      return _mapExceptionToFailure(e);
     }
   }
 
@@ -183,16 +134,8 @@ class AuthRepositoryImpl implements AuthRepository {
         newPasswordConfirmation: newPasswordConfirmation,
       );
       return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message, e.errors));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on AppException catch (e) {
+      return _mapExceptionToFailure(e);
     }
   }
 
@@ -203,14 +146,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return Right(
         sessions.map((model) => model.toEntity()).toList(),
       );
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on AppException catch (e) {
+      return _mapExceptionToFailure(e);
     }
   }
 
@@ -219,10 +156,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final authState = await localDataSource.getAuthState();
       return Right(authState);
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on AppException catch (e) {
+      return _mapExceptionToFailure(e);
     }
   }
 
@@ -233,16 +168,29 @@ class AuthRepositoryImpl implements AuthRepository {
       await localDataSource.clearCachedUser();
       await localDataSource.clearAuthState();
       return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on NetworkException catch (e) {
-      return Left(NetworkFailure(e.message));
-    } on UnauthorizedException catch (e) {
-      return Left(UnauthorizedFailure(e.message));
-    } on CacheException catch (e) {
-      return Left(CacheFailure(e.message));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on AppException catch (e) {
+      return _mapExceptionToFailure(e);
+    }
+  }
+
+  /// Map AppException to Failure
+  Either<Failure, T> _mapExceptionToFailure<T>(AppException exception) {
+    if (exception is ServerException) {
+      return Left(ServerFailure(message: exception.message));
+    } else if (exception is NetworkException) {
+      return Left(NetworkFailure(message: exception.message));
+    } else if (exception is UnauthorizedException) {
+      return Left(UnauthorizedFailure(exception.message));
+    } else if (exception is ValidationException) {
+      return Left(ValidationFailure(exception.message, exception.errors));
+    } else if (exception is RateLimitException) {
+      return Left(RateLimitFailure(exception.message, exception.retryAfter));
+    } else if (exception is TokenException) {
+      return Left(TokenFailure(exception.message));
+    } else if (exception is CacheException) {
+      return Left(CacheFailure(exception.message));
+    } else {
+      return Left(UnknownFailure(exception.message));
     }
   }
 }

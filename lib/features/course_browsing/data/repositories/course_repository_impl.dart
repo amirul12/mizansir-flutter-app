@@ -1,7 +1,6 @@
-// File: lib/features/course_browsing/data/repositories/course_repository_impl.dart
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/exceptions.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/services/api_exception.dart';
+import '../../../../core/error/failures.dart';
 import '../../domain/entities/course.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/entities/course_filter.dart';
@@ -29,16 +28,9 @@ class CourseRepositoryImpl implements CourseRepository {
         limit: limit,
       );
       return Right(courseModels.map((model) => model.toEntity()).toList());
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } on NotFoundException {
-      return Left(NotFoundFailure('No courses found'));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<List<Course>>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -47,16 +39,11 @@ class CourseRepositoryImpl implements CourseRepository {
     int limit = 10,
   }) async {
     try {
-      final courseModels = await remoteDataSource.getCourses(limit: limit);
+      final courseModels = await remoteDataSource.getFeaturedCourses(limit: limit);
       return Right(courseModels.map((model) => model.toEntity()).toList());
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<List<Course>>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -65,16 +52,9 @@ class CourseRepositoryImpl implements CourseRepository {
     try {
       final courseModel = await remoteDataSource.getCourseDetails(courseId);
       return Right(courseModel.toEntity());
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } on NotFoundException {
-      return Left(NotFoundFailure('Course not found'));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<Course>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -91,14 +71,9 @@ class CourseRepositoryImpl implements CourseRepository {
         limit: limit,
       );
       return Right(courseModels.map((model) => model.toEntity()).toList());
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<List<Course>>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -107,14 +82,9 @@ class CourseRepositoryImpl implements CourseRepository {
     try {
       final categoryModels = await remoteDataSource.getCategories();
       return Right(categoryModels.map((model) => model.toEntity()).toList());
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<List<Category>>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -125,16 +95,9 @@ class CourseRepositoryImpl implements CourseRepository {
     try {
       final lessonModels = await remoteDataSource.getPreviewLessons(courseId);
       return Right(lessonModels.map((model) => model.toEntity()).toList());
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } on NotFoundException {
-      return Left(NotFoundFailure('Lessons not found'));
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<List<LessonPreview>>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -143,14 +106,9 @@ class CourseRepositoryImpl implements CourseRepository {
     try {
       final isEnrolled = await remoteDataSource.isEnrolled(courseId);
       return Right(isEnrolled);
-    } on ServerException {
-      return Left(ServerFailure());
-    } on NetworkException {
-      return Left(NetworkFailure());
-    } on UnauthorizedException {
-      return Left(UnauthorizedFailure());
-    } catch (e) {
-      return Left(UnknownFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<bool>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 }

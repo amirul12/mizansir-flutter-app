@@ -49,6 +49,9 @@ dependencies:
   # Video Player
   youtube_player_flutter: ^9.1.1
   flutter_launcher_icons: ^0.14.4
+  package_info_plus: any
+  nb_utils: any
+  awesome_dialog: any
 
 dev_dependencies:
   flutter_test:

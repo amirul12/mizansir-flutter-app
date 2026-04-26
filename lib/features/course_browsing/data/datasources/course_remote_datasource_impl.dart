@@ -1,19 +1,16 @@
-// File: lib/features/course_browsing/data/datasources/course_remote_datasource_impl.dart
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import '../../../../core/errors/exceptions.dart';
+import '../../../../core/services/api_service_method.dart';
+import '../../../../core/services/api_exception.dart';
+import '../../../../core/constants/api_constants.dart';
+import '../../../../core/utils/common_json.dart';
 import '../models/course_model.dart';
 import '../models/category_model.dart';
 import '../models/lesson_preview_model.dart';
 import 'course_remote_datasource.dart';
 
-/// Course Remote Data Source Implementation
+/// Course Remote Data Source Implementation using ApiMethod
 class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
-  final http.Client client;
-  final String baseUrl;
-
-  CourseRemoteDataSourceImpl({required this.client, required this.baseUrl});
+  CourseRemoteDataSourceImpl();
 
   @override
   Future<List<CourseModel>> getCourses({
@@ -21,176 +18,92 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     int page = 1,
     int limit = 20,
   }) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
+      // Build query parameters
       final params = queryParams ?? {};
       params['page'] = page.toString();
       params['limit'] = limit.toString();
 
-      // Use Uri.parse to handle full URL correctly
-      final uri = Uri.parse(
-        '$baseUrl/v1/courses',
-      ).replace(queryParameters: params);
+      mapResponse = await ApiMethod(isBasic: true).get(
+        '${ApiConstants.baseUrl}${ApiConstants.coursesPath}',
+        query: params,
+        showResult: true,
+      );
 
-      // DEBUG: Print API Request
-      debugPrint('🔵 GET COURSES REQUEST');
-      debugPrint('URL: $uri');
-      debugPrint('Headers: {"Content-Type": "application/json"}');
-
-      final response = await client
-          .get(uri, headers: {'Content-Type': 'application/json'})
-          .timeout(const Duration(seconds: 30));
-
-      // DEBUG: Print API Response
-      debugPrint('🟢 GET COURSES RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-
-        // Handle direct list response
-        if (jsonData is List) {
-          debugPrint('✅ Successfully parsed ${jsonData.length} courses');
-          return jsonData
-              .map((course) => CourseModel.fromJson(course))
-              .toList();
-        }
-
-        // Handle wrapped response (CommonResponseModel format)
-        if (jsonData is Map && jsonData['data'] is List) {
-          debugPrint(
-            '✅ Successfully parsed ${jsonData['data'].length} courses',
-          );
-          return (jsonData['data'] as List)
-              .map((course) => CourseModel.fromJson(course))
-              .toList();
-        }
-
-        throw ServerException(message: 'Invalid data format received');
-      } else if (response.statusCode == 401) {
-        debugPrint('❌ Unauthorized: 401');
-        throw UnauthorizedException();
-      } else if (response.statusCode == 404) {
-        debugPrint('❌ Not Found: 404');
-        throw const NotFoundException(message: 'Courses not found');
-      } else {
-        debugPrint('❌ Error: ${response.statusCode}');
-        throw ServerException(
-          message: 'Failed to load courses',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on AppException {
-      rethrow;
+
+      // Extract data from response
+      final dataList = CommonToJson.getList(mapResponse);
+      if (dataList == null) {
+        throw ServerException('Invalid data format');
+      }
+
+      return dataList.map((course) => CourseModel.fromJson(course)).toList();
     } catch (e) {
-      debugPrint('❌ Exception: $e');
-      throw ServerException(message: e.toString());
+      debugPrint('Error in getCourses: $e');
+      rethrow;
     }
   }
 
   @override
   Future<List<CourseModel>> getFeaturedCourses({int limit = 10}) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      // Use Uri.parse to handle full URL correctly
-      final uri = Uri.parse(
-        '$baseUrl/v1/courses/featured',
-      ).replace(queryParameters: {'limit': limit.toString()});
+      mapResponse = await ApiMethod(isBasic: true).get(
+        '${ApiConstants.baseUrl}${ApiConstants.featuredCoursesEndpoint}',
+        query: {'limit': limit.toString()},
+        showResult: true,
+      );
 
-      // DEBUG: Print API Request
-      debugPrint('🔵 GET FEATURED COURSES REQUEST');
-      debugPrint('URL: $uri');
-
-      final response = await client
-          .get(uri, headers: {'Content-Type': 'application/json'})
-          .timeout(const Duration(seconds: 30));
-
-      // DEBUG: Print API Response
-      debugPrint('🟢 GET FEATURED COURSES RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-
-        // Handle direct list response
-        if (jsonData is List) {
-          return jsonData
-              .map((course) => CourseModel.fromJson(course))
-              .toList();
-        }
-
-        // Handle wrapped response
-        if (jsonData is Map && jsonData['data'] is List) {
-          return (jsonData['data'] as List)
-              .map((course) => CourseModel.fromJson(course))
-              .toList();
-        }
-        throw ServerException(message: 'Invalid data format received');
-      } else if (response.statusCode == 401) {
-        throw UnauthorizedException();
-      } else {
-        throw ServerException(
-          message: 'Failed to load featured courses',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on Exception {
-      rethrow;
+
+      final dataList = CommonToJson.getList(mapResponse);
+      if (dataList == null) {
+        throw ServerException('Invalid data format');
+      }
+
+      return dataList.map((course) => CourseModel.fromJson(course)).toList();
     } catch (e) {
-      throw ServerException(message: e.toString());
+      debugPrint('Error in getFeaturedCourses: $e');
+      rethrow;
     }
   }
 
   @override
   Future<CourseModel> getCourseDetails(String courseId) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      // Use Uri.parse to handle full URL correctly
-      final uri = Uri.parse('$baseUrl/v1/courses/$courseId');
+      mapResponse = await ApiMethod(isBasic: true).get(
+        '${ApiConstants.baseUrl}${ApiConstants.coursesPath}/$courseId',
+        showResult: true,
+      );
 
-      // DEBUG: Print API Request
-      debugPrint('🔵 GET COURSE DETAILS REQUEST');
-      debugPrint('URL: $uri');
-
-      final response = await client
-          .get(uri, headers: {'Content-Type': 'application/json'})
-          .timeout(const Duration(seconds: 30));
-
-      // DEBUG: Print API Response
-      debugPrint('🟢 GET COURSE DETAILS RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-
-        // Handle nested course object in response
-        if (jsonData['data'] is Map) {
-          final data = jsonData['data'] as Map<String, dynamic>;
-
-          // Check if course is nested (new API format)
-          if (data['course'] is Map) {
-            return CourseModel.fromJson(data['course'] as Map<String, dynamic>);
-          }
-
-          // Otherwise, data is the course object (old API format)
-          return CourseModel.fromJson(data);
-        }
-
-        throw ServerException(message: 'Invalid data format received');
-      } else if (response.statusCode == 401) {
-        throw UnauthorizedException();
-      } else if (response.statusCode == 404) {
-        throw const NotFoundException(message: 'Course not found');
-      } else {
-        throw ServerException(
-          message: 'Failed to load course details',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on AppException {
-      rethrow;
+
+      final dataMap = CommonToJson.getMap(mapResponse);
+      if (dataMap == null) {
+        throw ServerException('Invalid data format');
+      }
+
+      // Handle nested course object
+      if (dataMap['course'] is Map) {
+        return CourseModel.fromJson(dataMap['course'] as Map<String, dynamic>);
+      }
+
+      return CourseModel.fromJson(dataMap);
     } catch (e) {
-      throw ServerException(message: e.toString());
+      debugPrint('Error in getCourseDetails: $e');
+      rethrow;
     }
   }
 
@@ -200,162 +113,109 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
     int page = 1,
     int limit = 20,
   }) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      // Use Uri.parse to handle full URL correctly
-      final uri = Uri.parse('$baseUrl/v1/courses/search').replace(
-        queryParameters: {
+      mapResponse = await ApiMethod(isBasic: true).get(
+        '${ApiConstants.baseUrl}${ApiConstants.searchCoursesEndpoint}',
+        query: {
           'q': query,
           'page': page.toString(),
           'limit': limit.toString(),
         },
+        showResult: true,
       );
 
-      // DEBUG: Print API Request
-      debugPrint('🔵 SEARCH COURSES REQUEST');
-      debugPrint('URL: $uri');
-
-      final response = await client
-          .get(uri, headers: {'Content-Type': 'application/json'})
-          .timeout(const Duration(seconds: 30));
-
-      // DEBUG: Print API Response
-      debugPrint('🟢 SEARCH COURSES RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        if (jsonData['data'] is List) {
-          return (jsonData['data'] as List)
-              .map((course) => CourseModel.fromJson(course))
-              .toList();
-        }
-        throw ServerException(message: 'Invalid data format received');
-      } else if (response.statusCode == 401) {
-        throw UnauthorizedException();
-      } else {
-        throw ServerException(
-          message: 'Failed to search courses',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on Exception {
-      rethrow;
+
+      final dataList = CommonToJson.getList(mapResponse);
+      if (dataList == null) {
+        throw ServerException('Invalid data format');
+      }
+
+      return dataList.map((course) => CourseModel.fromJson(course)).toList();
     } catch (e) {
-      throw ServerException(message: e.toString());
+      debugPrint('Error in searchCourses: $e');
+      rethrow;
     }
   }
 
   @override
   Future<List<CategoryModel>> getCategories() async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      // Use Uri.parse to handle full URL correctly
-      final uri = Uri.parse('$baseUrl/v1/courses/categories');
+      mapResponse = await ApiMethod(isBasic: true).get(
+        '${ApiConstants.baseUrl}${ApiConstants.categoriesEndpoint}',
+        showResult: true,
+      );
 
-      // DEBUG: Print API Request
-      debugPrint('🔵 GET CATEGORIES REQUEST');
-      debugPrint('URL: $uri');
-
-      final response = await client
-          .get(uri, headers: {'Content-Type': 'application/json'})
-          .timeout(const Duration(seconds: 30));
-
-      // DEBUG: Print API Response
-      debugPrint('🟢 GET CATEGORIES RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        if (jsonData['data'] is List) {
-          return (jsonData['data'] as List)
-              .map((category) => CategoryModel.fromJson(category))
-              .toList();
-        }
-        throw ServerException(message: 'Invalid data format received');
-      } else if (response.statusCode == 401) {
-        throw UnauthorizedException();
-      } else {
-        throw ServerException(
-          message: 'Failed to load categories',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on Exception {
-      rethrow;
+
+      final dataList = CommonToJson.getList(mapResponse);
+      if (dataList == null) {
+        throw ServerException('Invalid data format');
+      }
+
+      return dataList
+          .map((category) => CategoryModel.fromJson(category))
+          .toList();
     } catch (e) {
-      throw ServerException(message: e.toString());
+      debugPrint('Error in getCategories: $e');
+      rethrow;
     }
   }
 
   @override
   Future<List<LessonPreviewModel>> getPreviewLessons(String courseId) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      // Use Uri.parse to handle full URL correctly
-      final uri = Uri.parse('$baseUrl/v1/courses/$courseId/lessons');
+      mapResponse = await ApiMethod(isBasic: true).get(
+        '${ApiConstants.baseUrl}${ApiConstants.coursesPath}/$courseId/lessons',
+        showResult: true,
+      );
 
-      // DEBUG: Print API Request
-      debugPrint('🔵 GET PREVIEW LESSONS REQUEST');
-      debugPrint('URL: $uri');
-
-      final response = await client
-          .get(uri, headers: {'Content-Type': 'application/json'})
-          .timeout(const Duration(seconds: 30));
-
-      // DEBUG: Print API Response
-      debugPrint('🟢 GET PREVIEW LESSONS RESPONSE');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Response Body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        if (jsonData['data'] is List) {
-          return (jsonData['data'] as List)
-              .map((lesson) => LessonPreviewModel.fromJson(lesson))
-              .toList();
-        }
-        throw ServerException(message: 'Invalid data format received');
-      } else if (response.statusCode == 401) {
-        throw UnauthorizedException();
-      } else if (response.statusCode == 404) {
-        throw const NotFoundException(message: 'Lessons not found');
-      } else {
-        throw ServerException(
-          message: 'Failed to load preview lessons',
-          statusCode: response.statusCode,
-        );
+      if (mapResponse == null) {
+        throw ServerException('No data received');
       }
-    } on AppException {
-      rethrow;
+
+      final dataList = CommonToJson.getList(mapResponse);
+      if (dataList == null) {
+        throw ServerException('Invalid data format');
+      }
+
+      return dataList
+          .map((lesson) => LessonPreviewModel.fromJson(lesson))
+          .toList();
     } catch (e) {
-      throw ServerException(message: e.toString());
+      debugPrint('Error in getPreviewLessons: $e');
+      rethrow;
     }
   }
 
   @override
   Future<bool> isEnrolled(String courseId) async {
+    Map<String, dynamic>? mapResponse;
+
     try {
-      final uri = Uri.https(
-        baseUrl.replaceAll('https://', '').replaceAll('http://', ''),
-        '/courses/$courseId/check-enrollment',
+      mapResponse = await ApiMethod(isBasic: false).get(
+        '${ApiConstants.baseUrl}${ApiConstants.coursesPath}/$courseId/check-enrollment',
+        showResult: true,
       );
 
-      final response = await client
-          .get(uri, headers: {'Content-Type': 'application/json'})
-          .timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        return jsonData['enrolled'] ?? false;
-      } else if (response.statusCode == 401) {
-        throw UnauthorizedException();
-      } else {
+      if (mapResponse == null) {
         return false;
       }
-    } on AppException {
-      rethrow;
+
+      return mapResponse['enrolled'] ?? false;
     } catch (e) {
-      throw ServerException(message: e.toString());
+      debugPrint('Error in isEnrolled: $e');
+      return false;
     }
   }
 }

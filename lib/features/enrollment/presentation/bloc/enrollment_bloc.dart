@@ -198,8 +198,13 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     );
 
     result.fold(
-      (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
-      (enrollmentData) => emit(EnrollmentCreated(enrollmentData: enrollmentData)),
+      (failure) {
+        // Check if already enrolled (active or pending)
+
+        emit(EnrollmentError(message: _getErrorMessage(failure)));
+      },
+      (enrollmentData) =>
+          emit(EnrollmentCreated(enrollmentData: enrollmentData)),
     );
   }
 

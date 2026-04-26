@@ -1,7 +1,7 @@
 // File: lib/features/enrollment/domain/usecases/mark_lesson_complete_usecase.dart
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../repositories/enrollment_repository.dart';
 
 /// Parameters for marking lesson complete

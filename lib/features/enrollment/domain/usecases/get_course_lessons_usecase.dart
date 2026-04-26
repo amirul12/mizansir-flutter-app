@@ -1,7 +1,7 @@
 // File: lib/features/enrollment/domain/usecases/get_course_lessons_usecase.dart
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/error/failures.dart';
 import '../entities/lesson.dart';
 import '../repositories/enrollment_repository.dart';
 

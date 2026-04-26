@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
-import '../../../../core/errors/exceptions.dart';
-import '../../../../core/errors/failures.dart';
+import '../../../../core/services/api_exception.dart';
+import '../../../../core/services/connectivity_service.dart';
+import '../../../../core/error/failures.dart';
 import '../../../auth/domain/repositories/auth_repository.dart';
 import '../../domain/entities/user_profile.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -13,27 +14,26 @@ import '../datasources/profile_remote_datasource.dart';
 class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileRemoteDataSource remoteDataSource;
   final AuthRepository authRepository;
+  final ConnectivityService connectivityService;
 
   ProfileRepositoryImpl({
     required this.remoteDataSource,
     required this.authRepository,
+    required this.connectivityService,
   });
 
   @override
   Future<Either<Failure, UserProfile>> getProfile() async {
     try {
+      if (!await connectivityService.isConnected) {
+        throw NoInternetException();
+      }
+
       final profileModel = await remoteDataSource.getProfile();
       return Right(profileModel.toEntity());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on UnauthorizedException {
-      return Left(const UnauthorizedFailure());
-    } on NotFoundException {
-      return Left(const NotFoundFailure('Profile not found'));
-    } on NetworkException {
-      return Left(const NetworkFailure());
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<UserProfile>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -41,34 +41,30 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<Either<Failure, UserProfile>> updateProfile(
       Map<String, dynamic> params) async {
     try {
+      if (!await connectivityService.isConnected) {
+        throw NoInternetException();
+      }
+
       final profileModel = await remoteDataSource.updateProfile(params);
       return Right(profileModel.toEntity());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on UnauthorizedException {
-      return Left(const UnauthorizedFailure());
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message));
-    } on NetworkException {
-      return Left(const NetworkFailure());
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<UserProfile>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
   Future<Either<Failure, UserProfile>> uploadAvatar(String imagePath) async {
     try {
+      if (!await connectivityService.isConnected) {
+        throw NoInternetException();
+      }
+
       final profileModel = await remoteDataSource.uploadAvatar(imagePath);
       return Right(profileModel.toEntity());
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on UnauthorizedException {
-      return Left(const UnauthorizedFailure());
-    } on NetworkException {
-      return Left(const NetworkFailure());
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<UserProfile>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
@@ -78,53 +74,43 @@ class ProfileRepositoryImpl implements ProfileRepository {
     required String newPassword,
   }) async {
     try {
+      if (!await connectivityService.isConnected) {
+        throw NoInternetException();
+      }
+
       await remoteDataSource.changePassword(
         currentPassword: currentPassword,
         newPassword: newPassword,
       );
       return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on UnauthorizedException {
-      return Left(const UnauthorizedFailure('Incorrect current password'));
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message));
-    } on NetworkException {
-      return Left(const NetworkFailure());
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+    } on CustomException catch (e) {
+      final failure = parseCustomException<void>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
   Future<Either<Failure, void>> deleteAccount(String password) async {
     try {
+      if (!await connectivityService.isConnected) {
+        throw NoInternetException();
+      }
+
       await remoteDataSource.deleteAccount(password);
       // Also logout locally after successful deletion
-      await authRepository.logout();
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } on UnauthorizedException {
-      return Left(const UnauthorizedFailure('Incorrect password'));
-    } on ValidationException catch (e) {
-      return Left(ValidationFailure(e.message));
-    } on NetworkException {
-      return Left(const NetworkFailure());
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      final logoutResult = await authRepository.logout();
+      return logoutResult.fold(
+        (failure) => Left(failure),
+        (_) => const Right(null),
+      );
+    } on CustomException catch (e) {
+      final failure = parseCustomException<void>(e);
+      return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
   Future<Either<Failure, void>> logout() async {
-    try {
-      await authRepository.logout();
-      return const Right(null);
-    } on ServerException catch (e) {
-      return Left(ServerFailure(e.message));
-    } catch (e) {
-      return Left(ServerFailure(e.toString()));
-    }
+    return authRepository.logout();
   }
 }
