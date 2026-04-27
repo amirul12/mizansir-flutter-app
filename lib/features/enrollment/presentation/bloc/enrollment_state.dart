@@ -1,5 +1,6 @@
 // File: lib/features/enrollment/presentation/bloc/enrollment_state.dart
 import 'package:equatable/equatable.dart';
+import 'package:mizansir/features/enrollment/data/models/lesson_model.dart' show LessonModel;
 import '../../domain/entities/enrolled_course.dart';
  
 import '../../domain/entities/lesson.dart';
@@ -56,9 +57,9 @@ class CourseLessonsLoaded extends EnrollmentState {
 
 /// Lesson Details Loaded State (with navigation)
 class LessonDetailsLoaded extends EnrollmentState {
-  final Lesson lesson;
-  final Lesson? nextLesson;
-  final Lesson? previousLesson;
+  final LessonModel lesson;
+  final LessonModel? nextLesson;
+  final LessonModel? previousLesson;
 
   const LessonDetailsLoaded({
     required this.lesson,

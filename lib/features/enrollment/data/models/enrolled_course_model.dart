@@ -113,7 +113,7 @@ class EnrolledCourseModel extends Equatable {
       totalWatchTimeMinutes: totalWatchTimeMinutes,
       nextLessonId: nextLessonId,
       enrollment: enrollment?.toEntity(),
-      lessons: lessons.map((lesson) => lesson.toEntity()).toList(),
+      lessons: lessons,
       enrolledAt: enrolledAt,
       expiresAt: expiresAt,
       createdAt: createdAt,

@@ -142,27 +142,12 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
       }
 
       // Parse current lesson
-      final lesson = LessonModel.fromJson(dataMap);
+      final lesson = lessonModelFromJson(dataMap);
 
-      // Parse navigation
       LessonModel? nextLesson;
       LessonModel? previousLesson;
 
-      if (dataMap['navigation'] is Map) {
-        final navigation = dataMap['navigation'] as Map<String, dynamic>;
-
-        // Parse next lesson
-        if (navigation['next_lesson'] is Map) {
-          nextLesson = LessonModel.fromJson(navigation['next_lesson']);
-        }
-
-        // Parse previous lesson
-        if (navigation['previous_lesson'] is Map) {
-          previousLesson = LessonModel.fromJson(navigation['previous_lesson']);
-        }
-      }
-
-      debugPrint('✅ Lesson details loaded: ${lesson.title}');
+      debugPrint('✅ Lesson details loaded: ${lesson.navigation?.nextLesson?.title}');
 
       return {
         'lesson': lesson,

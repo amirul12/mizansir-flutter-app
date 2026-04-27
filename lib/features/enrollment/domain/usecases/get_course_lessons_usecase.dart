@@ -2,6 +2,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import '../../../../core/error/failures.dart';
+import '../../data/models/lesson_model.dart';
 import '../entities/lesson.dart';
 import '../repositories/enrollment_repository.dart';
 
@@ -21,7 +22,7 @@ class GetCourseLessonsUseCase {
 
   const GetCourseLessonsUseCase(this.repository);
 
-  Future<Either<Failure, List<Lesson>>> call(GetCourseLessonsParams params) {
+  Future<Either<Failure, List<LessonModel>>> call(GetCourseLessonsParams params) {
     return repository.getCourseLessons(params.courseId);
   }
 }

@@ -165,9 +165,9 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
       (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
       (lessonsMap) => emit(
         LessonDetailsLoaded(
-          lesson: lessonsMap['lesson']!,
-          nextLesson: lessonsMap['nextLesson'],
-          previousLesson: lessonsMap['previousLesson'],
+          lesson:  ,
+          nextLesson:  ,
+          previousLesson:  ,
         ),
       ),
     );

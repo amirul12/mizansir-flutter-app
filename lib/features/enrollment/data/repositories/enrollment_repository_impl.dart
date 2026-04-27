@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/enrollment/data/models/lesson_model.dart' show LessonModel;
 import 'package:mizansir/features/enrollment/data/models/my_course_model.dart' show MyCourseModel;
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/error/failures.dart';
@@ -38,18 +39,18 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
   }
 
   @override
-  Future<Either<Failure, List<Lesson>>> getCourseLessons(String courseId) async {
+  Future<Either<Failure, List<LessonModel>>> getCourseLessons(String courseId) async {
     try {
       final lessonModels = await remoteDataSource.getCourseLessons(courseId);
-      return Right(lessonModels.map((model) => model.toEntity()).toList());
+      return Right(lessonModels);
     } on CustomException catch (e) {
-      final failure = parseCustomException<List<Lesson>>(e);
+      final failure = parseCustomException<List<LessonModel>>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
-  Future<Either<Failure, Map<String, Lesson?>>> getLessonDetails({
+  Future<Either<Failure, Map<String, LessonModel?>>> getLessonDetails({
     required String courseId,
     required String lessonId,
   }) async {
@@ -60,10 +61,10 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
       );
 
       // Convert models to entities
-      final result = <String, Lesson?>{
-        'lesson': lessonsMap['lesson']?.toEntity(),
-        'nextLesson': lessonsMap['nextLesson']?.toEntity(),
-        'previousLesson': lessonsMap['previousLesson']?.toEntity(),
+      final result = <String, LessonModel?>{
+        'lesson': lessonsMap['lesson'],
+        'nextLesson': lessonsMap['nextLesson'],
+        'previousLesson': lessonsMap['previousLesson'],
       };
 
       return Right(result);

@@ -1,5 +1,6 @@
 // File: lib/features/enrollment/domain/entities/enrolled_course.dart
 import 'package:equatable/equatable.dart';
+import 'package:mizansir/features/enrollment/data/models/lesson_model.dart' show LessonModel;
 import 'lesson.dart';
 import 'enrollment.dart';
 
@@ -17,7 +18,7 @@ class EnrolledCourse extends Equatable {
   final int totalWatchTimeMinutes;
   final String? nextLessonId; // ID of the next lesson to continue
   final Enrollment? enrollment;
-  final List<Lesson> lessons;
+  final List<LessonModel> lessons;
   final DateTime enrolledAt;
   final DateTime? expiresAt;
   final DateTime createdAt;
