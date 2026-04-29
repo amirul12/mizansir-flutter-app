@@ -1,5 +1,6 @@
 // File: lib/features/enrollment/presentation/bloc/enrollment_state.dart
 import 'package:equatable/equatable.dart';
+import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart' show CourseLessonModel;
 import 'package:mizansir/features/enrollment/data/models/lesson_model.dart' show LessonModel;
 import '../../domain/entities/enrolled_course.dart';
  
@@ -46,13 +47,16 @@ class EnrolledCourseDetailsLoaded extends EnrollmentState {
 
 /// Course Lessons Loaded State
 class CourseLessonsLoaded extends EnrollmentState {
-  final List<Lesson> lessons;
+  final CourseLessonModel courseLessons;
   final String courseId;
 
-  const CourseLessonsLoaded({required this.lessons, required this.courseId});
+  const CourseLessonsLoaded({
+    required this.courseLessons,
+    required this.courseId,
+  });
 
   @override
-  List<Object?> get props => [lessons, courseId];
+  List<Object?> get props => [courseLessons, courseId];
 }
 
 /// Lesson Details Loaded State (with navigation)

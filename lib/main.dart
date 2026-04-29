@@ -23,7 +23,7 @@ class MizanSirApp extends StatelessWidget {
       title: 'Mizan Sir',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      // darkTheme: AppTheme.darkTheme, // Uncomment when dark theme is ready
+       // darkTheme: AppTheme.darkTheme, // Uncomment when dark theme is ready
       routerConfig: AppRouter.router,
     );
   }

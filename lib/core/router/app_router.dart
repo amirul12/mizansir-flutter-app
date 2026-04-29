@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants/api_constants.dart';
+import '../utils/q_context.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
@@ -79,6 +80,7 @@ class AppRouter {
     return GoRouter(
       initialLocation: splashPath,
       debugLogDiagnostics: true,
+      navigatorKey: QContext.navigatorKey,
       errorBuilder: (context, state) => _ErrorPage(error: state.error),
       routes: [
         // Splash Route - Initial screen that checks auth status

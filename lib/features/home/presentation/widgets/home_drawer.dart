@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 // Import Blocs
 import 'package:mizansir/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:mizansir/features/auth/presentation/bloc/auth_event.dart';
-import 'package:mizansir/features/profile/presentation/bloc/profile_bloc.dart';
-import 'package:mizansir/features/profile/presentation/bloc/profile_state.dart';
+import 'package:mizansir/features/profile/presentation/bloc/dashboard_bloc.dart';
+import 'package:mizansir/features/profile/presentation/bloc/dashboard_state.dart';
 import 'package:mizansir/features/home/presentation/bloc/home_shell_cubit.dart';
 import 'package:mizansir/core/theme/app_colors.dart';
 
@@ -115,10 +115,12 @@ class HomeDrawer extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return BlocBuilder<ProfileBloc, ProfileState>(
+    return BlocBuilder<DashboardBloc, DashboardState>(
       builder: (context, state) {
-        final profile = state is ProfileLoaded ? state.profile : null;
-        
+        final user = (state is DashboardLoaded && state.stats!.user! != null)
+            ? state.stats!.user
+            : null;
+
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.only(top: 60, bottom: 24, left: 24, right: 24),
@@ -148,8 +150,9 @@ class HomeDrawer extends StatelessWidget {
                   ],
                 ),
                 child: ClipOval(
-                  child: profile?.user?.avatarUrl != null && profile!.user!.avatarUrl!.isNotEmpty
-                      ? Image.network(profile!.user!.avatarUrl!, fit: BoxFit.cover)
+                  child: user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty
+                      ? Image.network(user.avatarUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) =>
+                          const Icon(Icons.person, size: 40, color: AppColors.primary))
                       : const Center(
                           child: Icon(Icons.person, size: 40, color: AppColors.primary),
                         ),
@@ -157,20 +160,43 @@ class HomeDrawer extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                profile?.user?.name ?? 'Loading...',
+                user?.name ?? 'Loading...',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              const SizedBox(height: 4),
               Text(
-                profile?.user?.email ?? '',
+                user?.email ?? '',
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
                 ),
               ),
+              if (user?.phone != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    user!.phone!,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              if (user?.collegeName != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    user!.collegeName!,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
             ],
           ),
         );
@@ -223,25 +249,64 @@ class HomeDrawer extends StatelessWidget {
   }
 
   Widget _buildFooter(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: [
-          const Opacity(
-            opacity: 0.4,
-            child: Text(
-              'v1.0.0',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-            ),
+    return BlocBuilder<DashboardBloc, DashboardState>(
+      builder: (context, state) {
+        final user = (state is DashboardLoaded && state.stats!.user != null)
+            ? state.stats!.user
+            : null;
+        final batchInfo = [
+          if (user?.hscBatch?.name != null) user!.hscBatch!.name,
+          if (user?.batchTime?.name != null) user!.batchTime!.name,
+        ].join(' • ');
+
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              if (batchInfo.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    batchInfo,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              if (user?.address != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    user!.address!.toString(),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              const Opacity(
+                opacity: 0.4,
+                child: Text(
+                  'v1.0.0',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Image.asset(
+                'assets/icons/logo.png',
+                height: 30,
+                errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Image.asset(
-            'assets/icons/logo.png',
-            height: 30,
-            errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

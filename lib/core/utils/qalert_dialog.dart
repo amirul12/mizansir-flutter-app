@@ -3,8 +3,9 @@ import 'dart:ui';
  
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:mizansir/core/utils/q_context.dart';
 import 'package:mizansir/core/utils/q_text.dart' show QText, TextType;
-import 'package:nb_utils/nb_utils.dart' as QContext show navigatorKey;
+ 
 
 qAlertDialog(message,
     {cancelText,

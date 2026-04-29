@@ -2,11 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart'
+    show CourseLessonModel, Lesson;
 import '../bloc/enrollment_bloc.dart';
 import '../bloc/enrollment_event.dart';
 import '../bloc/enrollment_state.dart';
-import '../../domain/entities/lesson.dart';
-import '../widgets/lesson_item.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// Course Lessons List Page - Beautiful, modern lessons interface for students.
@@ -40,9 +40,9 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
     );
   }
 
-  void _selectLesson(Lesson lesson) {
+  void _selectLesson(String lessonId) {
     // Navigate to single lesson player
-    context.go('/my-courses/${widget.courseId}/lessons/${lesson.id}');
+    context.go('/my-courses/${widget.courseId}/lessons/$lessonId');
   }
 
   @override
@@ -83,7 +83,9 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                 ),
                 backgroundColor: AppColors.success,
                 behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 margin: const EdgeInsets.all(16),
               ),
             );
@@ -101,7 +103,7 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
             }
 
             if (state is CourseLessonsLoaded) {
-              return _buildLessonsList(state.lessons);
+              return _buildLessonsList(state.courseLessons);
             }
 
             return const Center(child: CircularProgressIndicator());
@@ -111,18 +113,26 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
     );
   }
 
-  Widget _buildLessonsList(List<Lesson> lessons) {
-    if (lessons.isEmpty) {
+  Widget _buildLessonsList(CourseLessonModel courseLessonModel) {
+    final modules = courseLessonModel.modules ?? [];
+    final progress = courseLessonModel.progress;
+
+    if (modules.isEmpty) {
       return _buildEmptyView('No lessons found for this course');
     }
 
-    int completedCount = lessons.where((l) => l.isCompleted).length;
-    int progressPercent = lessons.isEmpty
-        ? 0
-        : ((completedCount / lessons.length) * 100).round();
+    final totalLessons = progress?.totalLessons ?? 0;
+    final completedLessons = progress?.completedLessons ?? 0;
+    final progressPercent = progress?.progressPercentage?.toInt() ?? 0;
+    final remainingLessons = totalLessons - completedLessons;
 
-    final remainingLessons = lessons.length - completedCount;
-    final totalTime = lessons.fold<int>(0, (sum, lesson) => sum + lesson.duration);
+    // Calculate total duration from all lessons
+    num totalTime = 0;
+    for (var module in modules) {
+      for (var lesson in module.lessons ?? []) {
+        totalTime += (lesson?.durationMinutes ?? 0);
+      }
+    }
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -140,10 +150,7 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.primary,
-                    AppColors.primaryLight,
-                  ],
+                  colors: [AppColors.primary, AppColors.primaryLight],
                 ),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
@@ -165,7 +172,8 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                           children: [
                             Text(
                               'Your Progress',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -191,8 +199,12 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                             child: CircularProgressIndicator(
                               value: progressPercent / 100,
                               strokeWidth: 8,
-                              backgroundColor: Colors.white.withValues(alpha: 0.2),
-                              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.2,
+                              ),
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           ),
                           Text(
@@ -213,7 +225,9 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                     child: LinearProgressIndicator(
                       value: progressPercent / 100,
                       backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Colors.white,
+                      ),
                       minHeight: 12,
                     ),
                   ),
@@ -223,7 +237,7 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                       Expanded(
                         child: _buildProgressStat(
                           Icons.check_circle_outline,
-                          '$completedCount',
+                          '$completedLessons',
                           'Completed',
                         ),
                       ),
@@ -239,7 +253,7 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                       Expanded(
                         child: _buildProgressStat(
                           Icons.schedule,
-                          _formatDuration(totalTime),
+                          _formatDuration(totalTime.toInt()),
                           'Total Time',
                         ),
                       ),
@@ -250,34 +264,177 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
             ),
           ),
 
-          // Lessons List
+          // Lessons List by Module
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final lesson = lessons[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: LessonItem(
-                      lesson: lesson,
-                      isSelected: false,
-                      onTap: () => _selectLesson(lesson),
+              delegate: SliverChildBuilderDelegate((context, moduleIndex) {
+                final module = modules[moduleIndex];
+                final lessons = module.lessons ?? [];
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (module.moduleName != null &&
+                        module.moduleName!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          module.moduleName!,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                        ),
+                      ),
+                    ...lessons.map(
+                      (lesson) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildLessonCard(lesson),
+                      ),
                     ),
-                  );
-                },
-                childCount: lessons.length,
-              ),
+                    const SizedBox(height: 16),
+                  ],
+                );
+              }, childCount: modules.length),
             ),
           ),
 
           // Bottom spacing
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 32),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
         ],
       ),
     );
+  }
+
+  Widget _buildLessonCard(Lesson lesson) {
+    final isCompleted = lesson.isCompleted ?? false;
+    final isPreview = lesson.isPreview ?? false;
+
+    return GestureDetector(
+      onTap: () => _selectLesson(lesson.id.toString()),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: isCompleted
+                ? AppColors.success.withValues(alpha: 0.3)
+                : Colors.transparent,
+            width: 2,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Thumbnail or Icon
+            Container(
+              width: 80,
+              height: 60,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: lesson.thumbnail != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        lesson.thumbnail!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildLessonIcon(isCompleted, isPreview),
+                      ),
+                    )
+                  : _buildLessonIcon(isCompleted, isPreview),
+            ),
+            const SizedBox(width: 16),
+            // Lesson Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    lesson.title ?? 'Untitled Lesson',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      if (lesson.durationMinutes != null) ...[
+                        const Icon(
+                          Icons.schedule,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${lesson.durationMinutes} min',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(width: 12),
+                      if (isPreview)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'PREVIEW',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: AppColors.secondary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      if (isCompleted)
+                        const Icon(
+                          Icons.check_circle,
+                          size: 16,
+                          color: AppColors.success,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.play_circle_outline, color: AppColors.primary, size: 32),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLessonIcon(bool isCompleted, bool isPreview) {
+    if (isCompleted) {
+      return const Icon(Icons.check_circle, color: AppColors.success, size: 32);
+    }
+    if (isPreview) {
+      return const Icon(Icons.visibility, color: AppColors.secondary, size: 32);
+    }
+    return const Icon(Icons.play_arrow, color: AppColors.primary, size: 32);
   }
 
   /// Build progress stat widget.
@@ -291,11 +448,7 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
             color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 18,
-          ),
+          child: Icon(icon, color: Colors.white, size: 18),
         ),
         const SizedBox(width: 6),
         Flexible(
@@ -371,17 +524,17 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
             const SizedBox(height: 24),
             Text(
               'Oops! Something went wrong',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -390,7 +543,10 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
               icon: const Icon(Icons.refresh_rounded),
               label: const Text('Try Again'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
@@ -427,17 +583,17 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
             Text(
               message,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               'Check back later for new lessons',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
           ],

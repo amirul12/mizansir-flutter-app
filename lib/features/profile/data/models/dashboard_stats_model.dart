@@ -133,6 +133,14 @@ class User {
     final dynamic emailVerifiedAt;
     final DateTime? createdAt;
     final DateTime? updatedAt;
+    final String? collegeName;
+    final dynamic address;
+    final String? userClass;
+    final dynamic session;
+    final dynamic avatarUrl;
+    final Version? version;
+    final HscBatch? hscBatch;
+    final BatchTime? batchTime;
     final bool? isAdmin;
     final bool? isStudent;
     final Stats? stats;
@@ -146,6 +154,14 @@ class User {
         this.emailVerifiedAt,
         this.createdAt,
         this.updatedAt,
+        this.collegeName,
+        this.address,
+        this.userClass,
+        this.session,
+        this.avatarUrl,
+        this.version,
+        this.hscBatch,
+        this.batchTime,
         this.isAdmin,
         this.isStudent,
         this.stats,
@@ -160,6 +176,14 @@ class User {
         emailVerifiedAt: json["email_verified_at"],
         createdAt: json["created_at"] == null ? null : DateTime.parse(json["created_at"]),
         updatedAt: json["updated_at"] == null ? null : DateTime.parse(json["updated_at"]),
+        collegeName: json["college_name"],
+        address: json["address"],
+        userClass: json["class"],
+        session: json["session"],
+        avatarUrl: json["avatar_url"],
+        version: json["version"] == null ? null : Version.fromJson(json["version"]),
+        hscBatch: json["hsc_batch"] == null ? null : HscBatch.fromJson(json["hsc_batch"]),
+        batchTime: json["batch_time"] == null ? null : BatchTime.fromJson(json["batch_time"]),
         isAdmin: json["is_admin"],
         isStudent: json["is_student"],
         stats: json["stats"] == null ? null : Stats.fromJson(json["stats"]),
@@ -174,9 +198,65 @@ class User {
         "email_verified_at": emailVerifiedAt,
         "created_at": createdAt?.toIso8601String(),
         "updated_at": updatedAt?.toIso8601String(),
+        "college_name": collegeName,
+        "address": address,
+        "class": userClass,
+        "session": session,
+        "avatar_url": avatarUrl,
+        "version": version?.toJson(),
+        "hsc_batch": hscBatch?.toJson(),
+        "batch_time": batchTime?.toJson(),
         "is_admin": isAdmin,
         "is_student": isStudent,
         "stats": stats?.toJson(),
+    };
+}
+
+class BatchTime {
+    final int? id;
+    final String? name;
+    final dynamic time;
+
+    BatchTime({
+        this.id,
+        this.name,
+        this.time,
+    });
+
+    factory BatchTime.fromJson(Map<String, dynamic> json) => BatchTime(
+        id: json["id"],
+        name: json["name"],
+        time: json["time"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "time": time,
+    };
+}
+
+class HscBatch {
+    final int? id;
+    final String? name;
+    final int? year;
+
+    HscBatch({
+        this.id,
+        this.name,
+        this.year,
+    });
+
+    factory HscBatch.fromJson(Map<String, dynamic> json) => HscBatch(
+        id: json["id"],
+        name: json["name"],
+        year: json["year"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "year": year,
     };
 }
 
@@ -201,5 +281,25 @@ class Stats {
         "total_enrollments": totalEnrollments,
         "active_enrollments": activeEnrollments,
         "pending_enrollments": pendingEnrollments,
+    };
+}
+
+class Version {
+    final int? id;
+    final String? name;
+
+    Version({
+        this.id,
+        this.name,
+    });
+
+    factory Version.fromJson(Map<String, dynamic> json) => Version(
+        id: json["id"],
+        name: json["name"],
+    );
+
+    Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
     };
 }

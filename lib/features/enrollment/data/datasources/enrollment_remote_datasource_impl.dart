@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart' show CourseLessonModel;
 import '../../../../core/services/api_service_method.dart';
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/constants/api_constants.dart';
@@ -66,7 +67,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
   }
 
   @override
-  Future<List<LessonModel>> getCourseLessons(String courseId) async {
+  Future<CourseLessonModel> getCourseLessons(String courseId) async {
     Map<String, dynamic>? mapResponse;
 
     try {
@@ -84,35 +85,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         throw ServerException('Invalid data format');
       }
 
-      // Handle modules structure
-      // API returns: { course, enrollment, modules: [...], progress, navigation }
-      if (dataMap['modules'] is List) {
-        final modules = dataMap['modules'] as List;
-        final List<LessonModel> allLessons = [];
-
-        // Flatten lessons from all modules
-        for (var module in modules) {
-          if (module is Map && module['lessons'] is List) {
-            final lessons = module['lessons'] as List;
-            for (var lesson in lessons) {
-              if (lesson is Map) {
-                // Add module_name and course_id to lesson data
-                final lessonMap = lesson as Map<String, dynamic>;
-                lessonMap['module_name'] = module['module_name'];
-                lessonMap['course_id'] = courseId;
-                allLessons.add(LessonModel.fromJson(lessonMap));
-              }
-            }
-          }
-        }
-
-        debugPrint(
-          '✅ Successfully parsed ${allLessons.length} lessons from modules',
-        );
-        return allLessons;
-      }
-
-      throw ServerException('Invalid data format');
+      return CourseLessonModel.fromJson(dataMap);
     } catch (e) {
       debugPrint('Error in getCourseLessons: $e');
       rethrow;

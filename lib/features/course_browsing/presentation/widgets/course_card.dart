@@ -57,7 +57,8 @@ class CourseCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        if (course.category != null && course.category!.name != null)
+                        if (course.category != null &&
+                            course.category!.name != null)
                           _buildModernBadge(
                             course.category!.name!,
                             _getCategoryColor(course.category!.name!),

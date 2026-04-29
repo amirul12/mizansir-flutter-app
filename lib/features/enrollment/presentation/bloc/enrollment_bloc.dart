@@ -1,5 +1,6 @@
 // File: lib/features/enrollment/presentation/bloc/enrollment_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mizansir/features/enrollment/data/models/lesson_model.dart' show LessonModel;
 import '../../domain/usecases/get_my_courses_usecase.dart';
 import '../../domain/usecases/get_enrolled_course_details_usecase.dart';
 import '../../domain/usecases/get_course_lessons_usecase.dart';
@@ -89,14 +90,12 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
 
     result.fold(
       (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
-      (lessons) {
-        if (lessons.isEmpty) {
-          return emit(const EnrollmentEmpty(message: 'No lessons found'));
-        }
-        return emit(
-          CourseLessonsLoaded(lessons: lessons, courseId: event.courseId),
-        );
-      },
+      (courseLessons) => emit(
+        CourseLessonsLoaded(
+          courseLessons: courseLessons,
+          courseId: event.courseId,
+        ),
+      ),
     );
   }
 
@@ -165,9 +164,9 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
       (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
       (lessonsMap) => emit(
         LessonDetailsLoaded(
-          lesson:  ,
-          nextLesson:  ,
-          previousLesson:  ,
+          lesson: lessonsMap['lesson'] as LessonModel,
+          nextLesson: lessonsMap['next_lesson'] as LessonModel,
+          previousLesson: lessonsMap['previous_lesson'] as LessonModel,
         ),
       ),
     );

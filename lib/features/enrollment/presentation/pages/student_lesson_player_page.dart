@@ -339,13 +339,13 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
             // Handle different states without resetting UI
             if (state is LessonDetailsLoaded) {
               // Only update if different lesson
-              if (_currentLesson?.id != state.lesson.id) {
-                _currentLesson = state.lesson;
-                _initializePlayer(_currentLesson!);
-              }
+              // if (_currentLesson?.id != state.lesson.id) {
+              //   _currentLesson = state.lesson;
+              //   _initializePlayer(_currentLesson!);
+              // }
             } else if (state is CourseLessonsLoaded) {
               // Update playlist
-              _allLessons = state.lessons;
+             // _allLessons = state.lessons;
             } else if (state is EnrollmentError) {
               return _buildErrorView(state.message);
             }

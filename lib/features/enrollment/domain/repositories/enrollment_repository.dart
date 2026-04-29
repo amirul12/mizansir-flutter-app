@@ -1,5 +1,6 @@
 // File: lib/features/enrollment/domain/repositories/enrollment_repository.dart
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart' show CourseLessonModel;
 import 'package:mizansir/features/enrollment/data/models/my_course_model.dart' show MyCourseModel;
 import '../../../../core/error/failures.dart';
 import '../../data/models/lesson_model.dart';
@@ -17,7 +18,7 @@ abstract class EnrollmentRepository {
   Future<Either<Failure, EnrolledCourse>> getEnrolledCourseDetails(String courseId);
 
   /// Get lessons for an enrolled course
-  Future<Either<Failure, List<LessonModel>>> getCourseLessons(String courseId);
+  Future<Either<Failure, CourseLessonModel>> getCourseLessons(String courseId);
 
   /// Get lesson details with navigation
   ///

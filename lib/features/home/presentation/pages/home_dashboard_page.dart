@@ -3,7 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mizansir/features/profile/data/models/activity_model.dart'
     show ActivityModel;
-import '../../../profile/data/models/dashboard_stats_model.dart';
+import '../../../profile/data/models/dashboard_stats_model.dart'
+    show
+        DashboardStatsModel,
+        RecentEnrollment,
+        EnrollmentStats;
 import '../../../profile/presentation/bloc/dashboard_bloc.dart';
 import '../../../profile/presentation/bloc/dashboard_event.dart';
 import '../../../profile/presentation/bloc/dashboard_state.dart';
@@ -242,11 +246,14 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
 
   /// Build greeting section with user name and motivational message.
   Widget _buildGreetingSection(BuildContext context) {
-    return BlocBuilder<ProfileBloc, ProfileState>(
+    return BlocBuilder<DashboardBloc, DashboardState>(
       builder: (context, state) {
-        String userName = 'Student';
-        if (state is ProfileLoaded) {
-          userName = state.profile.user!.name!.split(' ')[0];
+        String userName = '';
+        String? userEmail;
+
+        if (state is DashboardLoaded && state.stats!.user != null) {
+          userName = state.stats!.user!.name!;
+          userEmail = state.stats!.user!.email;
         }
 
         final hour = DateTime.now().hour;
@@ -272,12 +279,20 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              'Let\'s continue your learning journey.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
-            ),
+            if (userEmail != null)
+              Text(
+                userEmail,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              )
+            else
+              Text(
+                'Let\'s continue your learning journey.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
           ],
         );
       },
@@ -300,28 +315,60 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
           return const SizedBox();
         }
 
-        return Row(
+        final enrollmentStats = stats.enrollmentStats;
+
+        return Column(
           children: [
-            Expanded(
-              child: _buildModernStatCard(
-                context,
-                icon: Icons.school_outlined,
-                title: 'Courses',
-                value: stats.enrollmentStats.toString(),
-                color: AppColors.primary,
-                gradient: AppColors.primaryGradient,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildModernStatCard(
+                    context,
+                    icon: Icons.school_outlined,
+                    title: 'Total',
+                    value: (enrollmentStats?.total ?? 0).toString(),
+                    color: AppColors.primary,
+                    gradient: AppColors.primaryGradient,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildModernStatCard(
+                    context,
+                    icon: Icons.play_circle_outline,
+                    title: 'Active',
+                    value: (enrollmentStats?.active ?? 0).toString(),
+                    color: AppColors.secondary,
+                    gradient: AppColors.secondaryGradient,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildModernStatCard(
-                context,
-                icon: Icons.play_circle_outline,
-                title: 'Active',
-                value: stats.recentEnrollments.toString(),
-                color: AppColors.secondary,
-                gradient: AppColors.secondaryGradient,
-              ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildModernStatCard(
+                    context,
+                    icon: Icons.pending_outlined,
+                    title: 'Pending',
+                    value: (enrollmentStats?.pending ?? 0).toString(),
+                    color: Colors.orange,
+                    gradient: [Colors.orange.shade400, Colors.orange.shade600],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildModernStatCard(
+                    context,
+                    icon: Icons.cancel_outlined,
+                    title: 'Expired',
+                    value: (enrollmentStats?.expired ?? 0).toString(),
+                    color: Colors.red,
+                    gradient: [Colors.red.shade400, Colors.red.shade600],
+                  ),
+                ),
+              ],
             ),
           ],
         );
@@ -467,84 +514,58 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
 
   /// Build continue learning section.
   Widget _buildContinueLearningSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return BlocBuilder<DashboardBloc, DashboardState>(
+      builder: (context, state) {
+        List<RecentEnrollment>? recentEnrollments;
+
+        if (state is DashboardLoaded) {
+          recentEnrollments = state.stats?.recentEnrollments;
+        }
+
+        // Hide section if no recent enrollments
+        if (recentEnrollments == null || recentEnrollments.isEmpty) {
+          return const SizedBox();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Continue Learning',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Continue Learning',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                TextButton(
+                  onPressed: () => context.read<HomeShellCubit>().goToMyLearning(),
+                  child: const Text('View All'),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () => context.read<HomeShellCubit>().goToMyLearning(),
-              child: const Text('View All'),
+            const SizedBox(height: 8),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: recentEnrollments!.take(3).length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final enrollment = recentEnrollments![index];
+                return _buildRecentEnrollmentCard(context, enrollment);
+              },
             ),
           ],
-        ),
-        const SizedBox(height: 8),
-        BlocBuilder<EnrollmentBloc, EnrollmentState>(
-          builder: (context, state) {
-            if (state is EnrollmentLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (state is MyCoursesLoaded && state.courses.isNotEmpty) {
-              final course = state.courses.first;
-              // Implementation of a compact learning card
-              return _buildCompactLearningCard(context, course);
-            }
-
-            return Container(
-              padding: const EdgeInsets.all(20),
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.school_outlined,
-                    size: 40,
-                    color: AppColors.disabled,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'No courses enrolled yet',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Start your journey today!',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: () =>
-                        context.read<HomeShellCubit>().goToCourses(),
-                    child: const Text('Browse Courses'),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildCompactLearningCard(BuildContext context, dynamic course) {
-    // Basic implementation for brevity, can be expanded
-    final title = course.title ?? 'Course';
-    final progress = (course.progressPercentage ?? 0.0) / 100.0;
+  Widget _buildRecentEnrollmentCard(BuildContext context, RecentEnrollment enrollment) {
+    final isActive = enrollment.isActive ?? false;
+    final statusColor = isActive ? AppColors.primary : AppColors.disabled;
+    final statusText = isActive ? 'Active' : 'Inactive';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -570,7 +591,10 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                   color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.play_lesson, color: AppColors.primary),
+                child: Icon(
+                  Icons.play_lesson,
+                  color: isActive ? AppColors.primary : AppColors.disabled,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -578,34 +602,83 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      enrollment.courseTitle ?? 'Course',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '${(progress * 100).toInt()}% completed',
-                      style: const TextStyle(
+                      statusText,
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: statusColor,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? AppColors.primary.withValues(alpha: 0.1)
+                      : AppColors.disabled.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  enrollment.status ?? 'Unknown',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 16),
-          LinearProgressIndicator(
-            value: progress,
-            backgroundColor: AppColors.progressBackground,
-            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(3),
-          ),
+          if (enrollment.expiresAt != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(
+                  Icons.access_time,
+                  size: 14,
+                  color: AppColors.textSecondary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Expires: ${_formatDate(enrollment.expiresAt!)}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final difference = date.difference(now);
+
+    if (difference.isNegative) {
+      return 'Expired';
+    } else if (difference.inDays == 0) {
+      return 'Today';
+    } else if (difference.inDays == 1) {
+      return 'Tomorrow';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days left';
+    } else if (difference.inDays < 30) {
+      return '${(difference.inDays / 7).floor()} weeks left';
+    } else {
+      return '${(difference.inDays / 30).floor()} months left';
+    }
   }
 
   /// Build featured courses section.
