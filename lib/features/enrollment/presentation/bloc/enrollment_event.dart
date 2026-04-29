@@ -15,14 +15,14 @@ class LoadMyCoursesEvent extends EnrollmentEvent {
 }
 
 /// Load Enrolled Course Details Event
-class LoadEnrolledCourseDetailsEvent extends EnrollmentEvent {
-  final String courseId;
+// class LoadEnrolledCourseDetailsEvent extends EnrollmentEvent {
+//   final String courseId;
 
-  const LoadEnrolledCourseDetailsEvent({required this.courseId});
+//   const LoadEnrolledCourseDetailsEvent({required this.courseId});
 
-  @override
-  List<Object?> get props => [courseId];
-}
+//   @override
+//   List<Object?> get props => [courseId];
+// }
 
 /// Load Course Lessons Event
 class LoadCourseLessonsEvent extends EnrollmentEvent {

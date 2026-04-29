@@ -192,6 +192,8 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(NetworkFailure(message: exception.message));
     } else if (exception is UnauthorizedException) {
       return Left(UnauthorizedFailure(exception.message));
+    } else if (exception is NotFoundException) {
+      return Left(NotFoundFailure(exception.message));
     } else if (exception is ValidationException) {
       return Left(ValidationFailure(exception.message, exception.errors));
     } else if (exception is RateLimitException) {

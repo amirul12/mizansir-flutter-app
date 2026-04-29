@@ -1,8 +1,9 @@
 // File: lib/features/enrollment/presentation/bloc/enrollment_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mizansir/features/enrollment/data/models/lesson_model.dart' show LessonModel;
+import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart';
+import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart'
+    show CourseLessonDetailsModel;
 import '../../domain/usecases/get_my_courses_usecase.dart';
-import '../../domain/usecases/get_enrolled_course_details_usecase.dart';
 import '../../domain/usecases/get_course_lessons_usecase.dart';
 import '../../domain/usecases/get_course_progress_usecase.dart';
 import '../../domain/usecases/mark_lesson_complete_usecase.dart';
@@ -14,7 +15,7 @@ import 'enrollment_state.dart';
 /// Enrollment BLoC
 class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
   final GetMyCoursesUseCase getMyCoursesUseCase;
-  final GetEnrolledCourseDetailsUseCase getEnrolledCourseDetailsUseCase;
+ 
   final GetCourseLessonsUseCase getCourseLessonsUseCase;
   final GetCourseProgressUseCase getCourseProgressUseCase;
   final MarkLessonCompleteUseCase markLessonCompleteUseCase;
@@ -23,7 +24,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
 
   EnrollmentBloc({
     required this.getMyCoursesUseCase,
-    required this.getEnrolledCourseDetailsUseCase,
+ 
     required this.getCourseLessonsUseCase,
     required this.getCourseProgressUseCase,
     required this.markLessonCompleteUseCase,
@@ -31,7 +32,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     required this.createEnrollmentUseCase,
   }) : super(EnrollmentInitial()) {
     on<LoadMyCoursesEvent>(_onLoadMyCourses);
-    on<LoadEnrolledCourseDetailsEvent>(_onLoadCourseDetails);
+    // on<LoadEnrolledCourseDetailsEvent>(_onLoadCourseDetails);
     on<LoadCourseLessonsEvent>(_onLoadCourseLessons);
     on<LoadCourseProgressEvent>(_onLoadCourseProgress);
     on<MarkLessonCompleteEvent>(_onMarkLessonComplete);
@@ -62,21 +63,21 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     );
   }
 
-  Future<void> _onLoadCourseDetails(
-    LoadEnrolledCourseDetailsEvent event,
-    Emitter<EnrollmentState> emit,
-  ) async {
-    emit(const EnrollmentLoading());
+  // Future<void> _onLoadCourseDetails(
+  //   LoadEnrolledCourseDetailsEvent event,
+  //   Emitter<EnrollmentState> emit,
+  // ) async {
+  //   emit(const EnrollmentLoading());
 
-    final result = await getEnrolledCourseDetailsUseCase(
-      GetEnrolledCourseDetailsParams(courseId: event.courseId),
-    );
+  //   final result = await getEnrolledCourseDetailsUseCase(
+  //     GetEnrolledCourseDetailsParams(courseId: event.courseId),
+  //   );
 
-    result.fold(
-      (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
-      (course) => emit(EnrolledCourseDetailsLoaded(course: course)),
-    );
-  }
+  //   result.fold(
+  //     (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
+  //     (course) => emit(EnrolledCourseDetailsLoaded(course: course)),
+  //   );
+  // }
 
   Future<void> _onLoadCourseLessons(
     LoadCourseLessonsEvent event,
@@ -144,7 +145,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
   ) async {
     // For now, we'll treat marking incomplete as loading the course details again
     // You could implement a separate use case if needed
-    add(LoadEnrolledCourseDetailsEvent(courseId: event.courseId));
+   // add(LoadEnrolledCourseDetailsEvent(courseId: event.courseId));
   }
 
   Future<void> _onGetLessonDetails(
@@ -164,9 +165,11 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
       (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
       (lessonsMap) => emit(
         LessonDetailsLoaded(
-          lesson: lessonsMap['lesson'] as LessonModel,
-          nextLesson: lessonsMap['next_lesson'] as LessonModel,
-          previousLesson: lessonsMap['previous_lesson'] as LessonModel,
+          lesson: lessonsMap['lesson'] as CourseLessonDetailsModel,
+          nextLesson:
+              lessonsMap['nextLesson'] as CourseLessonDetailsModel?,
+          previousLesson:
+              lessonsMap['previousLesson'] as CourseLessonDetailsModel?,
         ),
       ),
     );

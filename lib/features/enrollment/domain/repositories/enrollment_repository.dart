@@ -1,10 +1,11 @@
 // File: lib/features/enrollment/domain/repositories/enrollment_repository.dart
 import 'package:dartz/dartz.dart';
 import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart' show CourseLessonModel;
+import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart' show CourseLessonDetailsModel;
 import 'package:mizansir/features/enrollment/data/models/my_course_model.dart' show MyCourseModel;
 import '../../../../core/error/failures.dart';
 import '../../data/models/lesson_model.dart';
-import '../entities/enrolled_course.dart';
+ 
  
 import '../entities/lesson.dart';
 import '../entities/course_progress.dart';
@@ -15,7 +16,7 @@ abstract class EnrollmentRepository {
   Future<Either<Failure, List<MyCourseModel>>> getMyCourses();
 
   /// Get enrolled course details with lessons
-  Future<Either<Failure, EnrolledCourse>> getEnrolledCourseDetails(String courseId);
+  // Future<Either<Failure, EnrolledCourse>> getEnrolledCourseDetails(String courseId);
 
   /// Get lessons for an enrolled course
   Future<Either<Failure, CourseLessonModel>> getCourseLessons(String courseId);
@@ -26,7 +27,7 @@ abstract class EnrollmentRepository {
   /// - 'lesson': The current lesson
   /// - 'nextLesson': The next lesson (nullable)
   /// - 'previousLesson': The previous lesson (nullable)
-  Future<Either<Failure, Map<String, LessonModel?>>> getLessonDetails({
+  Future<Either<Failure, Map<String, CourseLessonDetailsModel?>>> getLessonDetails({
     required String courseId,
     required String lessonId,
   });

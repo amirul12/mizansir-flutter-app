@@ -79,17 +79,17 @@ class _MyCoursesPageState extends State<MyCoursesPage> {
         separatorBuilder: (context, index) => const SizedBox(height: 16),
         itemBuilder: (context, index) {
           final course = courses[index];
-          return EnrolledCourseCard(
-            course: course,
-            onTap: () {
-              // Navigate to course details
-              context.go('/my-courses/${course.id}');
-            },
-            onResume: () {
-              // Navigate to lessons and start playing
-              _navigateToLesson(context, course.id);
-            },
-          );
+          // return EnrolledCourseCard(
+          //   course: course,
+          //   onTap: () {
+          //     // Navigate to course details
+          //     context.go('/my-courses/${course.id}');
+          //   },
+          //   onResume: () {
+          //     // Navigate to lessons and start playing
+          //     _navigateToLesson(context, course.id);
+          //   },
+          // );
         },
       ),
     );

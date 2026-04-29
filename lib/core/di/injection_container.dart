@@ -31,7 +31,7 @@ import '../../features/enrollment/data/datasources/enrollment_remote_datasource_
 import '../../features/enrollment/data/repositories/enrollment_repository_impl.dart';
 import '../../features/enrollment/domain/repositories/enrollment_repository.dart';
 import '../../features/enrollment/domain/usecases/get_my_courses_usecase.dart';
-import '../../features/enrollment/domain/usecases/get_enrolled_course_details_usecase.dart';
+
 import '../../features/enrollment/domain/usecases/get_course_lessons_usecase.dart';
 import '../../features/enrollment/domain/usecases/get_course_progress_usecase.dart';
 import '../../features/enrollment/domain/usecases/mark_lesson_complete_usecase.dart';
@@ -79,9 +79,7 @@ Future<void> _initCore() async {
   // ==================== Services ====================
 
   // Connectivity Service
-  sl.registerLazySingleton<ConnectivityService>(
-    () => ConnectivityService(),
-  );
+  sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
   // Initialize connectivity (may fail in test environment)
   try {
     await sl<ConnectivityService>().init();
@@ -135,17 +133,12 @@ Future<void> _initAuth() async {
 
   // Repository
   sl.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(
-      remoteDataSource: sl(),
-      localDataSource: sl(),
-    ),
+    () => AuthRepositoryImpl(remoteDataSource: sl(), localDataSource: sl()),
   );
 
   // Data Sources
   sl.registerLazySingleton<AuthRemoteDataSource>(
-    () => AuthRemoteDataSourceImpl(
-      tokenService: sl(),
-    ),
+    () => AuthRemoteDataSourceImpl(tokenService: sl()),
   );
 
   sl.registerLazySingleton<AuthLocalDataSource>(
@@ -166,17 +159,13 @@ Future<void> _initCourseBrowsing() async {
 
   // Course Repository
   sl.registerLazySingleton<CourseRepository>(
-    () => CourseRepositoryImpl(
-      remoteDataSource: sl(),
-    ),
+    () => CourseRepositoryImpl(remoteDataSource: sl()),
   );
 
   // ==================== Use Cases ====================
 
   // Get Courses Use Case
-  sl.registerLazySingleton<GetCoursesUseCase>(
-    () => GetCoursesUseCase(sl()),
-  );
+  sl.registerLazySingleton<GetCoursesUseCase>(() => GetCoursesUseCase(sl()));
 
   // Get Featured Courses Use Case
   sl.registerLazySingleton<GetFeaturedCoursesUseCase>(
@@ -236,9 +225,7 @@ Future<void> _initEnrollment() async {
 
   // Enrollment Repository
   sl.registerLazySingleton<EnrollmentRepository>(
-    () => EnrollmentRepositoryImpl(
-      remoteDataSource: sl(),
-    ),
+    () => EnrollmentRepositoryImpl(remoteDataSource: sl()),
   );
 
   // ==================== Use Cases ====================
@@ -248,10 +235,10 @@ Future<void> _initEnrollment() async {
     () => GetMyCoursesUseCase(sl()),
   );
 
-  // Get Enrolled Course Details Use Case
-  sl.registerLazySingleton<GetEnrolledCourseDetailsUseCase>(
-    () => GetEnrolledCourseDetailsUseCase(sl()),
-  );
+  // // Get Enrolled Course Details Use Case
+  // sl.registerLazySingleton<GetEnrolledCourseDetailsUseCase>(
+  //   () => GetEnrolledCourseDetailsUseCase(sl()),
+  // );
 
   // Get Course Lessons Use Case
   sl.registerLazySingleton<GetCourseLessonsUseCase>(
@@ -284,7 +271,7 @@ Future<void> _initEnrollment() async {
   sl.registerFactory<EnrollmentBloc>(
     () => EnrollmentBloc(
       getMyCoursesUseCase: sl(),
-      getEnrolledCourseDetailsUseCase: sl(),
+
       getCourseLessonsUseCase: sl(),
       getCourseProgressUseCase: sl(),
       markLessonCompleteUseCase: sl(),
@@ -331,13 +318,23 @@ Future<void> _initProfile() async {
 
   // Profile Use Cases
   sl.registerLazySingleton<GetProfileUseCase>(() => GetProfileUseCase(sl()));
-  sl.registerLazySingleton<UpdateProfileUseCase>(() => UpdateProfileUseCase(sl()));
-  sl.registerLazySingleton<UploadAvatarUseCase>(() => UploadAvatarUseCase(sl()));
-  sl.registerLazySingleton<ChangePasswordUseCase>(() => ChangePasswordUseCase(sl()));
-  sl.registerLazySingleton<DeleteAccountUseCase>(() => DeleteAccountUseCase(sl()));
+  sl.registerLazySingleton<UpdateProfileUseCase>(
+    () => UpdateProfileUseCase(sl()),
+  );
+  sl.registerLazySingleton<UploadAvatarUseCase>(
+    () => UploadAvatarUseCase(sl()),
+  );
+  sl.registerLazySingleton<ChangePasswordUseCase>(
+    () => ChangePasswordUseCase(sl()),
+  );
+  sl.registerLazySingleton<DeleteAccountUseCase>(
+    () => DeleteAccountUseCase(sl()),
+  );
 
   // Dashboard Use Cases
-  sl.registerLazySingleton<GetDashboardUseCase>(() => GetDashboardUseCase(sl()));
+  sl.registerLazySingleton<GetDashboardUseCase>(
+    () => GetDashboardUseCase(sl()),
+  );
   sl.registerLazySingleton<GetActivityUseCase>(() => GetActivityUseCase(sl()));
 
   // ==================== BLoC ====================
@@ -356,10 +353,7 @@ Future<void> _initProfile() async {
 
   // Dashboard BLoC
   sl.registerFactory<DashboardBloc>(
-    () => DashboardBloc(
-      getDashboardUseCase: sl(),
-      getActivityUseCase: sl(),
-    ),
+    () => DashboardBloc(getDashboardUseCase: sl(), getActivityUseCase: sl()),
   );
 }
 
@@ -368,7 +362,5 @@ Future<void> _initHome() async {
   // ==================== Cubit ====================
 
   // Home Shell Cubit - Factory (new instance each time)
-  sl.registerFactory<HomeShellCubit>(
-    () => HomeShellCubit(),
-  );
+  sl.registerFactory<HomeShellCubit>(() => HomeShellCubit());
 }

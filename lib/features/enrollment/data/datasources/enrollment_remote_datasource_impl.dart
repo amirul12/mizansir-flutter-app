@@ -1,12 +1,17 @@
 import 'package:flutter/foundation.dart';
-import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart' show CourseLessonModel;
+import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart'
+    show
+        CourseLessonModel,
+        courseLessonModelFromJson;
+import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart'
+    show
+        CourseLessonDetailsModel,
+        courseLessonDetailsModelFromJson;
 import '../../../../core/services/api_service_method.dart';
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/utils/common_json.dart';
-import '../models/enrolled_course_model.dart';
 import '../models/my_course_model.dart';
-import '../models/lesson_model.dart';
 import '../models/course_progress_model.dart';
 import 'enrollment_remote_datasource.dart';
 
@@ -41,7 +46,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
   }
 
   @override
-  Future<EnrolledCourseModel> getEnrolledCourseDetails(String courseId) async {
+  Future<dynamic> getEnrolledCourseDetails(String courseId) async {
     Map<String, dynamic>? mapResponse;
 
     try {
@@ -59,7 +64,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         throw ServerException('Invalid data format');
       }
 
-      return EnrolledCourseModel.fromJson(dataMap);
+      return dataMap;
     } catch (e) {
       debugPrint('Error in getEnrolledCourseDetails: $e');
       rethrow;
@@ -80,12 +85,9 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      final dataMap = CommonToJson().getString(mapResponse);
-      if (dataMap == null) {
-        throw ServerException('Invalid data format');
-      }
+      final commonResponse = CommonToJson().getString(mapResponse);
 
-      return CourseLessonModel.fromJson(dataMap);
+      return courseLessonModelFromJson(commonResponse);
     } catch (e) {
       debugPrint('Error in getCourseLessons: $e');
       rethrow;
@@ -93,7 +95,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
   }
 
   @override
-  Future<Map<String, LessonModel?>> getLessonDetails({
+  Future<Map<String, CourseLessonDetailsModel?>> getLessonDetails({
     required String courseId,
     required String lessonId,
   }) async {
@@ -115,12 +117,14 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
       }
 
       // Parse current lesson
-      final lesson = lessonModelFromJson(dataMap);
+      final lesson = courseLessonDetailsModelFromJson(dataMap);
 
-      LessonModel? nextLesson;
-      LessonModel? previousLesson;
+      CourseLessonDetailsModel? nextLesson;
+      CourseLessonDetailsModel? previousLesson;
 
-      debugPrint('✅ Lesson details loaded: ${lesson.navigation?.nextLesson?.title}');
+      debugPrint(
+        '✅ Lesson details loaded: ${lesson.navigation?.nextLesson?.title}',
+      );
 
       return {
         'lesson': lesson,

@@ -1,8 +1,12 @@
 // File: lib/features/enrollment/presentation/bloc/enrollment_state.dart
 import 'package:equatable/equatable.dart';
-import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart' show CourseLessonModel;
-import 'package:mizansir/features/enrollment/data/models/lesson_model.dart' show LessonModel;
-import '../../domain/entities/enrolled_course.dart';
+import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart'
+    show
+        CourseLessonModel,
+        Lesson;
+import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart'
+    show CourseLessonDetailsModel;
+ 
  
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/course_progress.dart';
@@ -36,14 +40,14 @@ class MyCoursesLoaded extends EnrollmentState {
 }
 
 /// Enrolled Course Details Loaded State
-class EnrolledCourseDetailsLoaded extends EnrollmentState {
-  final EnrolledCourse course;
+// class EnrolledCourseDetailsLoaded extends EnrollmentState {
+//   final EnrolledCourse course;
 
-  const EnrolledCourseDetailsLoaded({required this.course});
+//   const EnrolledCourseDetailsLoaded({required this.course});
 
-  @override
-  List<Object?> get props => [course];
-}
+//   @override
+//   List<Object?> get props => [course];
+// }
 
 /// Course Lessons Loaded State
 class CourseLessonsLoaded extends EnrollmentState {
@@ -61,9 +65,9 @@ class CourseLessonsLoaded extends EnrollmentState {
 
 /// Lesson Details Loaded State (with navigation)
 class LessonDetailsLoaded extends EnrollmentState {
-  final LessonModel lesson;
-  final LessonModel? nextLesson;
-  final LessonModel? previousLesson;
+  final CourseLessonDetailsModel lesson;
+  final CourseLessonDetailsModel? nextLesson;
+  final CourseLessonDetailsModel? previousLesson;
 
   const LessonDetailsLoaded({
     required this.lesson,
@@ -74,6 +78,9 @@ class LessonDetailsLoaded extends EnrollmentState {
   @override
   List<Object?> get props => [lesson, nextLesson, previousLesson];
 }
+
+ 
+
 
 /// Lesson Loading State
 class LessonLoading extends EnrollmentState {

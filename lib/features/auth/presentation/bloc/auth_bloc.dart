@@ -194,6 +194,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         return 'Please check your internet connection and try again.';
       case 'UnauthorizedFailure':
         return 'Invalid email or password.';
+      case 'NotFoundFailure':
+        return 'Login endpoint not found. Please contact support.';
       case 'ValidationFailure':
         // Validation failures may have detailed field errors
         return failure.message;
@@ -209,7 +211,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         }
         return failure.message;
       default:
-        return 'An unexpected error occurred. Please try again.';
+        return failure.message ?? 'An unexpected error occurred. Please try again.';
     }
   }
 }

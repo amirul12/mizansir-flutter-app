@@ -1,10 +1,11 @@
 import 'package:dartz/dartz.dart';
 import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart' show CourseLessonModel;
+import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart';
 import 'package:mizansir/features/enrollment/data/models/lesson_model.dart' show LessonModel;
 import 'package:mizansir/features/enrollment/data/models/my_course_model.dart' show MyCourseModel;
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/error/failures.dart';
-import '../../domain/entities/enrolled_course.dart';
+ 
 
 import '../../domain/entities/lesson.dart';
 import '../../domain/entities/course_progress.dart';
@@ -29,15 +30,15 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
   }
 
   @override
-  Future<Either<Failure, EnrolledCourse>> getEnrolledCourseDetails(String courseId) async {
-    try {
-      final courseModel = await remoteDataSource.getEnrolledCourseDetails(courseId);
-      return Right(courseModel.toEntity());
-    } on CustomException catch (e) {
-      final failure = parseCustomException<EnrolledCourse>(e);
-      return failure.fold((failure) => Left(failure), (_) => throw e);
-    }
-  }
+  // Future<Either<Failure, EnrolledCourse>> getEnrolledCourseDetails(String courseId) async {
+  //   try {
+  //     final courseModel = await remoteDataSource.getEnrolledCourseDetails(courseId);
+  //     return Right(courseModel.toEntity());
+  //   } on CustomException catch (e) {
+  //     final failure = parseCustomException<EnrolledCourse>(e);
+  //     return failure.fold((failure) => Left(failure), (_) => throw e);
+  //   }
+  // }
 
   @override
   Future<Either<Failure, CourseLessonModel>> getCourseLessons(String courseId) async {
@@ -51,7 +52,7 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, LessonModel?>>> getLessonDetails({
+  Future<Either<Failure, Map<String, CourseLessonDetailsModel?>>> getLessonDetails({
     required String courseId,
     required String lessonId,
   }) async {
@@ -62,7 +63,7 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
       );
 
       // Convert models to entities
-      final result = <String, LessonModel?>{
+      final result = <String, CourseLessonDetailsModel?>{
         'lesson': lessonsMap['lesson'],
         'nextLesson': lessonsMap['nextLesson'],
         'previousLesson': lessonsMap['previousLesson'],

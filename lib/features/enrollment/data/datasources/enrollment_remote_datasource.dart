@@ -1,7 +1,8 @@
 // File: lib/features/enrollment/data/datasources/enrollment_remote_datasource.dart
 import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart' show CourseLessonModel;
+import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart';
 
-import '../models/enrolled_course_model.dart';
+ 
 import '../models/my_course_model.dart';
 import '../models/lesson_model.dart';
 import '../models/course_progress_model.dart';
@@ -12,7 +13,7 @@ abstract class EnrollmentRemoteDataSource {
   Future<List<MyCourseModel>> getMyCourses();
 
   /// Get enrolled course details with lessons
-  Future<EnrolledCourseModel> getEnrolledCourseDetails(String courseId);
+  // Future<EnrolledCourseModel> getEnrolledCourseDetails(String courseId);
 
   /// Get lessons for an enrolled course
   Future<CourseLessonModel> getCourseLessons(String courseId);
@@ -23,7 +24,7 @@ abstract class EnrollmentRemoteDataSource {
   /// - 'lesson': The current lesson
   /// - 'nextLesson': The next lesson (nullable)
   /// - 'previousLesson': The previous lesson (nullable)
-  Future<Map<String, LessonModel?>> getLessonDetails({
+  Future<Map<String, CourseLessonDetailsModel?>> getLessonDetails({
     required String courseId,
     required String lessonId,
   });
