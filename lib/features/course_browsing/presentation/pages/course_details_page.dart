@@ -1103,7 +1103,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
         onPressed: course!.isEnrolled! == true
             ? () {
                 // Handle "Go to Course" action - navigate to course lessons
-                context.go('/course/${course.id}/lessons');
+                context.go('/my-courses/${course.id}/lessons');
               }
             : _showEnrollmentDialog,
         icon: const Icon(Icons.how_to_reg),
