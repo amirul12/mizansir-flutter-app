@@ -291,6 +291,15 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
     return '$mins min';
   }
 
+  String? _getThumbnailUrl(dynamic thumbnail) {
+    if (thumbnail == null) return null;
+    if (thumbnail is String) return thumbnail;
+    if (thumbnail is Map && thumbnail['url'] != null) {
+      return thumbnail['url'] as String;
+    }
+    return null;
+  }
+
   bool _isDesktop(BuildContext context) {
     return MediaQuery.of(context).size.width > 800;
   }
@@ -336,16 +345,76 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
         },
         child: BlocBuilder<EnrollmentBloc, EnrollmentState>(
           builder: (context, state) {
-            // Handle different states without resetting UI
+            // Handle different states
             if (state is LessonDetailsLoaded) {
-              // Only update if different lesson
-              // if (_currentLesson?.id != state.lesson.id) {
-              //   _currentLesson = state.lesson;
-              //   _initializePlayer(_currentLesson!);
-              // }
+              // Update current lesson if different
+              final lessonId = state.lesson.id?.toString() ?? '';
+              if (_currentLesson?.id != lessonId) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    final lesson = Lesson(
+                      id: lessonId,
+                      courseId: widget.courseId,
+                      title: state.lesson.title ?? 'Untitled Lesson',
+                      description: state.lesson.description,
+                      duration: state.lesson.durationMinutes ?? 0,
+                      order: 0, // Will be updated from playlist
+                      videoUrl: null,
+                      thumbnailUrl: _getThumbnailUrl(state.lesson.thumbnail),
+                      youtubeEmbedUrl: state.lesson.youtubeEmbedUrl,
+                      youtubeVideoId: state.lesson.youtubeVideoId,
+                      isFree: state.lesson.isPreview ?? false,
+                      isCompleted: state.lesson.completion?.isCompleted ?? false,
+                      watchTimeSeconds: state.lesson.completion?.timeSpentSeconds,
+                      progressPercentage: state.lesson.completion?.progressPercentage,
+                      completedAt: state.lesson.completion?.completedAt?.toString(),
+                      createdAt: DateTime.now(),
+                      updatedAt: DateTime.now(),
+                    );
+
+                    setState(() {
+                      _currentLesson = lesson;
+                    });
+                    _initializePlayer(lesson);
+                  }
+                });
+              }
             } else if (state is CourseLessonsLoaded) {
-              // Update playlist
-             // _allLessons = state.lessons;
+              // Update playlist from modules
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && _allLessons.isEmpty) {
+                  final allLessons = <Lesson>[];
+                  final modules = state.courseLessons.modules ?? [];
+
+                  for (final module in modules) {
+                    final lessons = module.lessons ?? [];
+                    for (final lessonModel in lessons) {
+                      final lesson = Lesson(
+                        id: lessonModel.id?.toString() ?? '',
+                        courseId: widget.courseId,
+                        title: lessonModel.title ?? 'Untitled Lesson',
+                        description: lessonModel.description,
+                        duration: lessonModel.durationMinutes ?? 0,
+                        order: allLessons.length + 1,
+                        videoUrl: null,
+                        thumbnailUrl: _getThumbnailUrl(lessonModel.thumbnail),
+                        youtubeEmbedUrl: lessonModel.youtubeEmbedUrl,
+                        youtubeVideoId: lessonModel.youtubeVideoId,
+                        isFree: lessonModel.isPreview ?? false,
+                        isCompleted: lessonModel.isCompleted ?? false,
+                        completedAt: lessonModel.completedAt?.toString(),
+                        createdAt: DateTime.now(),
+                        updatedAt: DateTime.now(),
+                      );
+                      allLessons.add(lesson);
+                    }
+                  }
+
+                  setState(() {
+                    _allLessons = allLessons;
+                  });
+                }
+              });
             } else if (state is EnrollmentError) {
               return _buildErrorView(state.message);
             }
@@ -639,7 +708,7 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isCurrentLesson
-              ? Colors.white.withOpacity(0.1) // Fixed: use withOpacity
+              ? Colors.white.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
@@ -654,7 +723,7 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
               width: 120,
               height: 68,
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.3), // Fixed: use withOpacity
+                color: Colors.grey.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Stack(
@@ -676,7 +745,7 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
                     _buildDefaultThumbnail(index),
                   if (isCurrentLesson)
                     Container(
-                      color: Colors.black.withOpacity(0.3), // Fixed: use withOpacity
+                      color: Colors.black.withValues(alpha: 0.3),
                       child: const Center(
                         child: Icon(Icons.play_circle_outline,
                             color: Colors.white, size: 32),
@@ -758,8 +827,8 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.red.withOpacity(0.8), // Fixed: use withOpacity
-            Colors.red.withOpacity(0.6), // Fixed: use withOpacity
+            Colors.red.withValues(alpha: 0.8),
+            Colors.red.withValues(alpha: 0.6),
           ],
         ),
       ),

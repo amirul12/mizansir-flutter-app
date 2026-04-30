@@ -166,10 +166,10 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
       (lessonsMap) => emit(
         LessonDetailsLoaded(
           lesson: lessonsMap['lesson'] as CourseLessonDetailsModel,
-          nextLesson:
-              lessonsMap['nextLesson'] as CourseLessonDetailsModel?,
-          previousLesson:
-              lessonsMap['previousLesson'] as CourseLessonDetailsModel?,
+          nextLessonId: lessonsMap['nextLessonId'] as String?,
+          nextLessonTitle: lessonsMap['nextLessonTitle'] as String?,
+          previousLessonId: lessonsMap['previousLessonId'] as String?,
+          previousLessonTitle: lessonsMap['previousLessonTitle'] as String?,
         ),
       ),
     );

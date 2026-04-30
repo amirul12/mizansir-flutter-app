@@ -25,9 +25,9 @@ abstract class EnrollmentRepository {
   ///
   /// Returns a map containing:
   /// - 'lesson': The current lesson
-  /// - 'nextLesson': The next lesson (nullable)
-  /// - 'previousLesson': The previous lesson (nullable)
-  Future<Either<Failure, Map<String, CourseLessonDetailsModel?>>> getLessonDetails({
+  /// - 'nextLessonId': The next lesson ID (nullable)
+  /// - 'nextLessonTitle': The next lesson title (nullable)
+  Future<Either<Failure, Map<String, dynamic>>> getLessonDetails({
     required String courseId,
     required String lessonId,
   });

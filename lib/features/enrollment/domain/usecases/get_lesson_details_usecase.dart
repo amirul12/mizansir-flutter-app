@@ -1,9 +1,7 @@
 // File: lib/features/enrollment/domain/usecases/get_lesson_details_usecase.dart
 import 'package:dartz/dartz.dart';
 import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart' show CourseLessonDetailsModel;
-import 'package:mizansir/features/enrollment/data/models/lesson_model.dart' show LessonModel;
 import '../../../../core/error/failures.dart';
-import '../entities/lesson.dart';
 import '../repositories/enrollment_repository.dart';
 
 /// Parameters for getting lesson details
@@ -27,9 +25,9 @@ class GetLessonDetailsUseCase {
   ///
   /// Returns [Right] with a map containing:
   /// - 'lesson': The current lesson
-  /// - 'nextLesson': The next lesson (nullable)
-  /// - 'previousLesson': The previous lesson (nullable)
-  Future<Either<Failure, Map<String, CourseLessonDetailsModel?>>> call(
+  /// - 'nextLessonId': The next lesson ID (nullable)
+  /// - 'nextLessonTitle': The next lesson title (nullable)
+  Future<Either<Failure, Map<String, dynamic>>> call(
     GetLessonDetailsParams params,
   ) async {
     return await repository.getLessonDetails(

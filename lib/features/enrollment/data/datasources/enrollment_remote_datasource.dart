@@ -22,9 +22,9 @@ abstract class EnrollmentRemoteDataSource {
   ///
   /// Returns a map containing:
   /// - 'lesson': The current lesson
-  /// - 'nextLesson': The next lesson (nullable)
-  /// - 'previousLesson': The previous lesson (nullable)
-  Future<Map<String, CourseLessonDetailsModel?>> getLessonDetails({
+  /// - 'nextLesson': The next lesson object (nullable)
+  /// - 'previousLesson': The previous lesson object (nullable)
+  Future<Map<String, dynamic>> getLessonDetails({
     required String courseId,
     required String lessonId,
   });

@@ -8,6 +8,7 @@ import '../utils/q_context.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/auth/presentation/bloc/auth_state.dart';
 import '../../features/course_browsing/presentation/pages/courses_page.dart';
 import '../../features/course_browsing/presentation/pages/course_details_page.dart';
 import '../../features/course_browsing/presentation/pages/course_search_page.dart';
@@ -82,6 +83,50 @@ class AppRouter {
       debugLogDiagnostics: true,
       navigatorKey: QContext.navigatorKey,
       errorBuilder: (context, state) => _ErrorPage(error: state.error),
+      redirect: (context, state) {
+        final authBloc = di.sl<AuthBloc>();
+        final authState = authBloc.state;
+
+        // Get current location
+        final currentPath = state.matchedLocation;
+
+        // Define protected routes
+        const protectedRoutes = {
+          lessonPlayerPath,
+          lessonPlayerWithPath,
+          myCoursesPath,
+          courseProgressPath,
+          enrollmentsPath,
+          profilePath,
+          dashboardPath,
+          changePasswordPath,
+        };
+
+        // If on splash screen, let it handle auth check
+        if (currentPath == splashPath) {
+          return null;
+        }
+
+        // Wait for auth check to complete (don't redirect if still loading)
+        if (authState is AuthLoading || authState is AuthInitial) {
+          return null; // Let the splash screen handle navigation
+        }
+
+        // Check if user is authenticated
+        final isAuthenticated = authState is AuthAuthenticated;
+
+        // If trying to access protected route without auth, redirect to login
+        if (_isProtectedRoute(currentPath, protectedRoutes) && !isAuthenticated) {
+          return loginPath;
+        }
+
+        // If authenticated and trying to access login/register, redirect to home
+        if (isAuthenticated && (currentPath == loginPath || currentPath == registerPath)) {
+          return appShellPath;
+        }
+
+        return null; // No redirect needed
+      },
       routes: [
         // Splash Route - Initial screen that checks auth status
         GoRoute(
@@ -645,4 +690,28 @@ class _ErrorPage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Check if the given path is a protected route
+bool _isProtectedRoute(String path, Set<String> protectedRoutes) {
+  // Check exact match
+  if (protectedRoutes.contains(path)) {
+    return true;
+  }
+
+  // Check if path matches any protected route pattern
+  for (final protectedPath in protectedRoutes) {
+    if (protectedPath.contains(':')) {
+      // This is a route with parameters (e.g., '/my-courses/:courseId/lessons/:lessonId')
+      final regex = RegExp(protectedPath.replaceAllMapped(
+        RegExp(r':(\w+)'),
+        (match) => r'([^/]+)',
+      ));
+      if (regex.hasMatch(path)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }

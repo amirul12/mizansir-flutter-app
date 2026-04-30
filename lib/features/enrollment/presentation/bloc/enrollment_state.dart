@@ -66,17 +66,21 @@ class CourseLessonsLoaded extends EnrollmentState {
 /// Lesson Details Loaded State (with navigation)
 class LessonDetailsLoaded extends EnrollmentState {
   final CourseLessonDetailsModel lesson;
-  final CourseLessonDetailsModel? nextLesson;
-  final CourseLessonDetailsModel? previousLesson;
+  final String? nextLessonId;
+  final String? nextLessonTitle;
+  final String? previousLessonId;
+  final String? previousLessonTitle;
 
   const LessonDetailsLoaded({
     required this.lesson,
-    this.nextLesson,
-    this.previousLesson,
+    this.nextLessonId,
+    this.nextLessonTitle,
+    this.previousLessonId,
+    this.previousLessonTitle,
   });
 
   @override
-  List<Object?> get props => [lesson, nextLesson, previousLesson];
+  List<Object?> get props => [lesson, nextLessonId, nextLessonTitle, previousLessonId, previousLessonTitle];
 }
 
  

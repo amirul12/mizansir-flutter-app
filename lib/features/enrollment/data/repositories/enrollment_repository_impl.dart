@@ -52,7 +52,7 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, CourseLessonDetailsModel?>>> getLessonDetails({
+  Future<Either<Failure, Map<String, dynamic>>> getLessonDetails({
     required String courseId,
     required String lessonId,
   }) async {
@@ -62,16 +62,18 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
         lessonId: lessonId,
       );
 
-      // Convert models to entities
-      final result = <String, CourseLessonDetailsModel?>{
+      // Return map with lesson and navigation info
+      final result = <String, dynamic>{
         'lesson': lessonsMap['lesson'],
-        'nextLesson': lessonsMap['nextLesson'],
-        'previousLesson': lessonsMap['previousLesson'],
+        'nextLessonId': lessonsMap['nextLesson']?.id?.toString(),
+        'nextLessonTitle': lessonsMap['nextLesson']?.title,
+        'previousLessonId': null, // API doesn't provide this yet
+        'previousLessonTitle': null,
       };
 
       return Right(result);
     } on CustomException catch (e) {
-      final failure = parseCustomException<Map<String, Lesson?>>(e);
+      final failure = parseCustomException<Map<String, dynamic>>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }

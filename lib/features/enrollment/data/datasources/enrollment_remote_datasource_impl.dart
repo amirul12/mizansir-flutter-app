@@ -1,12 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart'
-    show
-        CourseLessonModel,
-        courseLessonModelFromJson;
+    show CourseLessonModel, courseLessonModelFromJson;
 import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart'
-    show
-        CourseLessonDetailsModel,
-        courseLessonDetailsModelFromJson;
+    show CourseLessonDetailsModel, courseLessonDetailsModelFromJson;
 import '../../../../core/services/api_service_method.dart';
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/constants/api_constants.dart';
@@ -95,7 +91,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
   }
 
   @override
-  Future<Map<String, CourseLessonDetailsModel?>> getLessonDetails({
+  Future<Map<String, dynamic>> getLessonDetails({
     required String courseId,
     required String lessonId,
   }) async {
@@ -119,8 +115,8 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
       // Parse current lesson
       final lesson = courseLessonDetailsModelFromJson(dataMap);
 
-      CourseLessonDetailsModel? nextLesson;
-      CourseLessonDetailsModel? previousLesson;
+      // CourseLessonDetailsModel? nextLesson;
+      // CourseLessonDetailsModel? previousLesson;
 
       debugPrint(
         '✅ Lesson details loaded: ${lesson.navigation?.nextLesson?.title}',
@@ -128,8 +124,8 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
 
       return {
         'lesson': lesson,
-        'nextLesson': nextLesson,
-        'previousLesson': previousLesson,
+        'nextLesson': lesson.navigation?.nextLesson,
+        'previousLesson': lesson.navigation?.previousLesson,
       };
     } catch (e) {
       debugPrint('Error in getLessonDetails: $e');
