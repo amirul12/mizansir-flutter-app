@@ -4,6 +4,7 @@ import 'package:mizansir/features/enrollment/data/models/course_lession_model.da
 import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart' show CourseLessonDetailsModel;
 import 'package:mizansir/features/enrollment/data/models/my_course_model.dart' show MyCourseModel;
 import '../../../../core/error/failures.dart';
+import '../../data/models/enrollments_create_model.dart';
 import '../../data/models/lesson_model.dart';
  
  
@@ -61,7 +62,7 @@ abstract class EnrollmentRepository {
   ///
   /// Returns [Right] with enrollment data (success, message, data) on success.
   /// Returns [Left] with [Failure] on failure.
-  Future<Either<Failure, Map<String, dynamic>>> createEnrollment({
+  Future<Either<Failure, EnrollmentsCreateModel>> createEnrollment({
     required String courseId,
     String? paymentMethod,
     String? paymentNotes,

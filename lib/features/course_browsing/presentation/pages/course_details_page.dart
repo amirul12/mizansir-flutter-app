@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
+import 'package:mizansir/features/enrollment/data/models/enrollments_create_model.dart' show EnrollmentsCreateModel;
 import '../bloc/course_bloc.dart';
 import '../bloc/course_event.dart';
 import '../bloc/course_state.dart';
@@ -1207,10 +1208,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  void _showEnrollmentSuccessDialog(Map<String, dynamic> enrollmentData) {
-    final message =
-        enrollmentData['message'] ?? 'Enrollment submitted successfully';
-    final nextSteps = enrollmentData['next_steps'] as Map<String, dynamic>?;
+  void _showEnrollmentSuccessDialog(EnrollmentsCreateModel enrollmentData) {
+    final message = 'Enrollment submitted successfully';
+    final nextSteps = enrollmentData.nextSteps;
 
     showDialog(
       context: context,
@@ -1237,10 +1237,10 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                if (nextSteps['payment_instructions'] != null) ...[
-                  Text(nextSteps['payment_instructions']['title'] ?? ''),
+                if (nextSteps.paymentInstructions != null) ...[
+                  Text(nextSteps.paymentInstructions!.title ?? ''),
                   const SizedBox(height: 8),
-                  ...(nextSteps['payment_instructions']['steps'] as List? ?? [])
+                  ...(nextSteps.paymentInstructions!.steps ?? [])
                       .map(
                         (step) => Padding(
                           padding: const EdgeInsets.only(bottom: 4),

@@ -6,6 +6,7 @@ import 'package:mizansir/features/enrollment/data/models/course_lession_model.da
         Lesson;
 import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart'
     show CourseLessonDetailsModel;
+import 'package:mizansir/features/enrollment/data/models/enrollments_create_model.dart' show EnrollmentsCreateModel;
  
  
 import '../../domain/entities/lesson.dart';
@@ -134,7 +135,7 @@ class EnrollmentEmpty extends EnrollmentState {
 
 /// Enrollment Created State
 class EnrollmentCreated extends EnrollmentState {
-  final Map<String, dynamic> enrollmentData;
+  final EnrollmentsCreateModel enrollmentData;
 
   const EnrollmentCreated({required this.enrollmentData});
 

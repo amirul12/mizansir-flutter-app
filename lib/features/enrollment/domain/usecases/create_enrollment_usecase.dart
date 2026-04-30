@@ -1,6 +1,7 @@
 // File: lib/features/enrollment/domain/usecases/create_enrollment_usecase.dart
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
+import '../../data/models/enrollments_create_model.dart';
 import '../repositories/enrollment_repository.dart';
 
 /// Parameters for creating enrollment
@@ -28,7 +29,7 @@ class CreateEnrollmentUseCase {
   ///
   /// Returns [Right] with enrollment data on success.
   /// Returns [Left] with [Failure] on failure.
-  Future<Either<Failure, Map<String, dynamic>>> call(CreateEnrollmentParams params) {
+  Future<Either<Failure, EnrollmentsCreateModel>> call(CreateEnrollmentParams params) {
     return repository.createEnrollment(
       courseId: params.courseId,
       paymentMethod: params.paymentMethod,

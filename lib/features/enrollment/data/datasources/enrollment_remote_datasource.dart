@@ -55,7 +55,7 @@ abstract class EnrollmentRemoteDataSource {
   });
 
   /// Create enrollment for a course
-  Future<Map<String, dynamic>> createEnrollment({
+  Future<String> createEnrollment({
     required String courseId,
     String? paymentMethod,
     String? paymentNotes,

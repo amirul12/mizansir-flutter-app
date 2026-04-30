@@ -335,33 +335,97 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
     return MediaQuery.of(context).size.width > 800;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: _isFullScreen
-          ? null
-          : AppBar(
-              backgroundColor: Colors.black,
-              elevation: 0,
-              leading: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                onPressed: () =>
-                    context.go('/my-courses/${widget.courseId}/lessons'),
-              ),
-              title: Text(
-                _currentLesson?.title ?? 'Playing Lesson',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+  Future<bool> _showExitWarningDialog() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color(0xFF1A1A1A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: const Text(
+              'Exit Lesson?',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
             ),
+            content: const Text(
+              'Your progress is saved. Are you sure you want to exit?',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text(
+                  'Exit',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
+        final shouldPop = await _showExitWarningDialog();
+        if (shouldPop && mounted) {
+          context.go('/my-courses/${widget.courseId}/lessons');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: _isFullScreen
+            ? null
+            : AppBar(
+                backgroundColor: Colors.black,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  onPressed: () => _showExitWarningDialog().then((shouldPop) {
+                    if (shouldPop && mounted) {
+                      context.go('/my-courses/${widget.courseId}/lessons');
+                    }
+                  }),
+                ),
+                title: Text(
+                  _currentLesson?.title ?? 'Playing Lesson',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
       body: BlocListener<EnrollmentBloc, EnrollmentState>(
         listener: (context, state) {
           if (state is LessonCompleted) {
@@ -463,6 +527,7 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
             return _buildMainPlayer(context);
           },
         ),
+      ),
       ),
     );
   }

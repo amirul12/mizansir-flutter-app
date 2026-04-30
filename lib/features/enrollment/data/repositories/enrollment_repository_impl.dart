@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart' show CourseLessonModel;
 import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart';
+import 'package:mizansir/features/enrollment/data/models/enrollments_create_model.dart';
 import 'package:mizansir/features/enrollment/data/models/lesson_model.dart' show LessonModel;
 import 'package:mizansir/features/enrollment/data/models/my_course_model.dart' show MyCourseModel;
 import '../../../../core/services/api_exception.dart';
@@ -149,7 +150,7 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
   }
 
   @override
-  Future<Either<Failure, Map<String, dynamic>>> createEnrollment({
+  Future<Either<Failure, EnrollmentsCreateModel>> createEnrollment({
     required String courseId,
     String? paymentMethod,
     String? paymentNotes,
@@ -162,9 +163,12 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
         paymentNotes: paymentNotes,
         transactionId: transactionId,
       );
-      return Right(enrollmentData);
+
+      // Parse JSON string to model
+      final enrollmentModel = enrollmentsCreateModelFromJson(enrollmentData);
+      return Right(enrollmentModel);
     } on CustomException catch (e) {
-      final failure = parseCustomException<Map<String, dynamic>>(e);
+      final failure = parseCustomException<EnrollmentsCreateModel>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }

@@ -252,7 +252,7 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> createEnrollment({
+  Future<String> createEnrollment({
     required String courseId,
     String? paymentMethod,
     String? paymentNotes,
@@ -278,12 +278,13 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         throw ServerException('No data received');
       }
 
-      if (mapResponse['success'] == true) {
-        debugPrint('✅ Enrollment created successfully');
-        return mapResponse;
+      final dataMap = CommonToJson().getString(mapResponse);
+      if (dataMap == null) {
+        throw ServerException('Invalid response format');
       }
 
-      throw ServerException('Invalid response format');
+      debugPrint('✅ Enrollment created successfully');
+      return dataMap;
     } catch (e) {
       debugPrint('Error in createEnrollment: $e');
       rethrow;
