@@ -29,8 +29,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleLogin() {
-    _emailController.text = "amir@email.com";
-    _passwordController.text = "Abcd@1234";
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
         LoginEvent(
@@ -39,6 +37,15 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     }
+  }
+
+  @override
+  void initState() {
+    _emailController.text = "amirul.csejust@gmail.com";
+    _passwordController.text = "Abcd@1234";
+
+    // TODO: implement initState
+    super.initState();
   }
 
   @override

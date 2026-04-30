@@ -34,7 +34,8 @@ class StudentLessonPlayerPage extends StatefulWidget {
   });
 
   @override
-  State<StudentLessonPlayerPage> createState() => _StudentLessonPlayerPageState();
+  State<StudentLessonPlayerPage> createState() =>
+      _StudentLessonPlayerPageState();
 }
 
 class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
@@ -45,6 +46,8 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
   bool _isFullScreen = false;
   bool _isCompletedTriggered = false;
   bool _isPlayerReady = false; // Track if player is ready
+  bool _isProcessingOrientation =
+      false; // Prevent duplicate orientation changes
 
   final ScreenSecurityService _screenSecurityService = ScreenSecurityService();
   final ScrollController _playlistController = ScrollController();
@@ -77,6 +80,7 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
     _playlistController.dispose();
     _disableScreenSecurity();
     _resetOrientation();
+    _isProcessingOrientation = false; // Reset flag to prevent memory leak
     super.dispose();
   }
 
@@ -104,17 +108,17 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
   void _loadLesson() {
     // Load current lesson details
     context.read<EnrollmentBloc>().add(
-          GetLessonDetailsEvent(
-            courseId: widget.courseId,
-            lessonId: widget.lessonId,
-          ),
-        );
+      GetLessonDetailsEvent(
+        courseId: widget.courseId,
+        lessonId: widget.lessonId,
+      ),
+    );
 
     // Load all lessons for playlist (only if not already loaded)
     if (_allLessons.isEmpty) {
       context.read<EnrollmentBloc>().add(
-            LoadCourseLessonsEvent(courseId: widget.courseId),
-          );
+        LoadCourseLessonsEvent(courseId: widget.courseId),
+      );
     }
   }
 
@@ -163,39 +167,63 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
     // Track fullscreen state changes
     if (controller.value.isFullScreen != _isFullScreen) {
       if (!mounted) return; // Check again before setState
+
+      final newFullScreenState = controller.value.isFullScreen;
       setState(() {
-        _isFullScreen = controller.value.isFullScreen;
+        _isFullScreen = newFullScreenState;
       });
 
-      // Handle orientation changes for fullscreen
-      if (controller.value.isFullScreen) {
-        // Enter landscape mode
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight,
-        ]);
-      } else {
-        // Allow all orientations
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight,
-        ]);
-      }
+      // Debounced orientation change for smooth transition
+      // Skip if already processing orientation change
+      if (_isProcessingOrientation) return;
+
+      _isProcessingOrientation = true;
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (!mounted) {
+          _isProcessingOrientation = false;
+          return;
+        }
+
+        if (newFullScreenState) {
+          // Enter landscape mode
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ]);
+        } else {
+          // Allow all orientations
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ]);
+        }
+
+        // Reset flag after orientation change completes
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            _isProcessingOrientation = false;
+          }
+        });
+      });
     }
 
     // Auto mark complete after 90% watched
-    final total = controller.metadata.duration.inSeconds;
-    final position = controller.value.position.inSeconds;
+    try {
+      final total = controller.metadata.duration.inSeconds;
+      final position = controller.value.position.inSeconds;
 
-    if (!_isCompletedTriggered &&
-        total > 0 &&
-        position > 0 &&
-        (position / total) >= 0.90 &&
-        _currentLesson != null &&
-        !_currentLesson!.isCompleted) {
-      _isCompletedTriggered = true;
-      _markAsWatched(showMessage: false);
+      if (!_isCompletedTriggered &&
+          total > 0 &&
+          position > 0 &&
+          (position / total) >= 0.90 &&
+          _currentLesson != null &&
+          !_currentLesson!.isCompleted) {
+        _isCompletedTriggered = true;
+        _markAsWatched(showMessage: false);
+      }
+    } catch (_) {
+      // Ignore errors if metadata not ready
     }
   }
 
@@ -214,16 +242,16 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
     // Initialize player immediately (will reuse controller and load new video)
     _initializePlayer(lesson);
 
+    // Update route first, then load lesson details
+    // This prevents duplicate loads from didUpdateWidget
+    if (widget.lessonId != lesson.id) {
+      context.go('/my-courses/${widget.courseId}/lessons/${lesson.id}');
+    }
+
     // Load lesson details from API (robust approach)
     context.read<EnrollmentBloc>().add(
-          GetLessonDetailsEvent(
-            courseId: widget.courseId,
-            lessonId: lesson.id,
-          ),
-        );
-
-    // Update route
-    context.go('/my-courses/${widget.courseId}/lessons/${lesson.id}');
+      GetLessonDetailsEvent(courseId: widget.courseId, lessonId: lesson.id),
+    );
 
     // Scroll to current lesson in playlist
     final index = _allLessons.indexWhere((l) => l.id == lesson.id);
@@ -244,7 +272,9 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
   void _playNextLesson() {
     if (_allLessons.isEmpty) return;
 
-    final currentIndex = _allLessons.indexWhere((l) => l.id == _currentLesson?.id);
+    final currentIndex = _allLessons.indexWhere(
+      (l) => l.id == _currentLesson?.id,
+    );
     if (currentIndex >= 0 && currentIndex < _allLessons.length - 1) {
       _playLesson(_allLessons[currentIndex + 1]);
     }
@@ -256,7 +286,8 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
     // Safely get watch time from controller
     int watchedSeconds;
     try {
-      watchedSeconds = _youtubeController?.value.position.inSeconds ??
+      watchedSeconds =
+          _youtubeController?.value.position.inSeconds ??
           (_currentLesson!.duration * 60);
     } catch (_) {
       // If controller is not ready, use lesson duration
@@ -264,13 +295,13 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
     }
 
     context.read<EnrollmentBloc>().add(
-          MarkLessonCompleteEvent(
-            courseId: widget.courseId,
-            lessonId: _currentLesson!.id,
-            watchTimeSeconds: watchedSeconds,
-            progressPercentage: 100,
-          ),
-        );
+      MarkLessonCompleteEvent(
+        courseId: widget.courseId,
+        lessonId: _currentLesson!.id,
+        watchTimeSeconds: watchedSeconds,
+        progressPercentage: 100,
+      ),
+    );
 
     if (showMessage && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -364,10 +395,14 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
                       youtubeEmbedUrl: state.lesson.youtubeEmbedUrl,
                       youtubeVideoId: state.lesson.youtubeVideoId,
                       isFree: state.lesson.isPreview ?? false,
-                      isCompleted: state.lesson.completion?.isCompleted ?? false,
-                      watchTimeSeconds: state.lesson.completion?.timeSpentSeconds,
-                      progressPercentage: state.lesson.completion?.progressPercentage,
-                      completedAt: state.lesson.completion?.completedAt?.toString(),
+                      isCompleted:
+                          state.lesson.completion?.isCompleted ?? false,
+                      watchTimeSeconds:
+                          state.lesson.completion?.timeSpentSeconds,
+                      progressPercentage:
+                          state.lesson.completion?.progressPercentage,
+                      completedAt: state.lesson.completion?.completedAt
+                          ?.toString(),
                       createdAt: DateTime.now(),
                       updatedAt: DateTime.now(),
                     );
@@ -439,15 +474,11 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
 
     return YoutubePlayerBuilder(
       onExitFullScreen: () {
+        // Only update state, let player listener handle orientation
         if (!mounted) return;
         setState(() {
           _isFullScreen = false;
         });
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight,
-        ]);
       },
       player: YoutubePlayer(
         controller: _youtubeController!,
@@ -506,16 +537,11 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
         // Main video area
         Expanded(
           flex: 7,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: player,
-                ),
-                _buildLessonInfo(),
-              ],
-            ),
+          child: Column(
+            children: [
+              AspectRatio(aspectRatio: 16 / 9, child: player),
+              Expanded(child: _buildLessonInfo()),
+            ],
           ),
         ),
 
@@ -526,9 +552,7 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
           child: Column(
             children: [
               _buildPlaylistHeader(),
-              Expanded(
-                child: _buildPlaylist(),
-              ),
+              Expanded(child: _buildPlaylist()),
             ],
           ),
         ),
@@ -539,24 +563,26 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
   Widget _buildMobileLayout(Widget player) {
     return Column(
       children: [
-        AspectRatio(
-          aspectRatio: 16 / 9,
-          child: player,
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildLessonInfo(),
-                _buildPlaylistHeader(),
-                _buildPlaylist(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                ),
-              ],
+        // Use AspectRatio only in portrait, full video in fullscreen
+        if (!_isFullScreen)
+          AspectRatio(aspectRatio: 16 / 9, child: player)
+        else
+          Expanded(child: player),
+        if (!_isFullScreen)
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildLessonInfo(),
+                  _buildPlaylistHeader(),
+                  _buildPlaylist(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -584,8 +610,11 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
           const SizedBox(height: 12),
           Row(
             children: [
-              const Icon(Icons.play_circle_outline,
-                  color: Colors.white70, size: 18),
+              const Icon(
+                Icons.play_circle_outline,
+                color: Colors.white70,
+                size: 18,
+              ),
               const SizedBox(width: 6),
               Text(
                 _formatDurationMinutes(_currentLesson!.duration),
@@ -596,7 +625,9 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
                 _currentLesson!.isCompleted
                     ? Icons.check_circle
                     : Icons.pending_outlined,
-                color: _currentLesson!.isCompleted ? Colors.green : Colors.orange,
+                color: _currentLesson!.isCompleted
+                    ? Colors.green
+                    : Colors.orange,
                 size: 18,
               ),
               const SizedBox(width: 6),
@@ -639,9 +670,7 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.white10, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.white10, width: 1)),
       ),
       child: Row(
         children: [
@@ -658,10 +687,7 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
           const Spacer(),
           Text(
             '${_allLessons.length} lessons',
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Colors.white54, fontSize: 14),
           ),
         ],
       ),
@@ -690,7 +716,10 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
       shrinkWrap: shrinkWrap,
       physics: physics,
       itemCount: _allLessons.length,
-      padding: const EdgeInsets.only(top: 8, bottom: 100), // Added bottom padding
+      padding: const EdgeInsets.only(
+        top: 8,
+        bottom: 100,
+      ), // Added bottom padding
       itemBuilder: (context, index) {
         final lesson = _allLessons[index];
         final isCurrentLesson = lesson.id == _currentLesson?.id;
@@ -747,8 +776,11 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
                     Container(
                       color: Colors.black.withValues(alpha: 0.3),
                       child: const Center(
-                        child: Icon(Icons.play_circle_outline,
-                            color: Colors.white, size: 32),
+                        child: Icon(
+                          Icons.play_circle_outline,
+                          color: Colors.white,
+                          size: 32,
+                        ),
                       ),
                     ),
                   if (lesson.isCompleted)
@@ -761,8 +793,11 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
                           color: Colors.green,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.check, color: Colors.white,
-                            size: 12),
+                        child: const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 12,
+                        ),
                       ),
                     ),
                 ],
@@ -783,8 +818,9 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
                     style: TextStyle(
                       color: isCurrentLesson ? Colors.blue : Colors.white,
                       fontSize: 14,
-                      fontWeight:
-                          isCurrentLesson ? FontWeight.w600 : FontWeight.w500,
+                      fontWeight: isCurrentLesson
+                          ? FontWeight.w600
+                          : FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -799,8 +835,11 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
                       ),
                       if (lesson.isCompleted) ...[
                         const SizedBox(width: 8),
-                        const Icon(Icons.check_circle,
-                            color: Colors.green, size: 14),
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 14,
+                        ),
                       ],
                     ],
                   ),
@@ -809,11 +848,7 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
             ),
 
             if (isCurrentLesson)
-              const Icon(
-                Icons.graphic_eq,
-                color: Colors.blue,
-                size: 20,
-              ),
+              const Icon(Icons.graphic_eq, color: Colors.blue, size: 20),
           ],
         ),
       ),
@@ -852,10 +887,7 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
         children: [
           CircularProgressIndicator(color: Colors.white),
           SizedBox(height: 16),
-          Text(
-            'Loading lesson...',
-            style: TextStyle(color: Colors.white70),
-          ),
+          Text('Loading lesson...', style: TextStyle(color: Colors.white70)),
         ],
       ),
     );
@@ -870,8 +902,11 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.video_library_outlined,
-                  size: 64, color: Colors.white54),
+              const Icon(
+                Icons.video_library_outlined,
+                size: 64,
+                color: Colors.white54,
+              ),
               const SizedBox(height: 16),
               const Text(
                 'No video available',
@@ -903,7 +938,10 @@ class _StudentLessonPlayerPageState extends State<StudentLessonPlayerPage> {
             const Text(
               'Error loading lesson',
               style: TextStyle(
-                  color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
