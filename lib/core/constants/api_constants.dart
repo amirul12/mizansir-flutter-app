@@ -2,7 +2,7 @@
 /// API-related constants for the Mizan Sir HSC ICT application
 class ApiConstants {
   // Base URL
-  static const String baseUrl = 'https://ict.mizansir.com/api';
+  static const String baseUrl = 'https://ict.mizansir.com/api/v1';
   // static const String baseUrl = 'http://192.168.0.104:8000/api/v1';
   // static const String baseUrl = 'http://10.65.41.153:8000/api/v1';
 
