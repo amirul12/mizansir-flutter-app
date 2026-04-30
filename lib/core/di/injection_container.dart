@@ -2,6 +2,7 @@
 import 'package:get_it/get_it.dart';
 import '../services/token_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/hive_service.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource_impl.dart';
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
@@ -77,6 +78,11 @@ Future<void> init() async {
 /// Initialize core services
 Future<void> _initCore() async {
   // ==================== Services ====================
+
+  // Hive Service
+  final hiveService = HiveServiceImpl();
+  sl.registerLazySingleton<HiveService>(() => hiveService);
+  await hiveService.init();
 
   // Connectivity Service
   sl.registerLazySingleton<ConnectivityService>(() => ConnectivityService());
@@ -225,7 +231,11 @@ Future<void> _initEnrollment() async {
 
   // Enrollment Repository
   sl.registerLazySingleton<EnrollmentRepository>(
-    () => EnrollmentRepositoryImpl(remoteDataSource: sl()),
+    () => EnrollmentRepositoryImpl(
+      remoteDataSource: sl(),
+      connectivityService: sl(),
+      hiveService: sl(),
+    ),
   );
 
   // ==================== Use Cases ====================
@@ -311,6 +321,7 @@ Future<void> _initProfile() async {
     () => DashboardRepositoryImpl(
       remoteDataSource: sl(),
       connectivityService: sl(),
+      hiveService: sl(),
     ),
   );
 

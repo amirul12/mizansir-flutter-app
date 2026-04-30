@@ -1,7 +1,7 @@
 // File: lib/features/course_browsing/presentation/bloc/course_state.dart
 import 'package:equatable/equatable.dart';
-import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
- 
+import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
+
 import '../../domain/entities/lesson_preview.dart';
 
 /// Base Course State
@@ -24,13 +24,10 @@ class CourseLoading extends CourseState {
 
 /// Courses Loaded State
 class CoursesLoaded extends CourseState {
-  final List<CourseModel> courses;
+  final CourseListResponse courses;
   final bool hasMore;
 
-  const CoursesLoaded({
-    required this.courses,
-    this.hasMore = true,
-  });
+  const CoursesLoaded({required this.courses, this.hasMore = true});
 
   @override
   List<Object?> get props => [courses, hasMore];
@@ -38,7 +35,7 @@ class CoursesLoaded extends CourseState {
 
 /// Featured Courses Loaded State
 class FeaturedCoursesLoaded extends CourseState {
-  final List<CourseModel> courses;
+  final CourseListResponse courses;
 
   const FeaturedCoursesLoaded({required this.courses});
 
@@ -48,7 +45,7 @@ class FeaturedCoursesLoaded extends CourseState {
 
 /// Course Details Loaded State
 class CourseDetailsLoaded extends CourseState {
-  final CourseModel course;
+  final dynamic course;
 
   const CourseDetailsLoaded({required this.course});
 
@@ -58,13 +55,10 @@ class CourseDetailsLoaded extends CourseState {
 
 /// Search Results Loaded State
 class SearchResultsLoaded extends CourseState {
-  final List<CourseModel> courses;
+  final CourseListResponse courses;
   final String query;
 
-  const SearchResultsLoaded({
-    required this.courses,
-    required this.query,
-  });
+  const SearchResultsLoaded({required this.courses, required this.query});
 
   @override
   List<Object?> get props => [courses, query];
@@ -72,7 +66,7 @@ class SearchResultsLoaded extends CourseState {
 
 /// Categories Loaded State
 class CategoriesLoaded extends CourseState {
-  final List<Category> categories;
+  final List<dynamic> categories;
 
   const CategoriesLoaded({required this.categories});
 

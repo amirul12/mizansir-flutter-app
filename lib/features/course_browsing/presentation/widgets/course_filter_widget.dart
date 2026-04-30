@@ -1,6 +1,7 @@
 // File: lib/features/course_browsing/presentation/widgets/course_filter_widget.dart
 import 'package:flutter/material.dart';
-import 'package:mizansir/features/course_browsing/data/models/course_model.dart' show Category;
+import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
+ 
 import '../../domain/entities/course_filter.dart';
  
 

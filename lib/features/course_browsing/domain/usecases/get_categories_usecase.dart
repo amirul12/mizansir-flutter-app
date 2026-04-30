@@ -1,6 +1,6 @@
 // File: lib/features/course_browsing/domain/usecases/get_categories_usecase.dart
 import 'package:dartz/dartz.dart';
-import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
+ 
 import '../../../../core/usecases/no_params.dart';
 import '../../../../core/error/failures.dart';
  
@@ -12,7 +12,7 @@ class GetCategoriesUseCase {
 
   const GetCategoriesUseCase(this.repository);
 
-  Future<Either<Failure, List<Category>>> call(NoParams params) {
+  Future<Either<Failure, List<dynamic>>> call(NoParams params) {
     return repository.getCategories();
   }
 }

@@ -53,11 +53,11 @@ class CourseBloc extends Bloc<CourseEvent, CourseState> {
     result.fold(
       (failure) => emit(CourseError(message: _getErrorMessage(failure))),
       (courses) {
-        if (courses.isEmpty) {
+        if (courses.items!.isEmpty) {
           return emit(const CourseEmpty(message: 'No courses found'));
         }
         // Check if there might be more courses
-        final hasMore = courses.length >= event.limit;
+        final hasMore = courses.items!.length >= event.limit;
         return emit(CoursesLoaded(courses: courses, hasMore: hasMore));
       },
     );
@@ -76,7 +76,7 @@ class CourseBloc extends Bloc<CourseEvent, CourseState> {
     result.fold(
       (failure) => emit(CourseError(message: _getErrorMessage(failure))),
       (courses) {
-        if (courses.isEmpty) {
+        if (courses.items!.isEmpty) {
           return emit(
             const CourseEmpty(message: 'No featured courses available'),
           );
@@ -119,7 +119,7 @@ class CourseBloc extends Bloc<CourseEvent, CourseState> {
     result.fold(
       (failure) => emit(CourseError(message: _getErrorMessage(failure))),
       (courses) {
-        if (courses.isEmpty) {
+        if (courses.items!.isEmpty) {
           return emit(
             CourseEmpty(message: 'No results found for "${event.query}"'),
           );

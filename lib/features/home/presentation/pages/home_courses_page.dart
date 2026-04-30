@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
 import 'package:mizansir/features/course_browsing/presentation/bloc/course_bloc.dart';
 import 'package:mizansir/features/course_browsing/presentation/bloc/course_event.dart';
 import 'package:mizansir/features/course_browsing/presentation/bloc/course_state.dart';
@@ -46,12 +47,17 @@ class _HomeCoursesPageState extends State<HomeCoursesPage> {
                 children: [
                   Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
                   const SizedBox(height: 16),
-                  const Text('Oops!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Oops!',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   Text(state.message, textAlign: TextAlign.center),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
-                    onPressed: () => context.read<CourseBloc>().add(const LoadCoursesEvent()),
+                    onPressed: () => context.read<CourseBloc>().add(
+                      const LoadCoursesEvent(),
+                    ),
                     icon: const Icon(Icons.refresh),
                     label: const Text('Try Again'),
                   ),
@@ -68,7 +74,10 @@ class _HomeCoursesPageState extends State<HomeCoursesPage> {
               children: [
                 Icon(Icons.school_outlined, size: 64, color: Colors.grey),
                 SizedBox(height: 16),
-                Text('No courses available', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                Text(
+                  'No courses available',
+                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                ),
               ],
             ),
           );
@@ -77,17 +86,19 @@ class _HomeCoursesPageState extends State<HomeCoursesPage> {
         final courses = state is CoursesLoaded
             ? state.courses
             : state is FeaturedCoursesLoaded
-                ? state.courses
-                : null;
+            ? state.courses
+            : null;
 
-        if (courses != null && courses.isNotEmpty) {
+        if (courses != null && courses.items!.isNotEmpty) {
           return RefreshIndicator(
-            onRefresh: () async => context.read<CourseBloc>().add(const LoadCoursesEvent()),
+            onRefresh: () async =>
+                context.read<CourseBloc>().add(const LoadCoursesEvent()),
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: courses.length,
+              itemCount: courses.items!.length,
               separatorBuilder: (context, index) => const SizedBox(height: 16),
-              itemBuilder: (context, index) => _buildCourseCard(context, courses[index]),
+              itemBuilder: (context, index) =>
+                  _buildCourseCard(context, courses.items![index]),
             ),
           );
         }
@@ -97,12 +108,18 @@ class _HomeCoursesPageState extends State<HomeCoursesPage> {
     );
   }
 
-  Widget _buildCourseCard(BuildContext context, dynamic course) {
+  Widget _buildCourseCard(BuildContext context, Item course) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 24, offset: const Offset(0, 8))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
@@ -116,16 +133,27 @@ class _HomeCoursesPageState extends State<HomeCoursesPage> {
               Stack(
                 children: [
                   ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
                     child: _buildThumbnailImage(context, course),
                   ),
                   Positioned(
-                    top: 16, left: 16, right: 16,
+                    top: 16,
+                    left: 16,
+                    right: 16,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        if (course.category != null) _buildModernBadge(course.category!.name, AppColors.primary),
-                        _buildBadge(course.levelLabel.toUpperCase(), Colors.black54),
+                        if (course.category != null)
+                          _buildModernBadge(
+                            course.category!.name!,
+                            AppColors.primary,
+                          ),
+                        _buildBadge(
+                          course.level!.toUpperCase(),
+                          Colors.black54,
+                        ),
                       ],
                     ),
                   ),
@@ -136,17 +164,41 @@ class _HomeCoursesPageState extends State<HomeCoursesPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(course.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    Text(
+                      course.title!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.star_rounded, size: 18, color: AppColors.starActive),
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 18,
+                          color: AppColors.starActive,
+                        ),
                         const SizedBox(width: 4),
-                        Text(course.rating?.toStringAsFixed(1) ?? '0.0', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 4),
-                        Text('(${course.reviewCount})', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+
+                        Text(
+                          '(${course.reviewCount})',
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
                         const Spacer(),
-                        Text(course.displayPrice, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary, fontSize: 16)),
+                        Text(
+                          course.formattedPrice!,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                            fontSize: 16,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -156,11 +208,20 @@ class _HomeCoursesPageState extends State<HomeCoursesPage> {
                       child: ElevatedButton(
                         onPressed: () => context.go('/courses/${course.id}'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: course.isEnrolled == true ? AppColors.secondary : AppColors.primary,
+                          backgroundColor: course.isEnrolled == true
+                              ? AppColors.secondary
+                              : AppColors.primary,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                        child: Text(course.isEnrolled == true ? 'Continue Learning' : 'Enroll Now', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        child: Text(
+                          course.isEnrolled == true
+                              ? 'Continue Learning'
+                              : 'Enroll Now',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ],
@@ -176,27 +237,59 @@ class _HomeCoursesPageState extends State<HomeCoursesPage> {
   Widget _buildThumbnailImage(BuildContext context, dynamic course) {
     if (course.thumbnail != null && course.thumbnail!.isNotEmpty) {
       return CachedNetworkImage(
-        imageUrl: course.thumbnail!, height: 180, width: double.infinity, fit: BoxFit.cover,
-        placeholder: (context, url) => Container(height: 180, color: Colors.grey.shade100),
-        errorWidget: (context, url, error) => Container(height: 180, color: Colors.grey.shade200, child: const Icon(Icons.broken_image)),
+        imageUrl: course.thumbnail!,
+        height: 180,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        placeholder: (context, url) =>
+            Container(height: 180, color: Colors.grey.shade100),
+        errorWidget: (context, url, error) => Container(
+          height: 180,
+          color: Colors.grey.shade200,
+          child: const Icon(Icons.broken_image),
+        ),
       );
     }
-    return Container(height: 180, color: AppColors.primary, child: const Icon(Icons.school, color: Colors.white, size: 48));
+    return Container(
+      height: 180,
+      color: AppColors.primary,
+      child: const Icon(Icons.school, color: Colors.white, size: 48),
+    );
   }
 
   Widget _buildModernBadge(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-      child: Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 
   Widget _buildBadge(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
-      child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }

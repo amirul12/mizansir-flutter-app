@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
+
 import '../../../../core/theme/app_colors.dart';
 
 /// Course Card Widget - Modern and informative
 class CourseCard extends StatelessWidget {
-  final CourseModel course;
+  final Item course;
   final VoidCallback? onTap;
   final VoidCallback? onEnroll;
 
@@ -57,13 +58,12 @@ class CourseCard extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        if (course.category != null &&
-                            course.category!.name != null)
+                        if (course.category != null && course.category!.name != null)
                           _buildModernBadge(
                             course.category!.name!,
                             _getCategoryColor(course.category!.name!),
                           ),
-                        _buildLevelBadge(course.levelLabel),
+                        _buildLevelBadge(course.level ?? 'N/A'),
                       ],
                     ),
                   ),
@@ -89,11 +89,11 @@ class CourseCard extends StatelessWidget {
                         ],
                       ),
                       child: Text(
-                        course.displayPrice,
+                        course.formattedPrice ?? 'Free',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          color: course.isFree
+                          color: (course.price ?? 0) == 0
                               ? AppColors.secondary
                               : AppColors.primary,
                         ),
@@ -109,31 +109,9 @@ class CourseCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Rating & Enrollments Row
+                    // Enrollments Row
                     Row(
                       children: [
-                        const Icon(
-                          Icons.star_rounded,
-                          size: 18,
-                          color: AppColors.starActive,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          course.rating?.toStringAsFixed(1) ?? '0.0',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '(${course.reviewCount})',
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const Spacer(),
                         const Icon(
                           Icons.people_outline_rounded,
                           size: 16,
@@ -141,13 +119,30 @@ class CourseCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          '${course.enrolledCount}',
+                          '${course.enrolledCount ?? 0}',
                           style: TextStyle(
                             color: Colors.grey.shade600,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        const SizedBox(width: 12),
+                        if (course.reviewCount != null && course.reviewCount! > 0) ...[
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 16,
+                            color: AppColors.starActive,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${course.reviewCount} reviews',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
 
@@ -168,32 +163,17 @@ class CourseCard extends StatelessWidget {
 
                     const SizedBox(height: 8),
 
-                    // Instructor
-                    if (course.instructor != null)
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.person_rounded,
-                              size: 14,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            course.instructor!,
-                            style: TextStyle(
-                              color: Colors.grey.shade700,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                    // Description
+                    if (course.description != null && course.description!.isNotEmpty)
+                      Text(
+                        course.description!,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
 
                     const SizedBox(height: 16),
@@ -205,13 +185,13 @@ class CourseCard extends StatelessWidget {
                       children: [
                         _buildMetaItem(
                           Icons.play_circle_fill_rounded,
-                          '${course.totalLessonsCount} Lessons',
+                          '${course.totalLessons ?? 0} Lessons',
                           Colors.blue.shade600,
                         ),
                         const SizedBox(width: 16),
                         _buildMetaItem(
                           Icons.schedule_rounded,
-                          course.formattedDuration ?? 'N/A',
+                          course.duration ?? 'N/A',
                           Colors.orange.shade600,
                         ),
                       ],

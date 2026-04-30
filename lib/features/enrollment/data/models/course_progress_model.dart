@@ -2,6 +2,8 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/course_progress.dart';
 
+
+
 /// Course Progress Model
 class CourseProgressModel extends Equatable {
   final String courseId;
@@ -73,6 +75,20 @@ class CourseProgressModel extends Equatable {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'course_id': courseId,
+      'course_title': courseTitle,
+      'total_lessons': totalLessons,
+      'completed_lessons': completedLessons,
+      'progress_percentage': progressPercentage,
+      'total_watch_time_seconds': totalWatchTimeSeconds,
+      'total_watch_time_minutes': totalWatchTimeMinutes,
+      'last_accessed_at': lastAccessedAt?.toIso8601String(),
+      'lesson_progress': lessonProgress.map((p) => p.toJson()).toList(),
+    };
+  }
+
   @override
   List<Object?> get props => [
         courseId,
@@ -137,6 +153,18 @@ class LessonProgressModel extends Equatable {
       completedAt: completedAt,
       lastAccessedAt: lastAccessedAt,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'lesson_id': lessonId,
+      'lesson_title': lessonTitle,
+      'is_completed': isCompleted,
+      'watch_time_seconds': watchTimeSeconds,
+      'progress_percentage': progressPercentage,
+      'completed_at': completedAt?.toIso8601String(),
+      'last_accessed_at': lastAccessedAt?.toIso8601String(),
+    };
   }
 
   @override

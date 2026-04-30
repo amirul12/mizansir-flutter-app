@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
-import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
+ 
 import '../../../../core/services/api_exception.dart';
 import '../../../../core/error/failures.dart';
  
@@ -16,7 +17,7 @@ class CourseRepositoryImpl implements CourseRepository {
   CourseRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, List<CourseModel>>> getCourses({
+  Future<Either<Failure, CourseListResponse>> getCourses({
     CourseFilter? filter,
     int page = 1,
     int limit = 20,
@@ -30,37 +31,37 @@ class CourseRepositoryImpl implements CourseRepository {
       );
       return Right(courseModels);
     } on CustomException catch (e) {
-      final failure = parseCustomException<List<CourseModel>>(e);
+      final failure = parseCustomException<CourseListResponse>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
-  Future<Either<Failure, List<CourseModel>>> getFeaturedCourses({
+  Future<Either<Failure, CourseListResponse>> getFeaturedCourses({
     int limit = 10,
   }) async {
     try {
       final courseModels = await remoteDataSource.getFeaturedCourses(limit: limit);
       return Right(courseModels);
     } on CustomException catch (e) {
-      final failure = parseCustomException<List<CourseModel>>(e);
+      final failure = parseCustomException<CourseListResponse>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
-  Future<Either<Failure, CourseModel>> getCourseDetails(String courseId) async {
+  Future<Either<Failure, dynamic>> getCourseDetails(String courseId) async {
     try {
       final courseModel = await remoteDataSource.getCourseDetails(courseId);
       return Right(courseModel);
     } on CustomException catch (e) {
-      final failure = parseCustomException<CourseModel>(e);
+      final failure = parseCustomException<dynamic>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
-  Future<Either<Failure, List<CourseModel>>> searchCourses(
+  Future<Either<Failure, CourseListResponse>> searchCourses(
     String query, {
     int page = 1,
     int limit = 20,
@@ -73,13 +74,13 @@ class CourseRepositoryImpl implements CourseRepository {
       );
       return Right(courseModels);
     } on CustomException catch (e) {
-      final failure = parseCustomException<List<CourseModel>>(e);
+      final failure = parseCustomException<CourseListResponse>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }
 
   @override
-  Future<Either<Failure, List<Category>>> getCategories() async {
+  Future<Either<Failure, List<dynamic>>> getCategories() async {
     try {
       final categoryModels = await remoteDataSource.getCategories();
       return Right(categoryModels.map((model) => model.toEntity()).toList());

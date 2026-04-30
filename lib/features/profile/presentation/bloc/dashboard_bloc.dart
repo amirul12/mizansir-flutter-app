@@ -4,8 +4,8 @@ import 'package:mizansir/features/profile/data/models/dashboard_stats_model.dart
 import '../../../../core/usecases/no_params.dart';
 import '../../domain/usecases/get_dashboard_usecase.dart';
 import '../../domain/usecases/get_activity_usecase.dart';
- 
- 
+
+
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 
@@ -36,12 +36,12 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     if (currentState is DashboardLoaded) {
       existingStats = currentState.stats;
       existingActivities = currentState.activities;
-    } else if (currentState is DashboardLoading) {
-      
     }
 
     emit(DashboardLoading(
-       
+      isOffline: false,
+      existingStats: existingStats,
+      existingActivities: existingActivities,
     ));
 
     final result = await getDashboardUseCase(NoParams());
@@ -49,17 +49,15 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     result.fold(
       (failure) => emit(DashboardError(
         _getErrorMessage(failure),
-        
+        existingStats: existingStats,
+        existingActivities: existingActivities,
       )),
       (stats) {
-        if (state is DashboardLoaded) {
-          emit((state as DashboardLoaded).copyWith(stats: stats));
-        } else {
-          emit(DashboardLoaded(
-            stats: stats,
-            activities: existingActivities,
-          ));
-        }
+        emit(DashboardLoaded(
+          stats: stats,
+          activities: existingActivities,
+          isOffline: false,
+        ));
       },
     );
   }
@@ -75,13 +73,12 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     if (currentState is DashboardLoaded) {
       existingStats = currentState.stats;
       existingActivities = currentState.activities;
-    } else if (currentState is DashboardLoading) {
-      
     }
 
     emit(DashboardLoading(
-     
-     
+      isOffline: false,
+      existingStats: existingStats,
+      existingActivities: existingActivities,
     ));
 
     final result = await getActivityUseCase(
@@ -94,22 +91,17 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     result.fold(
       (failure) => emit(DashboardError(
         _getErrorMessage(failure),
-        
+        existingStats: existingStats,
+        existingActivities: existingActivities,
       )),
       (activities) {
         final hasMore = activities.length >= event.limit;
-        if (state is DashboardLoaded) {
-          emit((state as DashboardLoaded).copyWith(
-            activities: activities,
-            hasMoreActivities: hasMore,
-          ));
-        } else {
-          emit(DashboardLoaded(
-            stats: existingStats,
-            activities: activities,
-            hasMoreActivities: hasMore,
-          ));
-        }
+        emit(DashboardLoaded(
+          stats: existingStats,
+          activities: activities,
+          hasMoreActivities: hasMore,
+          isOffline: false,
+        ));
       },
     );
   }
@@ -120,8 +112,10 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   ) async {
     if (state is DashboardError) {
       final errorState = state as DashboardError;
-      emit(DashboardError(
-        errorState.message
+      emit(DashboardLoaded(
+        stats: errorState.existingStats,
+        activities: errorState.existingActivities,
+        isOffline: true,
       ));
     }
   }

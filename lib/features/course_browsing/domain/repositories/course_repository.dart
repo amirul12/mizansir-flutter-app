@@ -1,38 +1,39 @@
 // File: lib/features/course_browsing/domain/repositories/course_repository.dart
 import 'package:dartz/dartz.dart';
-import 'package:mizansir/features/course_browsing/data/models/course_model.dart' show CourseModel, Category;
+
 import '../../../../core/error/failures.dart';
- 
- 
+
 import '../entities/course_filter.dart';
 import '../entities/lesson_preview.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart'
+    hide Category;
 
 /// Course Repository Interface
 abstract class CourseRepository {
   /// Get list of courses with optional filters
-  Future<Either<Failure, List<CourseModel>>> getCourses({
+  Future<Either<Failure, CourseListResponse>> getCourses({
     CourseFilter? filter,
     int page = 1,
     int limit = 20,
   });
 
   /// Get featured courses
-  Future<Either<Failure, List<CourseModel>>> getFeaturedCourses({
+  Future<Either<Failure, CourseListResponse>> getFeaturedCourses({
     int limit = 10,
   });
 
   /// Get course details by ID
-  Future<Either<Failure, CourseModel>> getCourseDetails(String courseId);
+  Future<Either<Failure, dynamic>> getCourseDetails(String courseId);
 
   /// Search courses by query
-  Future<Either<Failure, List<CourseModel>>> searchCourses(
+  Future<Either<Failure, CourseListResponse>> searchCourses(
     String query, {
     int page = 1,
     int limit = 20,
   });
 
   /// Get all categories
-  Future<Either<Failure, List<Category>>> getCategories();
+  Future<Either<Failure, List<dynamic>>> getCategories();
 
   /// Get preview lessons for a course
   Future<Either<Failure, List<LessonPreview>>> getPreviewLessons(

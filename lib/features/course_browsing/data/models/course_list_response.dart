@@ -9,7 +9,7 @@ CourseListResponse courseListResponseFromJson(String str) => CourseListResponse.
 String courseListResponseToJson(CourseListResponse data) => json.encode(data.toJson());
 
 class CourseListResponse {
-    final List<CourseModel>? items;
+    final List<Item>? items;
     final Pagination? pagination;
 
     CourseListResponse({
@@ -18,7 +18,7 @@ class CourseListResponse {
     });
 
     factory CourseListResponse.fromJson(Map<String, dynamic> json) => CourseListResponse(
-        items: json["items"] == null ? [] : List<CourseModel>.from(json["items"]!.map((x) => CourseModel.fromJson(x))),
+        items: json["items"] == null ? [] : List<Item>.from(json["items"]!.map((x) => Item.fromJson(x))),
         pagination: json["pagination"] == null ? null : Pagination.fromJson(json["pagination"]),
     );
 
@@ -28,11 +28,11 @@ class CourseListResponse {
     };
 }
 
-class CourseModel {
+class Item {
     final String? id;
     final String? title;
     final String? description;
-    final dynamic thumbnail;
+    final String? thumbnail;
     final int? price;
     final String? formattedPrice;
     final Category? category;
@@ -47,13 +47,8 @@ class CourseModel {
     final bool? isEnrolled;
     final Stats? stats;
     final Curriculum? curriculum;
-    final double? rating;
-    final String? instructor;
-    final List<Map<String, dynamic>>? modules;
-    final int? modulesCount;
-    final String? language;
 
-    CourseModel({
+    Item({
         this.id,
         this.title,
         this.description,
@@ -72,15 +67,10 @@ class CourseModel {
         this.isEnrolled,
         this.stats,
         this.curriculum,
-        this.rating,
-        this.instructor,
-        this.modules,
-        this.modulesCount,
-        this.language,
     });
 
-    factory CourseModel.fromJson(Map<String, dynamic> json) => CourseModel(
-        id: json["id"]?.toString(),
+    factory Item.fromJson(Map<String, dynamic> json) => Item(
+        id: json["id"],
         title: json["title"],
         description: json["description"],
         thumbnail: json["thumbnail"],
@@ -98,11 +88,6 @@ class CourseModel {
         isEnrolled: json["is_enrolled"],
         stats: json["stats"] == null ? null : Stats.fromJson(json["stats"]),
         curriculum: json["curriculum"] == null ? null : Curriculum.fromJson(json["curriculum"]),
-        rating: json["rating"]?.toDouble(),
-        instructor: json["instructor"] ?? json["instructor_name"],
-        modules: json["modules"] == null ? null : List<Map<String, dynamic>>.from(json["modules"]),
-        modulesCount: json["modules_count"] ?? (json["modules"] as List?)?.length,
-        language: json["language"],
     );
 
     Map<String, dynamic> toJson() => {
@@ -124,21 +109,7 @@ class CourseModel {
         "is_enrolled": isEnrolled,
         "stats": stats?.toJson(),
         "curriculum": curriculum?.toJson(),
-        "rating": rating,
-        "instructor": instructor,
-        "modules": modules,
-        "modules_count": modulesCount,
-        "language": language,
     };
-
-    // UI Helpers
-    String get levelLabel => level?.toUpperCase() ?? 'BEGINNER';
-    String get displayPrice => formattedPrice ?? (price == 0 || price == null ? 'Free' : '\$${price}');
-    bool get isFree => price == 0 || price == null;
-    int get totalLessonsCount => totalLessons ?? 0;
-    String? get formattedDuration => duration;
-    bool get hasCurriculum => curriculum != null || (modules != null && modules!.isNotEmpty);
-    bool get hasCategory => category != null && category!.name != null;
 }
 
 class Category {
@@ -165,7 +136,7 @@ class Category {
     });
 
     factory Category.fromJson(Map<String, dynamic> json) => Category(
-        id: json["id"]?.toString(),
+        id: json["id"],
         name: json["name"],
         slug: json["slug"],
         description: json["description"],

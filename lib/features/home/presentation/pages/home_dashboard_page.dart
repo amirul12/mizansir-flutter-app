@@ -4,10 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mizansir/features/profile/data/models/activity_model.dart'
     show ActivityModel;
 import '../../../profile/data/models/dashboard_stats_model.dart'
-    show
-        DashboardStatsModel,
-        RecentEnrollment,
-        EnrollmentStats;
+    show DashboardStatsModel, RecentEnrollment, EnrollmentStats;
 import '../../../profile/presentation/bloc/dashboard_bloc.dart';
 import '../../../profile/presentation/bloc/dashboard_event.dart';
 import '../../../profile/presentation/bloc/dashboard_state.dart';
@@ -251,7 +248,9 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         String userName = '';
         String? userEmail;
 
-        if (state is DashboardLoaded && state.stats!.user != null) {
+        if (state is DashboardLoaded &&
+            state.stats != null &&
+            state.stats?.user != null) {
           userName = state.stats!.user!.name!;
           userEmail = state.stats!.user!.email;
         }
@@ -535,12 +534,13 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
               children: [
                 Text(
                   'Continue Learning',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 TextButton(
-                  onPressed: () => context.read<HomeShellCubit>().goToMyLearning(),
+                  onPressed: () =>
+                      context.read<HomeShellCubit>().goToMyLearning(),
                   child: const Text('View All'),
                 ),
               ],
@@ -549,7 +549,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: recentEnrollments!.take(3).length,
+              itemCount: recentEnrollments.take(3).length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final enrollment = recentEnrollments![index];
@@ -562,7 +562,10 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     );
   }
 
-  Widget _buildRecentEnrollmentCard(BuildContext context, RecentEnrollment enrollment) {
+  Widget _buildRecentEnrollmentCard(
+    BuildContext context,
+    RecentEnrollment enrollment,
+  ) {
     final isActive = enrollment.isActive ?? false;
     final statusColor = isActive ? AppColors.primary : AppColors.disabled;
     final statusText = isActive ? 'Active' : 'Inactive';
@@ -711,14 +714,14 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
               );
             }
 
-            if (state is FeaturedCoursesLoaded && state.courses.isNotEmpty) {
+            if (state is FeaturedCoursesLoaded && state.courses.items!.isNotEmpty) {
               return SizedBox(
                 height: 220,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  itemCount: state.courses.length,
+                  itemCount: state.courses.items!.length,
                   itemBuilder: (context, index) {
-                    final course = state.courses[index];
+                    final course = state.courses.items![index];
                     return _buildCourseStripCard(context, course);
                   },
                 ),

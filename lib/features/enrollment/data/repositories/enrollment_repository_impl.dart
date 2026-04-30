@@ -1,14 +1,16 @@
+import 'dart:convert';
 import 'package:dartz/dartz.dart';
-import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart' show CourseLessonModel;
-import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart';
+import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart'
+    show CourseLessonModel, courseLessonModelFromJson;
+import 'package:mizansir/features/enrollment/data/models/course_progress_model.dart';
 import 'package:mizansir/features/enrollment/data/models/enrollments_create_model.dart';
-import 'package:mizansir/features/enrollment/data/models/lesson_model.dart' show LessonModel;
-import 'package:mizansir/features/enrollment/data/models/my_course_model.dart' show MyCourseModel;
+import 'package:mizansir/features/enrollment/data/models/my_course_model.dart'
+    show MyCourseModel, myCourseModelFromJson;
 import '../../../../core/services/api_exception.dart';
+import '../../../../core/services/connectivity_service.dart';
+import '../../../../core/services/hive_service.dart';
 import '../../../../core/error/failures.dart';
- 
 
-import '../../domain/entities/lesson.dart';
 import '../../domain/entities/course_progress.dart';
 import '../../domain/repositories/enrollment_repository.dart';
 import '../datasources/enrollment_remote_datasource.dart';
@@ -16,13 +18,31 @@ import '../datasources/enrollment_remote_datasource.dart';
 /// Enrollment Repository Implementation
 class EnrollmentRepositoryImpl implements EnrollmentRepository {
   final EnrollmentRemoteDataSource remoteDataSource;
+  final ConnectivityService connectivityService;
+  final HiveService hiveService;
 
-  EnrollmentRepositoryImpl({required this.remoteDataSource});
+  EnrollmentRepositoryImpl({
+    required this.remoteDataSource,
+    required this.connectivityService,
+    required this.hiveService,
+  });
 
   @override
   Future<Either<Failure, List<MyCourseModel>>> getMyCourses() async {
     try {
+      if (!await connectivityService.isConnected) {
+        final cachedJson = await hiveService.getMyCourses();
+        if (cachedJson != null) {
+          final cachedCourses = myCourseModelFromJson(cachedJson);
+          return Right(cachedCourses);
+        }
+        throw NoInternetException();
+      }
+
       final courseModels = await remoteDataSource.getMyCourses();
+      await hiveService.saveMyCourses(
+        jsonEncode(courseModels.map((e) => e.toJson()).toList()),
+      );
       return Right(courseModels);
     } on CustomException catch (e) {
       final failure = parseCustomException<List<MyCourseModel>>(e);
@@ -31,20 +51,24 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
   }
 
   @override
-  // Future<Either<Failure, EnrolledCourse>> getEnrolledCourseDetails(String courseId) async {
-  //   try {
-  //     final courseModel = await remoteDataSource.getEnrolledCourseDetails(courseId);
-  //     return Right(courseModel.toEntity());
-  //   } on CustomException catch (e) {
-  //     final failure = parseCustomException<EnrolledCourse>(e);
-  //     return failure.fold((failure) => Left(failure), (_) => throw e);
-  //   }
-  // }
-
-  @override
-  Future<Either<Failure, CourseLessonModel>> getCourseLessons(String courseId) async {
+  Future<Either<Failure, CourseLessonModel>> getCourseLessons(
+    String courseId,
+  ) async {
     try {
+      if (!await connectivityService.isConnected) {
+        final cachedJson = await hiveService.getCourseLessons(courseId);
+        if (cachedJson != null) {
+          final cachedLessons = courseLessonModelFromJson(cachedJson);
+          return Right(cachedLessons);
+        }
+        throw NoInternetException();
+      }
+
       final lessonModels = await remoteDataSource.getCourseLessons(courseId);
+      await hiveService.saveCourseLessons(
+        courseId,
+        jsonEncode(lessonModels.toJson()),
+      );
       return Right(lessonModels);
     } on CustomException catch (e) {
       final failure = parseCustomException<CourseLessonModel>(e);
@@ -58,20 +82,43 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
     required String lessonId,
   }) async {
     try {
+      if (!await connectivityService.isConnected) {
+        final cachedJson = await hiveService.getLessonDetails(
+          courseId,
+          lessonId,
+        );
+        if (cachedJson != null) {
+          final cachedDetails = jsonDecode(cachedJson);
+          final result = <String, dynamic>{
+            'lesson': cachedDetails['lesson'],
+            'nextLessonId': cachedDetails['nextLessonId'],
+            'nextLessonTitle': cachedDetails['nextLessonTitle'],
+            'previousLessonId': cachedDetails['previousLessonId'],
+            'previousLessonTitle': cachedDetails['previousLessonTitle'],
+          };
+          return Right(result);
+        }
+        throw NoInternetException();
+      }
+
       final lessonsMap = await remoteDataSource.getLessonDetails(
         courseId: courseId,
         lessonId: lessonId,
       );
 
-      // Return map with lesson and navigation info
       final result = <String, dynamic>{
         'lesson': lessonsMap['lesson'],
         'nextLessonId': lessonsMap['nextLesson']?.id?.toString(),
         'nextLessonTitle': lessonsMap['nextLesson']?.title,
-        'previousLessonId': null, // API doesn't provide this yet
+        'previousLessonId': null,
         'previousLessonTitle': null,
       };
 
+      await hiveService.saveLessonDetails(
+        courseId,
+        lessonId,
+        jsonEncode(result),
+      );
       return Right(result);
     } on CustomException catch (e) {
       final failure = parseCustomException<Map<String, dynamic>>(e);
@@ -80,9 +127,26 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
   }
 
   @override
-  Future<Either<Failure, CourseProgress>> getCourseProgress(String courseId) async {
+  Future<Either<Failure, CourseProgress>> getCourseProgress(
+    String courseId,
+  ) async {
     try {
+      if (!await connectivityService.isConnected) {
+        final cachedJson = await hiveService.getCourseProgress(courseId);
+        if (cachedJson != null) {
+          final cachedProgress = CourseProgressModel.fromJson(
+            jsonDecode(cachedJson),
+          );
+          return Right(cachedProgress.toEntity());
+        }
+        throw NoInternetException();
+      }
+
       final progressModel = await remoteDataSource.getCourseProgress(courseId);
+      await hiveService.saveCourseProgress(
+        courseId,
+        jsonEncode(progressModel.toJson()),
+      );
       return Right(progressModel.toEntity());
     } on CustomException catch (e) {
       final failure = parseCustomException<CourseProgress>(e);
@@ -164,7 +228,6 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
         transactionId: transactionId,
       );
 
-      // Parse JSON string to model
       final enrollmentModel = enrollmentsCreateModelFromJson(enrollmentData);
       return Right(enrollmentModel);
     } on CustomException catch (e) {

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
 import '../../domain/entities/course_filter.dart';
 import '../bloc/course_bloc.dart';
 import '../bloc/course_event.dart';
@@ -44,7 +45,7 @@ class _CoursesPageState extends State<CoursesPage> {
         context.read<CourseBloc>().add(
           LoadCoursesEvent(
             filter: _currentFilter,
-            page: (state.courses.length / 20).floor() + 1,
+            page: (state.courses.items!.length / 20).floor() + 1,
           ),
         );
       }
@@ -125,7 +126,7 @@ class _CoursesPageState extends State<CoursesPage> {
 
                 return CourseFilterWidget(
                   filter: _currentFilter ?? const CourseFilter(),
-                  categories: state.categories,
+                  categories: state.categories.cast<Category>(),
                   onFilterChanged: _applyFilter,
                   onClearFilters: _clearFilters,
                 );
@@ -149,7 +150,7 @@ class _CoursesPageState extends State<CoursesPage> {
                 }
 
                 if (state is CoursesLoaded) {
-                  return _buildCoursesList(state.courses, state.hasMore);
+                  return _buildCoursesList(state.courses.items!, state.hasMore);
                 }
 
                 // Initial state - show loading
@@ -162,7 +163,7 @@ class _CoursesPageState extends State<CoursesPage> {
     );
   }
 
-  Widget _buildCoursesList(List courses, bool hasMore) {
+  Widget _buildCoursesList(List<Item> courses, bool hasMore) {
     if (courses.isEmpty) {
       return _buildEmptyView('No courses found');
     }

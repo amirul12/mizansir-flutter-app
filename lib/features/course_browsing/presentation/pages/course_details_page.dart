@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
-import 'package:mizansir/features/enrollment/data/models/enrollments_create_model.dart' show EnrollmentsCreateModel;
+
+import 'package:mizansir/features/enrollment/data/models/enrollments_create_model.dart'
+    show EnrollmentsCreateModel;
 import '../bloc/course_bloc.dart';
 import '../bloc/course_event.dart';
 import '../bloc/course_state.dart';
@@ -251,7 +252,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildCourseDetails(CourseModel course) {
+  Widget _buildCourseDetails(dynamic course) {
     return CustomScrollView(
       slivers: [
         // Custom app bar with image
@@ -377,7 +378,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildCourseImage(CourseModel course) {
+  Widget _buildCourseImage(dynamic course) {
     String? imageUrl = course.thumbnail;
     if (imageUrl != null && !imageUrl.startsWith('http')) {
       final baseUrl = ApiConstants.baseUrl;
@@ -412,7 +413,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     return _buildPlaceholder(course);
   }
 
-  Widget _buildPlaceholder(CourseModel course) {
+  Widget _buildPlaceholder(dynamic course) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -470,7 +471,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildQuickInfo(CourseModel course) {
+  Widget _buildQuickInfo(dynamic course) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Wrap(
@@ -530,7 +531,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildPriceSection(CourseModel course) {
+  Widget _buildPriceSection(dynamic course) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(20),
@@ -602,7 +603,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildStatsSection(CourseModel course) {
+  Widget _buildStatsSection(dynamic course) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -678,7 +679,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildDescriptionSection(CourseModel course) {
+  Widget _buildDescriptionSection(dynamic course) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -720,7 +721,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildCurriculumSection(CourseModel course) {
+  Widget _buildCurriculumSection(dynamic course) {
     final modules = course.modules ?? [];
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -977,7 +978,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildMetaInfoSection(CourseModel course) {
+  Widget _buildMetaInfoSection(dynamic course) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -1069,7 +1070,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildEnrollSection(CourseModel course) {
+  Widget _buildEnrollSection(dynamic course) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: BlocListener<EnrollmentBloc, EnrollmentState>(
@@ -1240,19 +1241,18 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                 if (nextSteps.paymentInstructions != null) ...[
                   Text(nextSteps.paymentInstructions!.title ?? ''),
                   const SizedBox(height: 8),
-                  ...(nextSteps.paymentInstructions!.steps ?? [])
-                      .map(
-                        (step) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('• '),
-                              Expanded(child: Text(step.toString())),
-                            ],
-                          ),
-                        ),
+                  ...(nextSteps.paymentInstructions!.steps ?? []).map(
+                    (step) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('• '),
+                          Expanded(child: Text(step.toString())),
+                        ],
                       ),
+                    ),
+                  ),
                 ],
               ],
             ],

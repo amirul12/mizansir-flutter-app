@@ -1,7 +1,6 @@
 // File: lib/features/course_browsing/presentation/widgets/category_chip.dart
 import 'package:flutter/material.dart';
-import 'package:mizansir/features/course_browsing/data/models/course_model.dart';
- 
+import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
 
 /// Category Chip Widget
 class CategoryChip extends StatelessWidget {
@@ -22,21 +21,16 @@ class CategoryChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 10,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
               ? (category.color != null
-                  ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
-                  : Theme.of(context).primaryColor)
+                    ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
+                    : Theme.of(context).primaryColor)
               : Colors.grey[200],
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected
-                ? Colors.transparent
-                : Colors.grey[400]!,
+            color: isSelected ? Colors.transparent : Colors.grey[400]!,
             width: 1,
           ),
         ),
@@ -54,32 +48,24 @@ class CategoryChip extends StatelessWidget {
             Text(
               category.name!,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: isSelected ? Colors.white : Colors.grey[800],
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
+                color: isSelected ? Colors.white : Colors.grey[800],
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
             ),
             if (category.courseCount! > 0) ...[
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? Colors.white24
-                      : Colors.black12,
+                  color: isSelected ? Colors.white24 : Colors.black12,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
                   category.courseCount.toString(),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: isSelected
-                            ? Colors.white
-                            : Colors.grey[800],
-                        fontSize: 12,
-                      ),
+                    color: isSelected ? Colors.white : Colors.grey[800],
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],

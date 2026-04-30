@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
 import '../bloc/course_bloc.dart';
 import '../bloc/course_event.dart';
 import '../bloc/course_state.dart';
@@ -191,8 +192,10 @@ class _CourseSearchPageState extends State<CourseSearchPage> {
     );
   }
 
-  Widget _buildResultsView(List courses, String query) {
-    if (courses.isEmpty) {
+  Widget _buildResultsView(CourseListResponse courseList, String query) {
+
+    final courses = courseList.items;
+    if (courses!.isEmpty) {
       return _buildEmptyView('No results found for "$query"');
     }
 
