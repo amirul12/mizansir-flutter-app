@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:mizansir/core/utils/common_json.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_details_response.dart';
 import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
 import '../../../../core/services/api_service_method.dart';
 import '../../../../core/services/api_exception.dart';
@@ -71,7 +72,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
   }
 
   @override
-  Future<dynamic> getCourseDetails(String courseId) async {
+  Future<CourseDetailsResponse> getCourseDetails(String courseId) async {
     try {
       final mapResponse = await ApiMethod(isBasic: false).get(
         '${ApiConstants.baseUrl}${ApiConstants.coursesPath}/$courseId',
@@ -87,7 +88,7 @@ class CourseRemoteDataSourceImpl implements CourseRemoteDataSource {
         throw ServerException('Invalid data format');
       }
 
-      return courseListResponseFromJson(dataMap);
+      return courseDetailsResponseFromJson(dataMap);
     } catch (e) {
       debugPrint('Error in getCourseDetails: $e');
       rethrow;

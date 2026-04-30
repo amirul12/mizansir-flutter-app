@@ -1,5 +1,6 @@
 // File: lib/features/course_browsing/domain/repositories/course_repository.dart
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_details_response.dart';
 
 import '../../../../core/error/failures.dart';
 
@@ -23,7 +24,7 @@ abstract class CourseRepository {
   });
 
   /// Get course details by ID
-  Future<Either<Failure, dynamic>> getCourseDetails(String courseId);
+  Future<Either<Failure, CourseDetailsResponse>> getCourseDetails(String courseId);
 
   /// Search courses by query
   Future<Either<Failure, CourseListResponse>> searchCourses(

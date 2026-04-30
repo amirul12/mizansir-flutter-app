@@ -1,5 +1,6 @@
 // File: lib/features/course_browsing/presentation/bloc/course_state.dart
 import 'package:equatable/equatable.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_details_response.dart';
 import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
 
 import '../../domain/entities/lesson_preview.dart';
@@ -45,7 +46,7 @@ class FeaturedCoursesLoaded extends CourseState {
 
 /// Course Details Loaded State
 class CourseDetailsLoaded extends CourseState {
-  final dynamic course;
+  final CourseDetailsResponse course;
 
   const CourseDetailsLoaded({required this.course});
 

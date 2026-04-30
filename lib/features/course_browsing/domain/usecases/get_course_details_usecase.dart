@@ -1,6 +1,7 @@
 // File: lib/features/course_browsing/domain/usecases/get_course_details_usecase.dart
 import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_details_response.dart';
 import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
 
 import '../../../../core/error/failures.dart';
@@ -23,7 +24,7 @@ class GetCourseDetailsUseCase {
 
   const GetCourseDetailsUseCase(this.repository);
 
-  Future<Either<Failure, dynamic>> call(GetCourseDetailsParams params) {
+  Future<Either<Failure, CourseDetailsResponse>> call(GetCourseDetailsParams params) {
     return repository.getCourseDetails(params.courseId);
   }
 }

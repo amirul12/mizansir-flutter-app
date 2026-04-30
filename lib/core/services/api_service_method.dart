@@ -17,11 +17,9 @@ import 'package:mizansir/core/di/injection_container.dart' as di;
 import 'package:mizansir/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:mizansir/features/auth/presentation/bloc/auth_event.dart';
 import 'package:go_router/go_router.dart';
- 
+
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Add this import
-
-
 
 import 'api_exception.dart';
 
@@ -61,7 +59,7 @@ Future<Map<String, String>> basicHeaderInfo() async {
     "appversion": appVersion, // UPDATED: Dynamic app version
     "lang": currentLang, // UPDATED: Dynamic language
     "headerapisecret":
-        "4B57AC7AC8892694D579EE884AD1E44A36CDB3ACA969E18CAF41778A3D18981F9B8296C"
+        "4B57AC7AC8892694D579EE884AD1E44A36CDB3ACA969E18CAF41778A3D18981F9B8296C",
   };
 
   amirPrint("📋 Basic Header Info:");
@@ -109,6 +107,7 @@ class ApiMethod {
 
   bool isBasic;
   static bool _isSessionOutShowing = false;
+  static bool _isBadRequestShowing = false;
 
   void _handleUnauthorized() {
     if (_isSessionOutShowing) return;
@@ -135,6 +134,27 @@ class ApiMethod {
     }
   }
 
+  void _handleBadRequest(String message) {
+    if (_isBadRequestShowing) return;
+    _isBadRequestShowing = true;
+
+    final context = QContext.navigatorKey.currentState?.context;
+    if (context != null) {
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.error,
+        animType: AnimType.scale,
+        title: 'Error',
+        desc: message,
+        dismissOnTouchOutside: true,
+        dismissOnBackKeyPress: true,
+        btnOkOnPress: () {
+          _isBadRequestShowing = false;
+        },
+      ).show();
+    }
+  }
+
   static Future<bool> hasInternet() async {
     bool hasInternet = false;
     try {
@@ -151,7 +171,6 @@ class ApiMethod {
     return hasInternet;
   }
 
-
   // UPDATED: Get method with dynamic headers
   Future<dynamic> get(
     String url, {
@@ -164,17 +183,19 @@ class ApiMethod {
     bool showResult = false,
   }) async {
     log.i(
-        '|📍📍📍|----------------- [[ GET ]] method details start -----------------|📍📍📍|');
+      '|📍📍📍|----------------- [[ GET ]] method details start -----------------|📍📍📍|',
+    );
     log.i(url);
     log.i(
-        '|📍📍📍|----------------- [[ GET ]] method details ended -----------------|📍📍📍|');
+      '|📍📍📍|----------------- [[ GET ]] method details ended -----------------|📍📍📍|',
+    );
 
     try {
       if (hasLoader) {
         // Show loader if necessary
       }
 
-      var response;
+      http.StreamedResponse response;
 
       Uri uri;
       if (query != null) {
@@ -185,25 +206,24 @@ class ApiMethod {
       uri = Uri.parse(overloadBase ?? url);
       if (queryEncoderd) {
         uri.replace(
-            query: queryEncoderd ? uri.query : Uri.decodeFull(uri.query));
+          query: queryEncoderd ? uri.query : Uri.decodeFull(uri.query),
+        );
       }
       amirPrint(uri);
 
       http.Request request = http.Request('GET', uri);
       // UPDATED: Now uses await for dynamic headers
-      request.headers
-          .addAll(isBasic ? await basicHeaderInfo() : await bearerHeaderInfo());
+      request.headers.addAll(
+        isBasic ? await basicHeaderInfo() : await bearerHeaderInfo(),
+      );
 
       amirPrint(request);
       amirPrint(request.headers.entries);
       amirPrint("header print");
       response = await request.send().timeout(
-            const Duration(
-              seconds: 60,
-            ),
-            onTimeout: () =>
-                throw TimeoutException("Request Timed out! Try again"),
-          );
+        const Duration(seconds: 60),
+        onTimeout: () => throw TimeoutException("Request Timed out! Try again"),
+      );
 
       if (response.statusCode == 401) {
         amirPrint("401 Unauthorized - showing dialog");
@@ -213,7 +233,8 @@ class ApiMethod {
 
       log.i(response.statusCode);
       log.i(
-          '|📒📒📒|-----------------[[ POST ]] method response end --------------------|📒📒📒|');
+        '|📒📒📒|-----------------[[ POST ]] method response end --------------------|📒📒📒|',
+      );
 
       return _response(response, hasLoader: false);
     } on SocketException {
@@ -230,10 +251,14 @@ class ApiMethod {
         animType: AnimType.bottomSlide,
         title: 'No Internet Connection',
         desc: 'Please check your internet connection and try again',
-        titleTextStyle:
-            const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        descTextStyle:
-            const TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
+        titleTextStyle: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+        descTextStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.normal,
+        ),
         dialogBorderRadius: BorderRadius.circular(0),
         buttonsBorderRadius: BorderRadius.circular(0),
         btnOkColor: Colors.black,
@@ -242,14 +267,16 @@ class ApiMethod {
         },
         btnCancelText: "Exit",
         btnOkOnPress: () {
-          get(url,
-              query: query,
-              hasLoader: hasLoader,
-              code: code,
-              overloadBase: overloadBase,
-              queryEncoderd: queryEncoderd,
-              duration: duration,
-              showResult: showResult);
+          get(
+            url,
+            query: query,
+            hasLoader: hasLoader,
+            code: code,
+            overloadBase: overloadBase,
+            queryEncoderd: queryEncoderd,
+            duration: duration,
+            showResult: showResult,
+          );
         },
         btnOkText: "Retry",
       ).show();
@@ -269,46 +296,54 @@ class ApiMethod {
       log.e('🐞🐞🐞 Other Error Alert 🐞🐞🐞');
       log.e('❌❌❌ unlisted error received');
       log.e("❌❌❌ $e");
-      throw CustomException(e?.toString() ?? 'Unknown error');
+      throw CustomException(e.toString() ?? 'Unknown error');
     }
   }
 
   // UPDATED: Post Method with dynamic headers
-  Future post(String url, Map<String, dynamic> body,
-      {int code = 200,
-      int duration = 30,
-      overloadBase,
-      hasLoader = true,
-      bool showResult = false}) async {
+  Future post(
+    String url,
+    Map<String, dynamic> body, {
+    int code = 200,
+    int duration = 30,
+    overloadBase,
+    hasLoader = true,
+    bool showResult = false,
+  }) async {
     try {
       if (hasLoader) {
         // Show loader if necessary
       }
       log.i(
-          '|📍📍📍|-----------------[[ POST ]] method details start -----------------|📍📍📍|');
+        '|📍📍📍|-----------------[[ POST ]] method details start -----------------|📍📍📍|',
+      );
 
       log.i(url);
       log.i(body);
       log.i(
-          '|📍📍📍|-----------------[[ POST ]] method details end ------------|📍📍📍|');
+        '|📍📍📍|-----------------[[ POST ]] method details end ------------|📍📍📍|',
+      );
 
       var uri = Uri.parse(url);
 
       http.Request request = http.Request('POST', uri);
       // UPDATED: Now uses await for dynamic headers
-      request.headers
-          .addAll(isBasic ? await basicHeaderInfo() : await bearerHeaderInfo());
+      request.headers.addAll(
+        isBasic ? await basicHeaderInfo() : await bearerHeaderInfo(),
+      );
       if (body.isNotEmpty) {
         request.body = jsonEncode(body);
       }
 
-      var response = await request.send().timeout(Duration(seconds: duration),
-          onTimeout: () =>
-              throw TimeoutException("Request Timed out! Try again"));
+      var response = await request.send().timeout(
+        Duration(seconds: duration),
+        onTimeout: () => throw TimeoutException("Request Timed out! Try again"),
+      );
 
       log.i(response.statusCode);
       log.i(
-          '|📒📒📒|-----------------[[ POST ]] method response end --------------------|📒📒📒|');
+        '|📒📒📒|-----------------[[ POST ]] method response end --------------------|📒📒📒|',
+      );
 
       if (response.statusCode == 401) {
         amirPrint("401 Unauthorized - showing dialog");
@@ -334,15 +369,21 @@ class ApiMethod {
       log.e('🐞🐞🐞 Other Error Alert 🐞🐞🐞');
       log.e('❌❌❌ unlisted error received');
       log.e("❌❌❌ $e");
-      throw CustomException(e?.toString() ?? 'Unknown error');
+      throw CustomException(e.toString() ?? 'Unknown error');
     }
   }
 
   // UPDATED: paramGet method with dynamic headers
-  Future<Map<String, dynamic>?> paramGet(String url, Map<String, String> body,
-      {int code = 200, int duration = 15, bool showResult = false}) async {
+  Future<Map<String, dynamic>?> paramGet(
+    String url,
+    Map<String, String> body, {
+    int code = 200,
+    int duration = 15,
+    bool showResult = false,
+  }) async {
     log.i(
-        '|Get param📍📍📍|----------------- [[ GET ]] param method Details Start -----------------|📍📍📍|');
+      '|Get param📍📍📍|----------------- [[ GET ]] param method Details Start -----------------|📍📍📍|',
+    );
 
     log.i("##body given --> ");
 
@@ -353,27 +394,31 @@ class ApiMethod {
     log.i("##url list --> $url");
 
     log.i(
-        '|Get param📍📍📍|----------------- [[ GET ]] param method details ended ** ---------------|📍📍📍|');
+      '|Get param📍📍📍|----------------- [[ GET ]] param method details ended ** ---------------|📍📍📍|',
+    );
 
     try {
       final response = await http
           .get(
             Uri.parse(url).replace(queryParameters: body),
             // UPDATED: Now uses await for dynamic headers
-            headers:
-                isBasic ? await basicHeaderInfo() : await bearerHeaderInfo(),
+            headers: isBasic
+                ? await basicHeaderInfo()
+                : await bearerHeaderInfo(),
           )
           .timeout(const Duration(seconds: 15));
 
       log.i(
-          '|📒📒📒| ----------------[[ Get ]] Peram Response Start---------------|📒📒📒|');
+        '|📒📒📒| ----------------[[ Get ]] Peram Response Start---------------|📒📒📒|',
+      );
 
       if (showResult) {
         log.i(response.body.toString());
       }
 
       log.i(
-          '|📒📒📒| ----------------[[ Get ]] Peram Response End **-----------------|📒📒📒|');
+        '|📒📒📒| ----------------[[ Get ]] Peram Response End **-----------------|📒📒📒|',
+      );
 
       if (response.statusCode == 401) {
         _handleUnauthorized();
@@ -384,7 +429,8 @@ class ApiMethod {
       } else {
         log.e('🐞🐞🐞 Error Alert 🐞🐞🐞');
         log.e(
-            'unknown error hitted in status code  ${jsonDecode(response.body)}');
+          'unknown error hitted in status code  ${jsonDecode(response.body)}',
+        );
 
         ErrorResponse res = ErrorResponse.fromJson(jsonDecode(response.body));
         return null;
@@ -413,29 +459,34 @@ class ApiMethod {
 
   // UPDATED: multipart method with dynamic headers
   Future multipart(
-      String url, Map<String, String> body, String? filepath, String filedName,
-      {int code = 200, bool showResult = false}) async {
+    String url,
+    Map<String, String> body,
+    String? filepath,
+    String filedName, {
+    int code = 200,
+    bool showResult = false,
+  }) async {
     try {
       log.i(
-          '|📍📍📍|-----------------[[ Multipart ]] method details start -----------------|📍📍📍|');
+        '|📍📍📍|-----------------[[ Multipart ]] method details start -----------------|📍📍📍|',
+      );
 
       log.i(url);
       log.i(body);
       log.i(filepath);
       log.i(
-          '|📍📍📍|-----------------[[ Multipart ]] method details end ------------|📍📍📍|');
+        '|📍📍📍|-----------------[[ Multipart ]] method details end ------------|📍📍📍|',
+      );
 
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse(url),
-      )
+      final request = http.MultipartRequest('POST', Uri.parse(url))
         ..fields.addAll(body)
         // UPDATED: Now uses await for dynamic headers
         ..headers.addAll(await bearerHeaderInfo());
 
       if (filepath != "null" && filepath != null) {
-        request.files
-            .add(await http.MultipartFile.fromPath(filedName, filepath));
+        request.files.add(
+          await http.MultipartFile.fromPath(filedName, filepath),
+        );
       } else {
         log.e("file path is null");
       }
@@ -443,7 +494,8 @@ class ApiMethod {
       var response = await request.send();
       log.i(response.statusCode);
       log.i(
-          '|📒📒📒|-----------------[[ UPLOAD ]] method response end --------------------|📒📒📒|');
+        '|📒📒📒|-----------------[[ UPLOAD ]] method response end --------------------|📒📒📒|',
+      );
 
       if (response.statusCode == 401) {
         log.e("401 Unauthorized - showing dialog");
@@ -469,7 +521,7 @@ class ApiMethod {
       log.e('🐞🐞🐞 Other Error Alert 🐞🐞🐞');
       log.e('❌❌❌ unlisted error received');
       log.e("❌❌❌ $e");
-      throw CustomException(e?.toString() ?? 'Unknown error');
+      throw CustomException(e.toString() ?? 'Unknown error');
     }
   }
 
@@ -484,7 +536,8 @@ class ApiMethod {
   }) async {
     try {
       log.i(
-          '|📍📍📍|-----------------[[ Multipart ]] method details start -----------------|📍📍📍|');
+        '|📍📍📍|-----------------[[ Multipart ]] method details start -----------------|📍📍📍|',
+      );
 
       log.i(url);
 
@@ -495,7 +548,8 @@ class ApiMethod {
       }
 
       log.i(
-          '|📍📍📍|-----------------[[ Multipart ]] method details end ------------|📍📍📍|');
+        '|📍📍📍|-----------------[[ Multipart ]] method details end ------------|📍📍📍|',
+      );
 
       var token = '';
       final currentLang =
@@ -520,28 +574,28 @@ class ApiMethod {
       amirPrint("  ├─ lang: $currentLang");
       amirPrint("  └─ Full Headers: $headers");
 
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse(url),
-      )
+      final request = http.MultipartRequest('POST', Uri.parse(url))
         ..fields.addAll(body)
         ..headers.addAll(headers);
 
       for (int i = 0; i < fieldList.length; i++) {
-        request.files
-            .add(await http.MultipartFile.fromPath(fieldList[i], pathList[i]));
+        request.files.add(
+          await http.MultipartFile.fromPath(fieldList[i], pathList[i]),
+        );
       }
 
       var response = await request.send();
       var jsonData = await http.Response.fromStream(response);
 
       log.i(
-          '|📒📒📒|-----------------[[ POST ]] method response start ------------------|📒📒📒|');
+        '|📒📒📒|-----------------[[ POST ]] method response start ------------------|📒📒📒|',
+      );
 
       log.i(jsonData.body.toString());
       log.i(response.statusCode);
       log.i(
-          '|📒📒📒|-----------------[[ POST ]] method response end --------------------|📒📒📒|');
+        '|📒📒📒|-----------------[[ POST ]] method response end --------------------|📒📒📒|',
+      );
 
       if (response.statusCode == 401) {
         _handleUnauthorized();
@@ -552,7 +606,8 @@ class ApiMethod {
       } else {
         log.e('🐞🐞🐞 Error Alert On Status Code 🐞🐞🐞');
         log.e(
-            'unknown error hitted in status code ${jsonDecode(jsonData.body)}');
+          'unknown error hitted in status code ${jsonDecode(jsonData.body)}',
+        );
 
         ErrorResponse res = ErrorResponse.fromJson(jsonDecode(jsonData.body));
         return null;
@@ -579,36 +634,39 @@ class ApiMethod {
   }
 
   // UPDATED: delete method with dynamic headers
-  Future<Map<String, dynamic>?> delete(String url,
-      {int code = 203,
-      bool isLogout = false,
-      int duration = 15,
-      bool showResult = false}) async {
+  Future<Map<String, dynamic>?> delete(
+    String url, {
+    int code = 203,
+    bool isLogout = false,
+    int duration = 15,
+    bool showResult = false,
+  }) async {
     log.i(
-        '|📍📍📍|-----------------[[ DELETE ]] method details start-----------------|📍📍📍|');
+      '|📍📍📍|-----------------[[ DELETE ]] method details start-----------------|📍📍📍|',
+    );
 
     log.i(url);
     log.i(
-        '|📍📍📍|-----------------[[ DELETE ]] method details end ------------------|📍📍📍|');
+      '|📍📍📍|-----------------[[ DELETE ]] method details end ------------------|📍📍📍|',
+    );
 
     try {
       // UPDATED: Now uses await for dynamic headers
-      var headers =
-          isBasic ? await basicHeaderInfo() : await bearerHeaderInfo();
+      var headers = isBasic
+          ? await basicHeaderInfo()
+          : await bearerHeaderInfo();
 
       if (isLogout) {}
 
       log.i(headers);
 
       final response = await http
-          .delete(
-            Uri.parse(url),
-            headers: headers,
-          )
+          .delete(Uri.parse(url), headers: headers)
           .timeout(Duration(seconds: duration));
 
       log.i(
-          '|📒📒📒|----------------- [[ DELETE ]] method response start-----------------|📒📒📒|');
+        '|📒📒📒|----------------- [[ DELETE ]] method response start-----------------|📒📒📒|',
+      );
 
       if (showResult) {
         log.i(response.body.toString());
@@ -616,7 +674,8 @@ class ApiMethod {
 
       log.i(response.statusCode);
       log.i(
-          '|📒📒📒|----------------- [[ DELETE ]] method response start-----------------|📒📒📒|');
+        '|📒📒📒|----------------- [[ DELETE ]] method response start-----------------|📒📒📒|',
+      );
 
       if (response.statusCode == 401) {
         _handleUnauthorized();
@@ -627,7 +686,8 @@ class ApiMethod {
       } else {
         log.e('🐞🐞🐞 Error Alert 🐞🐞🐞');
         log.e(
-            'unknown error hitted in status code  ${jsonDecode(response.body)}');
+          'unknown error hitted in status code  ${jsonDecode(response.body)}',
+        );
 
         ErrorResponse res = ErrorResponse.fromJson(jsonDecode(response.body));
         return null;
@@ -654,29 +714,38 @@ class ApiMethod {
   }
 
   // UPDATED: put method with dynamic headers
-  Future<Map<String, dynamic>?> put(String url, Map<String, dynamic> body,
-      {int code = 200, int duration = 15, bool showResult = false}) async {
+  Future<Map<String, dynamic>?> put(
+    String url,
+    Map<String, dynamic> body, {
+    int code = 200,
+    int duration = 15,
+    bool showResult = false,
+  }) async {
     try {
       log.i(
-          '|📍📍📍|-------------[[ PUT ]] method details start-----------------|📍📍📍|');
+        '|📍📍📍|-------------[[ PUT ]] method details start-----------------|📍📍📍|',
+      );
 
       log.i(url);
       log.i(body);
       log.i(
-          '|📍📍📍|-------------[[ PUT ]] method details end ------------|📍📍📍|');
+        '|📍📍📍|-------------[[ PUT ]] method details end ------------|📍📍📍|',
+      );
 
       final response = await http
           .put(
             Uri.parse(url),
             body: jsonEncode(body),
             // UPDATED: Now uses await for dynamic headers
-            headers:
-                isBasic ? await basicHeaderInfo() : await bearerHeaderInfo(),
+            headers: isBasic
+                ? await basicHeaderInfo()
+                : await bearerHeaderInfo(),
           )
           .timeout(Duration(seconds: duration));
 
       log.i(
-          '|📒📒📒|-----------------[[ PUT ]] AKA Update method response start-----------------|📒📒📒|');
+        '|📒📒📒|-----------------[[ PUT ]] AKA Update method response start-----------------|📒📒📒|',
+      );
 
       if (showResult) {
         log.i(response.body);
@@ -684,7 +753,8 @@ class ApiMethod {
 
       log.i(response.statusCode);
       log.i(
-          '|📒📒📒|-----------------[[ PUT ]] AKA Update method response End -----------------|📒📒📒|');
+        '|📒📒📒|-----------------[[ PUT ]] AKA Update method response End -----------------|📒📒📒|',
+      );
 
       if (response.statusCode == 401) {
         _handleUnauthorized();
@@ -695,7 +765,8 @@ class ApiMethod {
       } else {
         log.e('🐞🐞🐞 Error Alert 🐞🐞🐞');
         log.e(
-            'unknown error hitted in status code  ${jsonDecode(response.body)}');
+          'unknown error hitted in status code  ${jsonDecode(response.body)}',
+        );
 
         ErrorResponse res = ErrorResponse.fromJson(jsonDecode(response.body));
         return null;
@@ -726,23 +797,28 @@ class ApiMethod {
     return null;
   }
 
-  Future uploadFile(String url, String filePath,
-      {int code = 200,
-      int duration = 30,
-      overloadBase,
-      hasLoader = true,
-      bool showResult = false}) async {
+  Future uploadFile(
+    String url,
+    String filePath, {
+    int code = 200,
+    int duration = 30,
+    overloadBase,
+    hasLoader = true,
+    bool showResult = false,
+  }) async {
     try {
       if (hasLoader) {
         // Show loader if necessary
       }
       log.i(
-          '|📍📍📍|-----------------[[ UPLOAD ]] method details start -----------------|📍📍📍|');
+        '|📍📍📍|-----------------[[ UPLOAD ]] method details start -----------------|📍📍📍|',
+      );
 
       log.i(url);
       log.i(filePath);
       log.i(
-          '|📍📍📍|-----------------[[ UPLOAD ]] method details end ------------|📍📍📍|');
+        '|📍📍📍|-----------------[[ UPLOAD ]] method details end ------------|📍📍📍|',
+      );
 
       var uri = Uri.parse(url);
 
@@ -751,16 +827,19 @@ class ApiMethod {
       request.headers.addAll(await bearerHeaderInfo());
 
       // Adding file to request
-      request.files
-          .add(await http.MultipartFile.fromPath('aiz_file', filePath));
+      request.files.add(
+        await http.MultipartFile.fromPath('aiz_file', filePath),
+      );
 
-      var response = await request.send().timeout(Duration(seconds: duration),
-          onTimeout: () =>
-              throw TimeoutException("Request Timed out! Try again"));
+      var response = await request.send().timeout(
+        Duration(seconds: duration),
+        onTimeout: () => throw TimeoutException("Request Timed out! Try again"),
+      );
 
       log.i(response.statusCode);
       log.i(
-          '|📒📒📒|-----------------[[ UPLOAD ]] method response end --------------------|📒📒📒|');
+        '|📒📒📒|-----------------[[ UPLOAD ]] method response end --------------------|📒📒📒|',
+      );
 
       if (response.statusCode == 401) {
         _handleUnauthorized();
@@ -785,16 +864,19 @@ class ApiMethod {
       log.e('🐞🐞🐞 Other Error Alert 🐞🐞🐞');
       log.e('❌❌❌ unlisted error received');
       log.e("❌❌❌ $e");
-      throw CustomException(e?.toString() ?? 'Unknown error');
+      throw CustomException(e.toString() ?? 'Unknown error');
     }
   }
 
-  dynamic _response(http.StreamedResponse response,
-      {bool hasLoader = true}) async {
+  dynamic _response(
+    http.StreamedResponse response, {
+    bool hasLoader = true,
+  }) async {
     final res = await http.Response.fromStream(response);
 
     log.i(
-        '|📒📒📒|-----------------[[ POST ]] method response start ------------------|📒📒📒|');
+      '|📒📒📒|-----------------[[ POST ]] method response start ------------------|📒📒📒|',
+    );
 
     log.i(res.body.toString());
 
@@ -809,9 +891,9 @@ class ApiMethod {
         return responseJson;
       case 400:
         var errorResponse = jsonDecode(res.body.toString());
+        String message = errorResponse['message'] ?? 'Bad request';
 
-        String message = errorResponse['message'];
-
+        _handleBadRequest(message);
         throw BadRequestException(message);
       case 401:
         _handleUnauthorized();
@@ -825,11 +907,13 @@ class ApiMethod {
             errorMessages[field] = List<String>.from(errors);
           });
         }
-        String formattedErrorMessages = errorMessages.entries.map((entry) {
-          String field = entry.key;
-          String errors = entry.value.join(', ');
-          return '$field: $errors';
-        }).join('\n');
+        String formattedErrorMessages = errorMessages.entries
+            .map((entry) {
+              String field = entry.key;
+              String errors = entry.value.join(', ');
+              return '$field: $errors';
+            })
+            .join('\n');
 
         throw UnprocessableEntityException(formattedErrorMessages);
 
@@ -841,7 +925,8 @@ class ApiMethod {
         throw ServerException();
       default:
         throw CustomException(
-            'Check your internet connection or try again later');
+          'Check your internet connection or try again later',
+        );
     }
   }
 }

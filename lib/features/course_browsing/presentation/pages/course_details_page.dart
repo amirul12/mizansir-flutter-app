@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_details_response.dart';
 
 import 'package:mizansir/features/enrollment/data/models/enrollments_create_model.dart'
     show EnrollmentsCreateModel;
@@ -79,7 +80,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                 }
 
                 if (state is CourseDetailsLoaded) {
-                  return _buildCourseDetails(state.course);
+                  return _buildCourseDetails(state);
                 }
 
                 return _buildLoadingState();
@@ -252,7 +253,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildCourseDetails(dynamic course) {
+  Widget _buildCourseDetails(CourseDetailsLoaded state) {
+    final course = state.course.course;
+
     return CustomScrollView(
       slivers: [
         // Custom app bar with image
@@ -305,7 +308,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               bottom: 60,
             ),
             title: Text(
-              course.title ?? 'Course Details',
+              course!.title ?? 'Course Details',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -336,38 +339,38 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Quick info chips
-                _buildQuickInfo(course),
+                _buildQuickInfo(state),
 
                 const SizedBox(height: 24),
 
                 // Price & Enrollment CTA
-                _buildPriceSection(course),
+                _buildPriceSection(state),
 
                 const SizedBox(height: 24),
 
                 // Enroll Button
-                _buildEnrollSection(course),
+                _buildEnrollSection(state),
 
                 const SizedBox(height: 24),
 
                 // Course Stats
-                _buildStatsSection(course),
+                _buildStatsSection(state),
 
                 const SizedBox(height: 24),
 
                 // Description
-                _buildDescriptionSection(course),
+                _buildDescriptionSection(state),
 
                 const SizedBox(height: 24),
 
                 // Curriculum
-                if (course.hasCurriculum && course.modules != null)
-                  _buildCurriculumSection(course),
+                if (course.curriculum != null && course.curriculum != null)
+                  _buildCurriculumSection(state.course),
 
                 const SizedBox(height: 24),
 
                 // Instructor & Category
-                _buildMetaInfoSection(course),
+                _buildMetaInfoSection(state.course),
 
                 const SizedBox(height: 100), // Space for bottom CTA
               ],
@@ -471,25 +474,26 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildQuickInfo(dynamic course) {
+  Widget _buildQuickInfo(CourseDetailsLoaded state) {
+    final course = state.course.course;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Wrap(
         spacing: 8,
         runSpacing: 8,
         children: [
-          if (course.level != null)
+          if (course!.level != null)
             _buildInfoChip(
               icon: Icons.signal_cellular_alt,
-              label: course.levelLabel,
+              label: course.level!,
               color: Colors.blue,
             ),
-          if (course.hasCategory)
-            _buildInfoChip(
-              icon: Icons.category,
-              label: course.category!.name!,
-              color: Colors.purple,
-            ),
+          // if (course.category != null)
+          //   _buildInfoChip(
+          //     icon: Icons.category,
+          //     label: course.category!.name!,
+          //     color: Colors.purple,
+          //   ),
           if (course.language != null)
             _buildInfoChip(
               icon: Icons.language,
@@ -531,13 +535,14 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildPriceSection(dynamic course) {
+  Widget _buildPriceSection(CourseDetailsLoaded state) {
+    final course = state.course.course;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: course.isFree
+          colors: course!.price == 0
               ? [
                   Colors.green.withValues(alpha: 0.1),
                   Colors.green.withValues(alpha: 0.05),
@@ -549,7 +554,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: course.isFree
+          color: course.price == 0
               ? Colors.green.withValues(alpha: 0.3)
               : Theme.of(context).primaryColor.withValues(alpha: 0.3),
           width: 2,
@@ -570,9 +575,9 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  course.displayPrice,
+                  course.price.toString(),
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: course.isFree
+                    color: course.price == 0
                         ? Colors.green
                         : Theme.of(context).primaryColor,
                     fontWeight: FontWeight.bold,
@@ -584,13 +589,13 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
-              color: course.isFree
+              color: course.price == 0
                   ? Colors.green
                   : Theme.of(context).primaryColor,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              course.isFree ? 'FREE' : 'PREMIUM',
+              course.price == 0 ? 'FREE' : 'PREMIUM',
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -603,7 +608,10 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildStatsSection(dynamic course) {
+  Widget _buildStatsSection(CourseDetailsLoaded state) {
+    final course = state.course.course;
+    final curriculum = course?.curriculum;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -612,27 +620,27 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
             child: _buildStatCard(
               icon: Icons.play_circle_outline,
               label: 'Lessons',
-              value: '${course.totalLessonsCount}',
+              value: '${curriculum?.totalLessons ?? course?.totalLessons ?? 0}',
               color: Colors.blue,
             ),
           ),
           const SizedBox(width: 12),
-          if (course.modulesCount != null)
+          if (curriculum?.modulesCount != null && curriculum!.modulesCount! > 0)
             Expanded(
               child: _buildStatCard(
                 icon: Icons.folder_outlined,
                 label: 'Modules',
-                value: '${course.modulesCount}',
+                value: '${curriculum.modulesCount}',
                 color: Colors.orange,
               ),
             ),
-          if (course.formattedDuration != null) ...[
+          if (course?.duration != null) ...[
             const SizedBox(width: 12),
             Expanded(
               child: _buildStatCard(
                 icon: Icons.access_time,
                 label: 'Duration',
-                value: course.formattedDuration!,
+                value: course!.duration!,
                 color: Colors.purple,
               ),
             ),
@@ -679,7 +687,8 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildDescriptionSection(dynamic course) {
+  Widget _buildDescriptionSection(CourseDetailsLoaded state) {
+    final course = state.course.course;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -710,7 +719,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            course.description ?? '',
+            course!.description ?? '',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               height: 1.6,
               color: Colors.grey[700],
@@ -721,8 +730,14 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildCurriculumSection(dynamic course) {
-    final modules = course.modules ?? [];
+  Widget _buildCurriculumSection(CourseDetailsResponse courseResponse) {
+    final course = courseResponse.course;
+    final curriculum = course?.curriculum;
+
+    if (curriculum == null || curriculum.modules == null) {
+      return const SizedBox();
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -755,33 +770,40 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           Padding(
             padding: const EdgeInsets.only(left: 50),
             child: Text(
-              '${course.totalLessonsCount} lessons in ${course.totalLessons} modules',
+              '${curriculum.totalLessons ?? 0} lessons in ${curriculum.modulesCount ?? 0} modules',
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
           ),
+          if (curriculum.formattedDuration != null) ...[
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.only(left: 50),
+              child: Text(
+                'Total Duration: ${curriculum.formattedDuration}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
-          ...modules.asMap().entries.map((entry) {
+          ...curriculum.modules!.asMap().entries.map((entry) {
             final index = entry.key;
             final module = entry.value;
-            final lessons = module['lessons'] as List<dynamic>? ?? [];
-            return _buildModuleCard(module, lessons, index + 1);
+            return _buildModuleCard(module, index + 1);
           }),
         ],
       ),
     );
   }
 
-  Widget _buildModuleCard(
-    Map<String, dynamic> module,
-    List<dynamic> lessons,
-    int moduleNumber,
-  ) {
-    final moduleName =
-        module['module_name'] as String? ?? 'Module $moduleNumber';
-    final lessonsCount = module['lessons_count'] as int? ?? lessons.length;
-    final totalMinutes = module['total_duration_minutes'] as int?;
+  Widget _buildModuleCard(Module module, int moduleNumber) {
+    final moduleName = module.moduleName ?? 'Module $moduleNumber';
+    final lessonsCount = module.lessonsCount ?? 0;
+    final lessons = module.lessons ?? [];
+    final totalMinutes = module.totalDurationMinutes;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -869,8 +891,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                 child: Column(
                   children: lessons.map((lesson) {
-                    final lessonMap = lesson as Map<String, dynamic>;
-                    return _buildLessonItem(lessonMap);
+                    return _buildLessonItem(lesson);
                   }).toList(),
                 ),
               ),
@@ -880,11 +901,11 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildLessonItem(Map<String, dynamic> lesson) {
-    final title = lesson['title'] as String? ?? 'Untitled Lesson';
-    final durationMinutes = lesson['duration_minutes'] as int?;
-    final isPreview = lesson['is_preview'] as bool? ?? false;
-    final contentType = lesson['content_type'] as String? ?? 'video';
+  Widget _buildLessonItem(Lesson lesson) {
+    final title = lesson.title ?? 'Untitled Lesson';
+    final durationMinutes = lesson.durationMinutes;
+    final isPreview = lesson.isPreview ?? false;
+    final contentType = lesson.contentType ?? 'video';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -978,26 +999,30 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildMetaInfoSection(dynamic course) {
+  Widget _buildMetaInfoSection(CourseDetailsResponse course) {
+    final courseData = course.course;
+    if (courseData == null) {
+      return const SizedBox.shrink();
+    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (course.instructor != null) ...[
-            _buildMetaItem(
-              icon: Icons.person,
-              label: 'Instructor',
-              value: course.instructor!,
-            ),
-            const SizedBox(height: 16),
-          ],
-          if (course.rating != null) ...[
+          // if (course.instructor != null) ...[
+          //   _buildMetaItem(
+          //     icon: Icons.person,
+          //     label: 'Instructor',
+          //     value: course.instructor!,
+          //   ),
+          //   const SizedBox(height: 16),
+          // ],
+          if (course.course!.rating != null) ...[
             _buildMetaItem(
               icon: Icons.star,
               label: 'Rating',
               value:
-                  '${course.rating!.toStringAsFixed(1)} (${course.reviewCount} reviews)',
+                  '${course.course!.rating!.toStringAsFixed(1)} (${course.course!.reviewCount} reviews)',
               valueColor: Colors.amber,
             ),
             const SizedBox(height: 16),
@@ -1070,37 +1095,28 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     );
   }
 
-  Widget _buildEnrollSection(dynamic course) {
+  Widget _buildEnrollSection(CourseDetailsLoaded state) {
+    final course = state.course.course;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      child: BlocListener<EnrollmentBloc, EnrollmentState>(
-        listener: (context, state) {
-          if (state is EnrollmentCreated) {
-            _showEnrollmentSuccessDialog(state.enrollmentData);
-          } else if (state is AlreadyEnrolled) {
-            _showAlreadyEnrolledDialog(state.message);
-          } else if (state is EnrollmentError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-                showCloseIcon: true,
-              ),
-            );
-          }
-        },
-        child: FilledButton.icon(
-          onPressed: _showEnrollmentDialog,
-          icon: const Icon(Icons.how_to_reg),
-          label: Text(course.isFree ? 'Enroll for Free' : 'Enroll Now'),
-          style: FilledButton.styleFrom(
-            backgroundColor: Theme.of(context).primaryColor,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            minimumSize: const Size(double.infinity, 56),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+      child: FilledButton.icon(
+        onPressed: course!.isEnrolled! == true
+            ? () {
+                // Handle "Go to Course" action - navigate to course lessons
+                context.go('/course/${course.id}/lessons');
+              }
+            : _showEnrollmentDialog,
+        icon: const Icon(Icons.how_to_reg),
+        label: Text(
+          course.isEnrolled! == true ? 'Go to Course' : course.formattedPrice!,
+        ),
+        style: FilledButton.styleFrom(
+          backgroundColor: Theme.of(context).primaryColor,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          minimumSize: const Size(double.infinity, 56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       ),
@@ -1122,20 +1138,20 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Course: ${course.title ?? 'Untitled'}',
+              'Course: ${course.course!.title ?? 'Untitled'}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'Price: ${course.displayPrice}',
+              'Price: ${course.course!.formattedPrice}',
               style: TextStyle(
-                color: course.isFree
+                color: course.course!.price! == 0
                     ? Colors.green
                     : Theme.of(context).primaryColor,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            if (!course.isFree) ...[
+            if (course.course!.price! != 0) ...[
               const SizedBox(height: 16),
               const Text('Payment Method:'),
               const SizedBox(height: 8),
@@ -1187,9 +1203,14 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
           FilledButton(
             onPressed: () {
               Navigator.pop(dialogContext);
-              _submitEnrollment(course.id ?? '', course.isFree);
+              _submitEnrollment(
+                course.course!.id ?? '',
+                course.course!.price != 0,
+              );
             },
-            child: Text(course.isFree ? 'Enroll Now' : 'Submit Enrollment'),
+            child: Text(
+              course.canEnroll != true ? 'Enroll Now' : 'Submit Enrollment',
+            ),
           ),
         ],
       ),

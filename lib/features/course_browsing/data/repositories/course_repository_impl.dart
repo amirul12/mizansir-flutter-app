@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_details_response.dart';
 import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
  
 import '../../../../core/services/api_exception.dart';
@@ -50,12 +51,12 @@ class CourseRepositoryImpl implements CourseRepository {
   }
 
   @override
-  Future<Either<Failure, dynamic>> getCourseDetails(String courseId) async {
+  Future<Either<Failure, CourseDetailsResponse>> getCourseDetails(String courseId) async {
     try {
       final courseModel = await remoteDataSource.getCourseDetails(courseId);
       return Right(courseModel);
     } on CustomException catch (e) {
-      final failure = parseCustomException<dynamic>(e);
+      final failure = parseCustomException<CourseDetailsResponse>(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }

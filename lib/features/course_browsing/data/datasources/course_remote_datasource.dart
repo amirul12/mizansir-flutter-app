@@ -1,5 +1,6 @@
 // File: lib/features/course_browsing/data/datasources/course_remote_datasource.dart
  
+import 'package:mizansir/features/course_browsing/data/models/course_details_response.dart';
 import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
 
  
@@ -19,7 +20,7 @@ abstract class CourseRemoteDataSource {
   Future<CourseListResponse> getFeaturedCourses({int limit = 10});
 
   /// Get course details by ID
-  Future<dynamic> getCourseDetails(String courseId);
+  Future<CourseDetailsResponse> getCourseDetails(String courseId);
 
   /// Search courses
   Future<CourseListResponse> searchCourses(
