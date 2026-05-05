@@ -918,15 +918,47 @@ class ApiMethod {
         throw UnprocessableEntityException(formattedErrorMessages);
 
       case 403:
-        throw CustomException('Forbidden');
+        var errorResponse = jsonDecode(res.body.toString());
+        String message = errorResponse['message'] ?? 'Forbidden access';
+
+        _handleForbidden(message);
+        throw CustomException(message);
+
       case 404:
-        throw CustomException('Not Found');
+        throw NotFoundException('Resource not found');
       case 500:
-        throw ServerException();
+        throw ServerException('Internal server error');
+      case 502:
+      case 503:
+      case 504:
+        throw ServiceUnavailableException('Service temporarily unavailable');
       default:
         throw CustomException(
           'Check your internet connection or try again later',
         );
+    }
+  }
+
+  bool _isForbiddenShowing = false;
+
+  void _handleForbidden(String message) {
+    if (_isForbiddenShowing) return;
+    _isForbiddenShowing = true;
+
+    final context = QContext.navigatorKey.currentState?.context;
+    if (context != null) {
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.warning,
+        animType: AnimType.scale,
+        title: 'Access Denied',
+        desc: message,
+        dismissOnTouchOutside: true,
+        dismissOnBackKeyPress: true,
+        btnOkOnPress: () {
+          _isForbiddenShowing = false;
+        },
+      ).show();
     }
   }
 }

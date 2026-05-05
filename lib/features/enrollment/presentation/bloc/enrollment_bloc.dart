@@ -1,6 +1,5 @@
 // File: lib/features/enrollment/presentation/bloc/enrollment_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart';
 import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart'
     show CourseLessonDetailsModel;
 import '../../domain/usecases/get_my_courses_usecase.dart';
@@ -15,7 +14,7 @@ import 'enrollment_state.dart';
 /// Enrollment BLoC
 class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
   final GetMyCoursesUseCase getMyCoursesUseCase;
- 
+
   final GetCourseLessonsUseCase getCourseLessonsUseCase;
   final GetCourseProgressUseCase getCourseProgressUseCase;
   final MarkLessonCompleteUseCase markLessonCompleteUseCase;
@@ -24,7 +23,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
 
   EnrollmentBloc({
     required this.getMyCoursesUseCase,
- 
+
     required this.getCourseLessonsUseCase,
     required this.getCourseProgressUseCase,
     required this.markLessonCompleteUseCase,
@@ -50,17 +49,14 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
 
     final result = await getMyCoursesUseCase();
 
-    result.fold(
-      (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
-      (courses) {
-        if (courses.isEmpty) {
-          return emit(
-            const EnrollmentEmpty(message: 'No enrolled courses yet'),
-          );
-        }
-        return emit(MyCoursesLoaded(courses: courses));
-      },
-    );
+    result.fold((failure) => emit(EnrollmentError(message: failure.message!)), (
+      courses,
+    ) {
+      if (courses.isEmpty) {
+        return emit(const EnrollmentEmpty(message: 'No enrolled courses yet'));
+      }
+      return emit(MyCoursesLoaded(courses: courses));
+    });
   }
 
   // Future<void> _onLoadCourseDetails(
@@ -90,7 +86,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     );
 
     result.fold(
-      (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
+      (failure) => emit(EnrollmentError(message: failure.message!)),
       (courseLessons) => emit(
         CourseLessonsLoaded(
           courseLessons: courseLessons,
@@ -111,7 +107,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     );
 
     result.fold(
-      (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
+      (failure) => emit(EnrollmentError(message: failure.message!)),
       (progress) => emit(CourseProgressLoaded(progress: progress)),
     );
   }
@@ -132,7 +128,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     );
 
     result.fold(
-      (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
+      (failure) => emit(EnrollmentError(message: failure.message!)),
       (_) => emit(
         LessonCompleted(courseId: event.courseId, lessonId: event.lessonId),
       ),
@@ -145,7 +141,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
   ) async {
     // For now, we'll treat marking incomplete as loading the course details again
     // You could implement a separate use case if needed
-   // add(LoadEnrolledCourseDetailsEvent(courseId: event.courseId));
+    // add(LoadEnrolledCourseDetailsEvent(courseId: event.courseId));
   }
 
   Future<void> _onGetLessonDetails(
@@ -162,7 +158,7 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
     );
 
     result.fold(
-      (failure) => emit(EnrollmentError(message: _getErrorMessage(failure))),
+      (failure) => emit(EnrollmentError(message: failure.message!)),
       (lessonsMap) => emit(
         LessonDetailsLoaded(
           lesson: lessonsMap['lesson'] as CourseLessonDetailsModel,
@@ -203,25 +199,10 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
       (failure) {
         // Check if already enrolled (active or pending)
 
-        emit(EnrollmentError(message: _getErrorMessage(failure)));
+        emit(EnrollmentError(message: failure.message!));
       },
       (enrollmentData) =>
           emit(EnrollmentCreated(enrollmentData: enrollmentData)),
     );
-  }
-
-  String _getErrorMessage(dynamic failure) {
-    switch (failure.runtimeType.toString()) {
-      case 'NetworkFailure':
-        return 'Please check your internet connection and try again.';
-      case 'UnauthorizedFailure':
-        return 'Please login to access this feature.';
-      case 'NotFoundFailure':
-        return 'The requested resource was not found.';
-      case 'ServerFailure':
-        return 'Server error. Please try again later.';
-      default:
-        return 'An unexpected error occurred. Please try again.';
-    }
   }
 }

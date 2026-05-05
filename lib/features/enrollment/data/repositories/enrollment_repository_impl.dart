@@ -71,7 +71,7 @@ class EnrollmentRepositoryImpl implements EnrollmentRepository {
       );
       return Right(lessonModels);
     } on CustomException catch (e) {
-      final failure = parseCustomException<CourseLessonModel>(e);
+      final failure = parseCustomException(e);
       return failure.fold((failure) => Left(failure), (_) => throw e);
     }
   }

@@ -2,12 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart'
-    show CourseLessonModel, Lesson;
+    show CourseLessonModel, Lesson, Course, Enrollment, Navigation;
 import '../bloc/enrollment_bloc.dart';
 import '../bloc/enrollment_event.dart';
 import '../bloc/enrollment_state.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 /// Course Lessons List Page - Beautiful, modern lessons interface for students.
 ///
@@ -114,12 +116,11 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
   }
 
   Widget _buildLessonsList(CourseLessonModel courseLessonModel) {
+    final course = courseLessonModel.course;
+    final enrollment = courseLessonModel.enrollment;
     final modules = courseLessonModel.modules ?? [];
     final progress = courseLessonModel.progress;
-
-    if (modules.isEmpty) {
-      return _buildEmptyView('No lessons found for this course');
-    }
+    final navigation = courseLessonModel.navigation;
 
     final totalLessons = progress?.totalLessons ?? 0;
     final completedLessons = progress?.completedLessons ?? 0;
@@ -141,168 +142,507 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
       color: AppColors.primary,
       child: CustomScrollView(
         slivers: [
+          // Course Header
+          if (course != null)
+            SliverToBoxAdapter(child: _buildCourseHeader(course, enrollment)),
+
           // Progress Header
           SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.primary, AppColors.primaryLight],
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Your Progress',
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _getMotivationalMessage(progressPercent),
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Circular Progress
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          SizedBox(
-                            width: 80,
-                            height: 80,
-                            child: CircularProgressIndicator(
-                              value: progressPercent / 100,
-                              strokeWidth: 8,
-                              backgroundColor: Colors.white.withValues(
-                                alpha: 0.2,
-                              ),
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            '$progressPercent%',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: LinearProgressIndicator(
-                      value: progressPercent / 100,
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        Colors.white,
-                      ),
-                      minHeight: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildProgressStat(
-                          Icons.check_circle_outline,
-                          '$completedLessons',
-                          'Completed',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildProgressStat(
-                          Icons.play_circle_outline,
-                          '$remainingLessons',
-                          'Remaining',
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildProgressStat(
-                          Icons.schedule,
-                          _formatDuration(totalTime.toInt()),
-                          'Total Time',
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+            child: _buildProgressHeader(
+              progressPercent,
+              completedLessons,
+              remainingLessons,
+              totalTime.toInt(),
             ),
           ),
+
+          // Navigation Controls (if available)
+          if (navigation != null)
+            SliverToBoxAdapter(child: _buildNavigationControls(navigation)),
 
           // Lessons List by Module
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate((context, moduleIndex) {
-                final module = modules[moduleIndex];
-                final lessons = module.lessons ?? [];
+          if (modules.isEmpty)
+            SliverFillRemaining(
+              child: _buildEmptyView('No lessons found for this course'),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, moduleIndex) {
+                  final module = modules[moduleIndex];
+                  final lessons = module.lessons ?? [];
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (module.moduleName != null &&
-                        module.moduleName!.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          module.moduleName!,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
-                              ),
+                  if (lessons.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (module.moduleName != null &&
+                          module.moduleName!.isNotEmpty)
+                        _buildModuleHeader(module.moduleName!, lessons.length),
+                      ...lessons.map(
+                        (lesson) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildLessonCard(lesson),
                         ),
                       ),
-                    ...lessons.map(
-                      (lesson) => Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildLessonCard(lesson),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                );
-              }, childCount: modules.length),
+                      const SizedBox(height: 16),
+                    ],
+                  );
+                }, childCount: modules.length),
+              ),
             ),
-          ),
 
           // Bottom spacing
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        ],
+      ),
+    );
+  }
+
+  /// Build course header with title, thumbnail, and enrollment info.
+  Widget _buildCourseHeader(Course course, Enrollment? enrollment) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Course Thumbnail
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: course.thumbnail != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      course.thumbnail!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.school_rounded,
+                        color: AppColors.primary,
+                        size: 40,
+                      ),
+                    ),
+                  )
+                : const Icon(
+                    Icons.school_rounded,
+                    color: AppColors.primary,
+                    size: 40,
+                  ),
+          ),
+          const SizedBox(width: 16),
+          // Course Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  course.title ?? 'Course',
+                  style: AppTextStyles.h4,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                if (enrollment != null)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      _buildEnrollmentChip(
+                        enrollment.status ?? 'Unknown',
+                        enrollment.isActive ?? false,
+                      ),
+                      if (enrollment.expiresAt != null)
+                        _buildExpiryChip(enrollment.expiresAt!),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build progress header with circular progress and stats.
+  Widget _buildProgressHeader(
+    int progressPercent,
+    int completedLessons,
+    int remainingLessons,
+    int totalTime,
+  ) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primary, AppColors.primaryLight],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Your Progress',
+                      style: AppTextStyles.h4.copyWith(
+                        color: AppColors.textWhite,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _getMotivationalMessage(progressPercent),
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.textWhite.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Circular Progress
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: CircularProgressIndicator(
+                      value: progressPercent / 100,
+                      strokeWidth: 8,
+                      backgroundColor: AppColors.textWhite.withValues(
+                        alpha: 0.2,
+                      ),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.textWhite,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '$progressPercent%',
+                    style: AppTextStyles.h3.copyWith(
+                      color: AppColors.textWhite,
+                      fontSize: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: LinearProgressIndicator(
+              value: progressPercent / 100,
+              backgroundColor: AppColors.textWhite.withValues(alpha: 0.2),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                AppColors.textWhite,
+              ),
+              minHeight: 12,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(
+                child: _buildProgressStat(
+                  Icons.check_circle_outline,
+                  '$completedLessons',
+                  'Completed',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildProgressStat(
+                  Icons.play_circle_outline,
+                  '$remainingLessons',
+                  'Remaining',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildProgressStat(
+                  Icons.schedule,
+                  _formatDuration(totalTime),
+                  'Total Time',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build module header with name and lesson count.
+  Widget _buildModuleHeader(String moduleName, int lessonCount) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.folder_open_rounded, color: AppColors.primary, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              moduleName,
+              style: AppTextStyles.h6.copyWith(color: AppColors.primary),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '$lessonCount',
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textWhite,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build navigation controls for previous/next lesson.
+  Widget _buildNavigationControls(Navigation navigation) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      child: Row(
+        children: [
+          if (navigation.previousLesson != null)
+            Expanded(
+              child: _buildNavigationButton(
+                Icons.arrow_back_ios_rounded,
+                navigation.previousLesson!.title ?? 'Previous Lesson',
+                () => _selectLesson(navigation.previousLesson!.id.toString()),
+                isNext: false,
+              ),
+            ),
+          if (navigation.previousLesson != null &&
+              navigation.nextLesson != null)
+            const SizedBox(width: 12),
+          if (navigation.nextLesson != null)
+            Expanded(
+              child: _buildNavigationButton(
+                Icons.arrow_forward_ios_rounded,
+                navigation.nextLesson!.title ?? 'Next Lesson',
+                () => _selectLesson(navigation.nextLesson!.id.toString()),
+                isNext: true,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Build navigation button.
+  Widget _buildNavigationButton(
+    IconData icon,
+    String title,
+    VoidCallback onTap, {
+    required bool isNext,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border, width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadowLight,
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            if (!isNext) ...[
+              Icon(icon, color: AppColors.primary, size: 20),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Previous', style: AppTextStyles.overline),
+                    Text(
+                      title,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ] else ...[
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('Next', style: AppTextStyles.overline),
+                    Text(
+                      title,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Icon(icon, color: AppColors.primary, size: 20),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Build enrollment status chip.
+  Widget _buildEnrollmentChip(String status, bool isActive) {
+    final color = isActive ? AppColors.success : AppColors.warning;
+    final backgroundColor = isActive
+        ? AppColors.successLight
+        : AppColors.warningLight;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isActive ? Icons.check_circle : Icons.info_outline,
+            color: color,
+            size: 14,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              status.toUpperCase(),
+              style: AppTextStyles.caption.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build expiry date chip.
+  Widget _buildExpiryChip(DateTime expiresAt) {
+    final now = DateTime.now();
+    final daysUntilExpiry = expiresAt.difference(now).inDays;
+    final isExpiringSoon = daysUntilExpiry <= 7 && daysUntilExpiry >= 0;
+    final isExpired = daysUntilExpiry < 0;
+
+    final color = isExpired
+        ? AppColors.error
+        : isExpiringSoon
+        ? AppColors.warning
+        : AppColors.textSecondary;
+    final backgroundColor = isExpired
+        ? AppColors.errorLight
+        : isExpiringSoon
+        ? AppColors.warningLight
+        : AppColors.disabledBackground;
+
+    final String expiryText;
+    if (isExpired) {
+      expiryText = 'Expired';
+    } else if (isExpiringSoon) {
+      expiryText = 'Expires in $daysUntilExpiry days';
+    } else if (daysUntilExpiry < 30) {
+      expiryText = 'Expires ${DateFormat('MMM d').format(expiresAt)}';
+    } else {
+      expiryText = 'Expires ${DateFormat('MMM d, y').format(expiresAt)}';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isExpired ? Icons.cancel : Icons.schedule,
+            color: color,
+            size: 14,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              expiryText,
+              style: AppTextStyles.caption.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
@@ -317,11 +657,11 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
+              color: AppColors.shadow,
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -329,31 +669,62 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
           border: Border.all(
             color: isCompleted
                 ? AppColors.success.withValues(alpha: 0.3)
-                : Colors.transparent,
-            width: 2,
+                : AppColors.border,
+            width: isCompleted ? 2 : 1,
           ),
         ),
         child: Row(
           children: [
             // Thumbnail or Icon
             Container(
-              width: 80,
-              height: 60,
+              width: 100,
+              height: 70,
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: lesson.thumbnail != null
-                  ? ClipRRect(
+              child: Stack(
+                children: [
+                  if (lesson.thumbnail != null)
+                    ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.network(
                         lesson.thumbnail!,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            _buildLessonIcon(isCompleted, isPreview),
+                        width: double.infinity,
+                        height: double.infinity,
+                        errorBuilder: (context, error, stackTrace) => Center(
+                          child: _buildLessonIcon(isCompleted, isPreview),
+                        ),
                       ),
                     )
-                  : _buildLessonIcon(isCompleted, isPreview),
+                  else
+                    Center(child: _buildLessonIcon(isCompleted, isPreview)),
+                  // Duration Badge
+                  if (lesson.durationMinutes != null)
+                    Positioned(
+                      bottom: 4,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.videoOverlay,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          _formatDuration(lesson.durationMinutes!),
+                          style: AppTextStyles.caption.copyWith(
+                            color: AppColors.textWhite,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
             const SizedBox(width: 16),
             // Lesson Info
@@ -363,66 +734,88 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                 children: [
                   Text(
                     lesson.title ?? 'Untitled Lesson',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                    style: AppTextStyles.bodyLarge.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
-                  Row(
+                  if (lesson.description != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      lesson.description!,
+                      style: AppTextStyles.bodySmall,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      if (lesson.durationMinutes != null) ...[
-                        const Icon(
-                          Icons.schedule,
-                          size: 14,
-                          color: AppColors.textSecondary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${lesson.durationMinutes} min',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(width: 12),
                       if (isPreview)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.secondary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Text(
-                            'PREVIEW',
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: AppColors.secondary,
-                              fontWeight: FontWeight.bold,
+                        _buildStatusChip(
+                          'PREVIEW',
+                          AppColors.secondary,
+                          AppColors.secondaryLight,
+                          Icons.visibility,
+                        ),
+                      if (isCompleted) ...[
+                        _buildStatusChip(
+                          'COMPLETED',
+                          AppColors.success,
+                          AppColors.successLight,
+                          Icons.check_circle,
+                        ),
+                        if (lesson.completedAt != null)
+                          Text(
+                            DateFormat('MMM d').format(lesson.completedAt!),
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textTertiary,
                             ),
                           ),
-                        ),
-                      if (isCompleted)
-                        const Icon(
-                          Icons.check_circle,
-                          size: 16,
-                          color: AppColors.success,
-                        ),
+                      ],
                     ],
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.play_circle_outline, color: AppColors.primary, size: 32),
+            Icon(
+              Icons.play_circle_filled_rounded,
+              color: AppColors.primary,
+              size: 36,
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Build status chip (preview/completed).
+  Widget _buildStatusChip(
+    String label,
+    Color color,
+    Color backgroundColor,
+    IconData icon,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 12),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: AppTextStyles.overline.copyWith(color: color, fontSize: 9),
+          ),
+        ],
       ),
     );
   }
@@ -434,51 +827,53 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
     if (isPreview) {
       return const Icon(Icons.visibility, color: AppColors.secondary, size: 32);
     }
-    return const Icon(Icons.play_arrow, color: AppColors.primary, size: 32);
+    return const Icon(
+      Icons.play_arrow_rounded,
+      color: AppColors.primary,
+      size: 32,
+    );
   }
 
   /// Build progress stat widget.
   Widget _buildProgressStat(IconData icon, String value, String label) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: Colors.white, size: 18),
-        ),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppColors.textWhite.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: AppColors.textWhite, size: 18),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  value,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textWhite,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 11,
+                Text(
+                  label,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textWhite.withValues(alpha: 0.8),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -524,17 +919,15 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
             const SizedBox(height: 24),
             Text(
               'Oops! Something went wrong',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: AppTextStyles.h4,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
               message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -548,7 +941,7 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                   vertical: 16,
                 ),
                 backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.textWhite,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -580,20 +973,13 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
               ),
             ),
             const SizedBox(height: 24),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text(message, style: AppTextStyles.h4, textAlign: TextAlign.center),
             const SizedBox(height: 12),
             Text(
               'Check back later for new lessons',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
           ],

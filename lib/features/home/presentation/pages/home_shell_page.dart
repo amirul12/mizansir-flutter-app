@@ -8,6 +8,7 @@ import 'package:mizansir/features/home/domain/entities/home_tab.dart';
 import 'package:mizansir/features/course_browsing/presentation/bloc/course_bloc.dart';
 import 'package:mizansir/features/profile/presentation/bloc/profile_bloc.dart';
 import 'package:mizansir/features/profile/presentation/bloc/dashboard_bloc.dart';
+import 'package:mizansir/features/profile/presentation/bloc/activity_bloc.dart';
 import 'package:mizansir/features/enrollment/presentation/bloc/enrollment_bloc.dart';
 import 'package:mizansir/features/home/presentation/bloc/home_shell_cubit.dart';
 import 'package:mizansir/features/auth/presentation/bloc/auth_bloc.dart';
@@ -35,6 +36,7 @@ class HomeShellPage extends StatelessWidget {
       providers: [
         BlocProvider(create: (context) => HomeShellCubit(initialTab: initialTab)),
         BlocProvider(create: (context) => di.sl<DashboardBloc>()),
+        BlocProvider(create: (context) => di.sl<ActivityBloc>()),
         BlocProvider(create: (context) => di.sl<EnrollmentBloc>()),
         BlocProvider(create: (context) => di.sl<CourseBloc>()),
         BlocProvider(create: (context) => di.sl<ProfileBloc>()),

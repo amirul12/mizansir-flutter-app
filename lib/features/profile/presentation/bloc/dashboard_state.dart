@@ -1,8 +1,5 @@
 import 'package:equatable/equatable.dart';
-import 'package:mizansir/features/profile/data/models/activity_model.dart' show ActivityModel;
 import 'package:mizansir/features/profile/data/models/dashboard_stats_model.dart';
- 
- 
 
 /// Abstract base class for all dashboard states.
 abstract class DashboardState extends Equatable {
@@ -19,66 +16,42 @@ class DashboardInitial extends DashboardState {}
 class DashboardLoading extends DashboardState {
   final bool isOffline;
   final DashboardStatsModel? existingStats;
-  final List<ActivityModel>? existingActivities;
 
   const DashboardLoading({
     this.isOffline = false,
     this.existingStats,
-    this.existingActivities,
   });
 
   @override
-  List<Object?> get props => [isOffline, existingStats, existingActivities];
+  List<Object?> get props => [isOffline, existingStats];
 }
 
-/// Consolidated Dashboard loaded state to hold both stats and activities.
+/// Dashboard loaded state.
 class DashboardLoaded extends DashboardState {
-  final DashboardStatsModel? stats;
-  final List<ActivityModel>? activities;
-  final bool hasMoreActivities;
+  final DashboardStatsModel stats;
   final bool isOffline;
   final String? message;
 
   const DashboardLoaded({
-    this.stats,
-    this.activities,
-    this.hasMoreActivities = false,
+    required this.stats,
     this.isOffline = false,
     this.message,
   });
 
-  DashboardLoaded copyWith({
-    DashboardStatsModel? stats,
-    List<ActivityModel>? activities,
-    bool? hasMoreActivities,
-    bool? isOffline,
-    String? message,
-  }) {
-    return DashboardLoaded(
-      stats: stats ?? this.stats,
-      activities: activities ?? this.activities,
-      hasMoreActivities: hasMoreActivities ?? this.hasMoreActivities,
-      isOffline: isOffline ?? this.isOffline,
-      message: message ?? this.message,
-    );
-  }
-
   @override
-  List<Object?> get props => [stats, activities, hasMoreActivities, isOffline, message];
+  List<Object?> get props => [stats, isOffline, message];
 }
 
 /// Error state.
 class DashboardError extends DashboardState {
   final String message;
   final DashboardStatsModel? existingStats;
-  final List<ActivityModel>? existingActivities;
 
   const DashboardError(
     this.message, {
     this.existingStats,
-    this.existingActivities,
   });
 
   @override
-  List<Object?> get props => [message, existingStats, existingActivities];
+  List<Object?> get props => [message, existingStats];
 }

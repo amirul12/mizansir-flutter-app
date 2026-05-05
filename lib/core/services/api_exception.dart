@@ -23,17 +23,17 @@ class UnprocessableEntityException extends CustomException {
 
 class ServerException extends CustomException {
   ServerException([String? message])
-      : super(message, "Failed to connect to server: ");
+    : super(message, "Failed to connect to server: ");
 }
 
 class NoInternetException extends CustomException {
   NoInternetException([String? message])
-      : super("", "No Internet Connection: ");
+    : super("", "No Internet Connection: ");
 }
 
 class FetchDataException extends CustomException {
   FetchDataException([String? message])
-      : super(message, "Error During Communication: ");
+    : super(message, "Error During Communication: ");
 }
 
 class UnauthorizedException extends CustomException {
@@ -57,12 +57,17 @@ class TimeoutException extends CustomException {
 }
 
 class NetworkException extends CustomException {
-  NetworkException(
-      [String super.message = "Check your Internet Connection and try again!"]);
+  NetworkException([
+    String super.message = "Check your Internet Connection and try again!",
+  ]);
 }
 
-class ForbiddenException extends CustomException {
-  ForbiddenException([String super.message = "Forbidden"]);
+class ForbiddenException implements Exception {
+  final String message;
+  ForbiddenException(this.message);
+
+  @override
+  String toString() => message;
 }
 
 class NotFoundException extends CustomException {
@@ -77,6 +82,10 @@ class ClientException extends CustomException {
   ClientException([String super.message = "Client Error"]);
 }
 
+class ServiceUnavailableException extends CustomException {
+  ServiceUnavailableException([String super.message = "Service Unavailable"]);
+}
+
 class UnprocessableEntityFailure extends Failure {
   const UnprocessableEntityFailure(super.message);
 
@@ -89,8 +98,11 @@ Either<Failure, T> parseCustomException<T>(CustomException exception) {
   if (exception is BadRequestException) {
     return Left(BadRequestFailure(exception.message ?? 'Bad request error'));
   } else if (exception is ServerException) {
-    return const Left(ServiceUnavailableFailure(
-        message: "Failed to connect to server: Please try again later"));
+    return const Left(
+      ServiceUnavailableFailure(
+        message: "Failed to connect to server: Please try again later",
+      ),
+    );
   } else if (exception is NoInternetException) {
     return const Left(NetworkFailure(message: "No Internet Connection"));
   } else if (exception is UnauthorisedException) {
@@ -111,6 +123,8 @@ Either<Failure, T> parseCustomException<T>(CustomException exception) {
     return const Left(NetworkFailure());
   } else if (exception is ClientException) {
     return const Left(ServerFailure());
+  } else if (exception is ServiceUnavailableException) {
+    return Left(ServiceUnavailableFailure(message: exception.message ?? 'Service unavailable'));
   } else {
     return const Left(ServerFailure()); // Fallback for any other exceptions
   }

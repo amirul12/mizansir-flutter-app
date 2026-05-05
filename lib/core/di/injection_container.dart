@@ -57,6 +57,7 @@ import '../../features/profile/domain/usecases/get_dashboard_usecase.dart';
 import '../../features/profile/domain/usecases/get_activity_usecase.dart';
 import '../../features/profile/presentation/bloc/profile_bloc.dart';
 import '../../features/profile/presentation/bloc/dashboard_bloc.dart';
+import '../../features/profile/presentation/bloc/activity_bloc.dart';
 // Home Shell Imports
 import '../../features/home/presentation/bloc/home_shell_cubit.dart';
 
@@ -364,7 +365,12 @@ Future<void> _initProfile() async {
 
   // Dashboard BLoC
   sl.registerFactory<DashboardBloc>(
-    () => DashboardBloc(getDashboardUseCase: sl(), getActivityUseCase: sl()),
+    () => DashboardBloc(getDashboardUseCase: sl()),
+  );
+
+  // Activity BLoC
+  sl.registerFactory<ActivityBloc>(
+    () => ActivityBloc(getActivityUseCase: sl()),
   );
 }
 

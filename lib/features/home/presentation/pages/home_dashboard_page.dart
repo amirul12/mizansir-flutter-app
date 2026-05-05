@@ -3,8 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mizansir/features/profile/data/models/activity_model.dart'
     show ActivityModel;
+import 'package:mizansir/features/profile/presentation/bloc/activity_event.dart';
+import 'package:mizansir/features/profile/presentation/bloc/activity_state.dart';
 import '../../../profile/data/models/dashboard_stats_model.dart'
     show DashboardStatsModel, RecentEnrollment, EnrollmentStats;
+import '../../../profile/presentation/bloc/activity_bloc.dart';
 import '../../../profile/presentation/bloc/dashboard_bloc.dart';
 import '../../../profile/presentation/bloc/dashboard_event.dart';
 import '../../../profile/presentation/bloc/dashboard_state.dart';
@@ -49,7 +52,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
 
-    context.read<DashboardBloc>().add(LoadActivityEvent());
+    context.read<ActivityBloc>().add(LoadActivityEvent());
   }
 
   @override
@@ -811,10 +814,11 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
 
   /// Build recent activity section.
   Widget _buildRecentActivitySection(BuildContext context) {
-    return BlocBuilder<DashboardBloc, DashboardState>(
+    return BlocBuilder<ActivityBloc, ActivityState>(
       builder: (context, state) {
         List<ActivityModel>? activities;
-        if (state is DashboardLoaded) {
+
+        if (state is ActivityLoaded) {
           activities = state.activities;
         }
 
