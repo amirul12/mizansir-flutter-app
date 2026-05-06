@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Import Entities
@@ -93,14 +94,46 @@ class _HomeShellViewState extends State<_HomeShellView> {
   Widget build(BuildContext context) {
     return BlocBuilder<HomeShellCubit, HomeTab>(
       builder: (context, currentTab) {
-        return Scaffold(
-          key: _scaffoldKey,
-          drawer: HomeDrawer(onLogout: () => _showLogoutDialog(context)),
-          appBar: _buildAppBar(context, currentTab),
-          body: _buildBodyForTab(currentTab),
-          bottomNavigationBar: HomeBottomNavBar(
-            currentTab: currentTab,
-            onTabSelected: (tab) => context.read<HomeShellCubit>().setTab(tab),
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (bool didPop, dynamic result) async {
+            if (didPop) return;
+            final shouldExit = await showDialog<bool>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                title: const Text('Exit App'),
+                content: const Text('Are you sure you want to exit?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: const Text('Stay', style: TextStyle(color: Colors.grey)),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text('Exit'),
+                  ),
+                ],
+              ),
+            );
+            if (shouldExit == true && context.mounted) {
+              SystemNavigator.pop();
+            }
+          },
+          child: Scaffold(
+            key: _scaffoldKey,
+            drawer: HomeDrawer(onLogout: () => _showLogoutDialog(context)),
+            appBar: _buildAppBar(context, currentTab),
+            body: _buildBodyForTab(currentTab),
+            bottomNavigationBar: HomeBottomNavBar(
+              currentTab: currentTab,
+              onTabSelected: (tab) => context.read<HomeShellCubit>().setTab(tab),
+            ),
           ),
         );
       },

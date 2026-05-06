@@ -15,7 +15,10 @@ import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 
 import '../../../enrollment/presentation/bloc/enrollment_bloc.dart';
+import '../../../enrollment/presentation/bloc/enrollment_event.dart';
 import '../../../enrollment/presentation/bloc/enrollment_state.dart';
+import '../../../enrollment/data/models/my_course_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../course_browsing/presentation/bloc/course_bloc.dart';
 import '../../../course_browsing/presentation/bloc/course_state.dart';
 import '../bloc/home_shell_cubit.dart';
@@ -53,6 +56,12 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     if (!mounted) return;
 
     context.read<ActivityBloc>().add(LoadActivityEvent());
+
+    // Load my courses for grid section
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+
+    context.read<EnrollmentBloc>().add(const LoadMyCoursesEvent());
   }
 
   @override
@@ -110,24 +119,26 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                         // 3. Stats Section
                         _buildStatsSection(context),
 
-                        const SizedBox(height: 24),
+                        // const SizedBox(height: 24),
 
-                        // 4. Quick Actions Section
-                        _buildQuickActionsSection(context),
-
+                        // // 4. Quick Actions Section
+                        // _buildQuickActionsSection(context),
                         const SizedBox(height: 24),
 
                         // 5. Continue Learning Section
+
+                        // // 6. Featured Courses Section
+                        // _buildFeaturedCoursesSection(context),
+                        // const SizedBox(height: 24),
+
+                        // 7. My Learning Grid Section
+                        _buildMyLearningGridSection(context),
+                        const SizedBox(height: 24),
                         _buildContinueLearningSection(context),
 
                         const SizedBox(height: 24),
 
-                        // 6. Featured Courses Section
-                        _buildFeaturedCoursesSection(context),
-
-                        const SizedBox(height: 24),
-
-                        // 7. Recent Activity Section
+                        // 8. Recent Activity Section
                         _buildRecentActivitySection(context),
 
                         const SizedBox(height: 32),
@@ -251,11 +262,9 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         String userName = '';
         String? userEmail;
 
-        if (state is DashboardLoaded &&
-            state.stats != null &&
-            state.stats?.user != null) {
-          userName = state.stats!.user!.name!;
-          userEmail = state.stats!.user!.email;
+        if (state is DashboardLoaded && state.stats.user != null) {
+          userName = state.stats.user!.name!;
+          userEmail = state.stats.user!.email;
         }
 
         final hour = DateTime.now().hour;
@@ -301,7 +310,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
     );
   }
 
-  /// Build stats cards section with modern design.
+  /// Build stats cards section with horizontal scrolling.
   Widget _buildStatsSection(BuildContext context) {
     return BlocBuilder<DashboardBloc, DashboardState>(
       buildWhen: (previous, current) =>
@@ -320,61 +329,118 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         final enrollmentStats = stats.enrollmentStats;
 
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _buildModernStatCard(
+            Text(
+              'Overview',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 100,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: [
+                  _buildCompactStatCard(
                     context,
                     icon: Icons.school_outlined,
                     title: 'Total',
                     value: (enrollmentStats?.total ?? 0).toString(),
                     color: AppColors.primary,
-                    gradient: AppColors.primaryGradient,
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildModernStatCard(
+                  const SizedBox(width: 12),
+                  _buildCompactStatCard(
                     context,
                     icon: Icons.play_circle_outline,
                     title: 'Active',
                     value: (enrollmentStats?.active ?? 0).toString(),
                     color: AppColors.secondary,
-                    gradient: AppColors.secondaryGradient,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildModernStatCard(
+                  const SizedBox(width: 12),
+                  _buildCompactStatCard(
                     context,
                     icon: Icons.pending_outlined,
                     title: 'Pending',
                     value: (enrollmentStats?.pending ?? 0).toString(),
                     color: Colors.orange,
-                    gradient: [Colors.orange.shade400, Colors.orange.shade600],
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildModernStatCard(
+                  const SizedBox(width: 12),
+                  _buildCompactStatCard(
                     context,
                     icon: Icons.cancel_outlined,
                     title: 'Expired',
                     value: (enrollmentStats?.expired ?? 0).toString(),
                     color: Colors.red,
-                    gradient: [Colors.red.shade400, Colors.red.shade600],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildCompactStatCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      width: 100,
+      height: 100,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: 0.15),
+            color.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: color.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, color: color, size: 16),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: color,
+              fontSize: 22,
+              height: 1,
+            ),
+          ),
+          Text(
+            title,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
+              fontSize: 10,
+              height: 1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -521,7 +587,7 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         List<RecentEnrollment>? recentEnrollments;
 
         if (state is DashboardLoaded) {
-          recentEnrollments = state.stats?.recentEnrollments;
+          recentEnrollments = state.stats.recentEnrollments;
         }
 
         // Hide section if no recent enrollments
@@ -717,7 +783,8 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
               );
             }
 
-            if (state is FeaturedCoursesLoaded && state.courses.items!.isNotEmpty) {
+            if (state is FeaturedCoursesLoaded &&
+                state.courses.items!.isNotEmpty) {
               return SizedBox(
                 height: 220,
                 child: ListView.builder(
@@ -810,6 +877,205 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         ),
       ),
     );
+  }
+
+  /// Build my learning grid section.
+  Widget _buildMyLearningGridSection(BuildContext context) {
+    return BlocBuilder<EnrollmentBloc, EnrollmentState>(
+      builder: (context, state) {
+        if (state is MyCoursesLoaded && state.courses.isNotEmpty) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'My Learning',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        context.read<HomeShellCubit>().goToMyLearning(),
+                    child: const Text('View All'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.75,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: state.courses.take(4).length,
+                itemBuilder: (context, index) {
+                  final course = state.courses[index] as MyCourseModel;
+                  return _buildCourseGridCard(context, course);
+                },
+              ),
+            ],
+          );
+        }
+        return const SizedBox();
+      },
+    );
+  }
+
+  Widget _buildCourseGridCard(BuildContext context, MyCourseModel course) {
+    final courseInfo = course.course;
+    final curriculum = course.curriculum;
+    final progress =
+        curriculum?.progressPercentage?.clamp(0, 100).toDouble() ?? 0.0;
+    final progressColor = _getProgressColor(progress);
+
+    return GestureDetector(
+      onTap: () {
+        if (curriculum?.nextLesson != null) {
+          context.go(
+            '/my-courses/${courseInfo?.id}/lessons/${curriculum?.nextLesson!.id}',
+          );
+        } else {
+          context.go('/my-courses/${courseInfo?.id}/lessons');
+        }
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Thumbnail
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(16),
+              ),
+              child: SizedBox(
+                height: 100,
+                width: double.infinity,
+                child:
+                    courseInfo?.thumbnail != null &&
+                        courseInfo!.thumbnail!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: courseInfo.thumbnail!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: AppColors.primary.withValues(alpha: 0.1),
+                          child: const Icon(
+                            Icons.school,
+                            size: 40,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        child: const Icon(
+                          Icons.school,
+                          size: 40,
+                          color: AppColors.primary,
+                        ),
+                      ),
+              ),
+            ),
+            // Content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      courseInfo?.title ?? 'Course',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (courseInfo?.description != null &&
+                        courseInfo!.description!.isNotEmpty)
+                      Text(
+                        courseInfo.description!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    const Spacer(),
+                    // Progress
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${progress.toInt()}%',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: progressColor,
+                              ),
+                            ),
+                            if (curriculum != null)
+                              Text(
+                                '${curriculum.completedLessons}/${curriculum.totalLessons}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        LinearProgressIndicator(
+                          value: progress / 100,
+                          minHeight: 4,
+                          borderRadius: BorderRadius.circular(2),
+                          backgroundColor: Colors.grey.shade200,
+                          valueColor: AlwaysStoppedAnimation(progressColor),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getProgressColor(double progress) {
+    if (progress >= 75) return Colors.green;
+    if (progress >= 50) return Colors.orange;
+    return AppColors.primary;
   }
 
   /// Build recent activity section.

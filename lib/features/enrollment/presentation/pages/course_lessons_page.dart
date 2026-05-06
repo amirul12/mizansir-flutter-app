@@ -50,19 +50,46 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded),
-          onPressed: () {
-            context.go('/home');
-          },
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadow,
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+            onPressed: () => context.go('/home'),
+          ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: _loadLessons,
+          Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.shadow,
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: _loadLessons,
+            ),
           ),
         ],
       ),
@@ -97,7 +124,12 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
         child: BlocBuilder<EnrollmentBloc, EnrollmentState>(
           builder: (context, state) {
             if (state is EnrollmentLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 3,
+                ),
+              );
             }
 
             if (state is EnrollmentError) {
@@ -108,7 +140,12 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
               return _buildLessonsList(state.courseLessons);
             }
 
-            return const Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(
+                color: AppColors.primary,
+                strokeWidth: 3,
+              ),
+            );
           },
         ),
       ),
@@ -206,8 +243,8 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
   /// Build course header with title, thumbnail, and enrollment info.
   Widget _buildCourseHeader(Course course, Enrollment? enrollment) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
@@ -223,10 +260,15 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
         children: [
           // Course Thumbnail
           Container(
-            width: 80,
-            height: 80,
+            width: 72,
+            height: 72,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.primary.withValues(alpha: 0.1),
+                  AppColors.secondary.withValues(alpha: 0.1),
+                ],
+              ),
               borderRadius: BorderRadius.circular(16),
             ),
             child: course.thumbnail != null
@@ -235,20 +277,20 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                     child: Image.network(
                       course.thumbnail!,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
+                      errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.school_rounded,
                         color: AppColors.primary,
-                        size: 40,
+                        size: 36,
                       ),
                     ),
                   )
-                : const Icon(
+                : Icon(
                     Icons.school_rounded,
                     color: AppColors.primary,
-                    size: 40,
+                    size: 36,
                   ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 14),
           // Course Info
           Expanded(
             child: Column(
@@ -256,7 +298,9 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
               children: [
                 Text(
                   course.title ?? 'Course',
-                  style: AppTextStyles.h4,
+                  style: AppTextStyles.h5.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -291,12 +335,12 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
   ) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.primary, AppColors.primaryLight],
+          colors: AppColors.primaryGradient,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
@@ -318,14 +362,14 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                   children: [
                     Text(
                       'Your Progress',
-                      style: AppTextStyles.h4.copyWith(
+                      style: AppTextStyles.h5.copyWith(
                         color: AppColors.textWhite,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       _getMotivationalMessage(progressPercent),
-                      style: AppTextStyles.bodyMedium.copyWith(
+                      style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textWhite.withValues(alpha: 0.9),
                       ),
                     ),
@@ -337,11 +381,11 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                 alignment: Alignment.center,
                 children: [
                   SizedBox(
-                    width: 80,
-                    height: 80,
+                    width: 72,
+                    height: 72,
                     child: CircularProgressIndicator(
                       value: progressPercent / 100,
-                      strokeWidth: 8,
+                      strokeWidth: 7,
                       backgroundColor: AppColors.textWhite.withValues(
                         alpha: 0.2,
                       ),
@@ -352,28 +396,29 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                   ),
                   Text(
                     '$progressPercent%',
-                    style: AppTextStyles.h3.copyWith(
+                    style: AppTextStyles.h5.copyWith(
                       color: AppColors.textWhite,
-                      fontSize: 20,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: progressPercent / 100,
               backgroundColor: AppColors.textWhite.withValues(alpha: 0.2),
               valueColor: const AlwaysStoppedAnimation<Color>(
                 AppColors.textWhite,
               ),
-              minHeight: 12,
+              minHeight: 10,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(
@@ -655,32 +700,38 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
     return GestureDetector(
       onTap: () => _selectLesson(lesson.id.toString()),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow,
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: AppColors.shadow.withValues(alpha: 0.5),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
           border: Border.all(
             color: isCompleted
                 ? AppColors.success.withValues(alpha: 0.3)
-                : AppColors.border,
-            width: isCompleted ? 2 : 1,
+                : Colors.transparent,
+            width: isCompleted ? 2 : 0,
           ),
         ),
         child: Row(
           children: [
             // Thumbnail or Icon
             Container(
-              width: 100,
-              height: 70,
+              width: 90,
+              height: 64,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                gradient: LinearGradient(
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.1),
+                    AppColors.primary.withValues(alpha: 0.05),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Stack(
@@ -718,7 +769,8 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                           _formatDuration(lesson.durationMinutes!),
                           style: AppTextStyles.caption.copyWith(
                             color: AppColors.textWhite,
-                            fontSize: 10,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -726,7 +778,7 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                 ],
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 14),
             // Lesson Info
             Expanded(
               child: Column(
@@ -734,24 +786,27 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                 children: [
                   Text(
                     lesson.title ?? 'Untitled Lesson',
-                    style: AppTextStyles.bodyLarge.copyWith(
+                    style: AppTextStyles.bodyMedium.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (lesson.description != null) ...[
+                  if (lesson.description != null && lesson.description!.isNotEmpty) ...[
                     const SizedBox(height: 4),
                     Text(
                       lesson.description!,
-                      style: AppTextStyles.bodySmall,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                   const SizedBox(height: 8),
                   Wrap(
-                    spacing: 8,
+                    spacing: 6,
+                    runSpacing: 4,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       if (isPreview)
@@ -773,6 +828,7 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
                             DateFormat('MMM d').format(lesson.completedAt!),
                             style: AppTextStyles.caption.copyWith(
                               color: AppColors.textTertiary,
+                              fontSize: 10,
                             ),
                           ),
                       ],
@@ -782,10 +838,17 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(
-              Icons.play_circle_filled_rounded,
-              color: AppColors.primary,
-              size: 36,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.play_arrow_rounded,
+                color: AppColors.primary,
+                size: 24,
+              ),
             ),
           ],
         ),
@@ -801,7 +864,7 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
     IconData icon,
   ) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(6),
@@ -809,11 +872,15 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: color, size: 12),
-          const SizedBox(width: 4),
+          Icon(icon, color: color, size: 10),
+          const SizedBox(width: 3),
           Text(
             label,
-            style: AppTextStyles.overline.copyWith(color: color, fontSize: 9),
+            style: AppTextStyles.overline.copyWith(
+              color: color,
+              fontSize: 8,
+              letterSpacing: 0.5,
+            ),
           ),
         ],
       ),
@@ -917,11 +984,7 @@ class _CourseLessonsPageState extends State<CourseLessonsPage> {
               ),
             ),
             const SizedBox(height: 24),
-            Text(
-              'Oops! Something went wrong',
-              style: AppTextStyles.h4,
-              textAlign: TextAlign.center,
-            ),
+            Text('Info', style: AppTextStyles.h4, textAlign: TextAlign.center),
             const SizedBox(height: 12),
             Text(
               message,

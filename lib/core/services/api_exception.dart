@@ -116,16 +116,19 @@ Either<Failure, T> parseCustomException<T>(CustomException exception) {
   } else if (exception is UnprocessableEntityException) {
     return Left(UnprocessableEntityFailure(exception.message));
   } else if (exception is FetchDataException) {
-    return const Left(ServerFailure());
+    return Left(ServerFailure(message: exception.message!));
   } else if (exception is TimeoutException) {
-    return const Left(ServerFailure());
-  } else if (exception is NetworkException) {
-    return const Left(NetworkFailure());
+    return const Left(
+      ServerFailure(message: "Request Timed out! Try again"),
+    );
   } else if (exception is ClientException) {
-    return const Left(ServerFailure());
+    return Left(ServerFailure(message: exception.message!));
   } else if (exception is ServiceUnavailableException) {
-    return Left(ServiceUnavailableFailure(message: exception.message ?? 'Service unavailable'));
-  } else {
-    return const Left(ServerFailure()); // Fallback for any other exceptions
-  }
+    return Left(
+      ServiceUnavailableFailure(
+        message: exception.message ?? 'Service unavailable',
+      ),
+    );
+  } else
+    return Left(ServerFailure(message: exception._message));
 }
