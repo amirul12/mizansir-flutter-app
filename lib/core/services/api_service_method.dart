@@ -134,6 +134,31 @@ class ApiMethod {
     }
   }
 
+  void _handleInvalidUserWithOutDialog() {
+    if (_isSessionOutShowing) return;
+    _isSessionOutShowing = true;
+
+    final context = QContext.navigatorKey.currentState?.context;
+    if (context != null) {
+      // Clear token/auth state
+      di.sl<AuthBloc>().add(LogoutEvent());
+
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.warning,
+        animType: AnimType.scale,
+        title: 'Info',
+        desc: 'Email or Password is wrong, Please try again.',
+        dismissOnTouchOutside: false,
+        dismissOnBackKeyPress: false,
+        btnOkOnPress: () {
+          _isSessionOutShowing = false;
+          context.go('/');
+        },
+      ).show();
+    }
+  }
+
   void _handleBadRequest(String message) {
     if (_isBadRequestShowing) return;
     _isBadRequestShowing = true;
@@ -348,6 +373,79 @@ class ApiMethod {
       if (response.statusCode == 401) {
         amirPrint("401 Unauthorized - showing dialog");
         _handleUnauthorized();
+        return null;
+      }
+
+      return _response(response, hasLoader: false);
+    } on SocketException {
+      log.e('🐞🐞🐞 Error Alert on Socket Exception 🐞🐞🐞');
+      throw NetworkException();
+    } on TimeoutException {
+      log.e('🐞🐞🐞 Error Alert Timeout Exception🐞🐞🐞');
+      log.e('Time out exception$url');
+      throw TimeoutException();
+    } on http.ClientException catch (err, stackTrace) {
+      log.e('🐞🐞🐞 Error Alert Client Exception🐞🐞🐞');
+      log.e('client exception hitted');
+      log.e(err.toString());
+      log.e(stackTrace.toString());
+      throw ClientException();
+    } catch (e) {
+      log.e('🐞🐞🐞 Other Error Alert 🐞🐞🐞');
+      log.e('❌❌❌ unlisted error received');
+      log.e("❌❌❌ $e");
+      throw CustomException(e.toString() ?? 'Unknown error');
+    }
+  }
+
+  // UPDATED: Post Method with dynamic headers
+  Future postWithOutAuth(
+    String url,
+    Map<String, dynamic> body, {
+    int code = 200,
+    int duration = 30,
+    overloadBase,
+    hasLoader = true,
+    bool showResult = false,
+  }) async {
+    try {
+      if (hasLoader) {
+        // Show loader if necessary
+      }
+      log.i(
+        '|📍📍📍|-----------------[[ POST ]] method details start -----------------|📍📍📍|',
+      );
+
+      log.i(url);
+      log.i(body);
+      log.i(
+        '|📍📍📍|-----------------[[ POST ]] method details end ------------|📍📍📍|',
+      );
+
+      var uri = Uri.parse(url);
+
+      http.Request request = http.Request('POST', uri);
+      // UPDATED: Now uses await for dynamic headers
+      request.headers.addAll(
+        isBasic ? await basicHeaderInfo() : await bearerHeaderInfo(),
+      );
+      if (body.isNotEmpty) {
+        request.body = jsonEncode(body);
+      }
+
+      var response = await request.send().timeout(
+        Duration(seconds: duration),
+        onTimeout: () => throw TimeoutException("Request Timed out! Try again"),
+      );
+
+      log.i(response.statusCode);
+      log.i(
+        '|📒📒📒|-----------------[[ POST ]] method response end --------------------|📒📒📒|',
+      );
+
+      if (response.statusCode == 401) {
+        amirPrint("401 Unauthorized - showing dialog");
+        _handleInvalidUserWithOutDialog();
         return null;
       }
 
