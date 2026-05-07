@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 // Import Blocs
 import 'package:mizansir/features/auth/presentation/bloc/auth_bloc.dart';
@@ -11,9 +12,36 @@ import 'package:mizansir/features/home/presentation/bloc/home_shell_cubit.dart';
 import 'package:mizansir/core/theme/app_colors.dart';
 
 /// Home drawer widget with full navigation menu.
-class HomeDrawer extends StatelessWidget {
+class HomeDrawer extends StatefulWidget {
   final VoidCallback? onLogout;
   const HomeDrawer({super.key, this.onLogout});
+
+  @override
+  State<HomeDrawer> createState() => _HomeDrawerState();
+}
+
+class _HomeDrawerState extends State<HomeDrawer> {
+  PackageInfo _packageInfo = PackageInfo(
+    appName: 'Unknown',
+    packageName: 'Unknown',
+    version: 'Unknown',
+    buildNumber: 'Unknown',
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _initPackageInfo();
+  }
+
+  Future<void> _initPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() {
+        _packageInfo = info;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,8 +126,8 @@ class HomeDrawer extends StatelessWidget {
                   color: Colors.redAccent,
                   onTap: () {
                     Navigator.pop(context);
-                    if (onLogout != null) {
-                      onLogout!();
+                    if (widget.onLogout != null) {
+                      widget.onLogout!();
                     } else {
                       _showLogoutDialog(context);
                     }
@@ -117,8 +145,8 @@ class HomeDrawer extends StatelessWidget {
   Widget _buildHeader(BuildContext context) {
     return BlocBuilder<DashboardBloc, DashboardState>(
       builder: (context, state) {
-        final user = (state is DashboardLoaded && state.stats!.user! != null)
-            ? state.stats!.user
+        final user = (state is DashboardLoaded && state.stats?.user != null)
+            ? state.stats?.user
             : null;
 
         return Container(
@@ -179,7 +207,7 @@ class HomeDrawer extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    user!.phone!,
+                    user?.phone ?? '',
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
@@ -190,7 +218,7 @@ class HomeDrawer extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
-                    user!.collegeName!,
+                    user?.collegeName ?? '',
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
@@ -251,13 +279,13 @@ class HomeDrawer extends StatelessWidget {
   Widget _buildFooter(BuildContext context) {
     return BlocBuilder<DashboardBloc, DashboardState>(
       builder: (context, state) {
-        final user = (state is DashboardLoaded && state.stats!.user != null)
-            ? state.stats!.user
+        final user = (state is DashboardLoaded && state.stats?.user != null)
+            ? state.stats?.user
             : null;
         final batchInfo = [
-          if (user?.hscBatch?.name != null) user!.hscBatch!.name,
-          if (user?.batchTime?.name != null) user!.batchTime!.name,
-        ].join(' • ');
+          if (user?.hscBatch?.name != null) user?.hscBatch?.name,
+          if (user?.batchTime?.name != null) user?.batchTime?.name,
+        ].where((name) => name != null).join(' • ');
 
         return Padding(
           padding: const EdgeInsets.all(24.0),
@@ -280,7 +308,7 @@ class HomeDrawer extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                    user!.address!.toString(),
+                    user?.address?.toString() ?? '',
                     style: const TextStyle(
                       fontSize: 11,
                       color: Colors.grey,
@@ -290,11 +318,11 @@ class HomeDrawer extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              const Opacity(
+              Opacity(
                 opacity: 0.4,
                 child: Text(
-                  'v1.0.0',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                  'v${_packageInfo.version} (${_packageInfo.buildNumber})',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                 ),
               ),
               const SizedBox(height: 8),
