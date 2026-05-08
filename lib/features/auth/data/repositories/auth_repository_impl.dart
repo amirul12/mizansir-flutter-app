@@ -1,4 +1,6 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/material.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/auth_user.dart';
@@ -52,6 +54,16 @@ class AuthRepositoryImpl implements AuthRepository {
     required String deviceName,
   }) async {
     try {
+      // Check internet connection before login
+      final isConnected = await InternetConnectionChecker().hasConnection;
+      if (!isConnected) {
+        return const Left(
+          NoInternetConnectionFailure(
+            'You\'re offline. Please connect to the internet to login.',
+          ),
+        );
+      }
+
       final authResponse = await remoteDataSource.login(
         email: email,
         password: password,
@@ -101,7 +113,21 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      await remoteDataSource.logout();
+      // Check internet connection
+
+      final isConnected = await InternetConnectionChecker().hasConnection;
+
+      if (isConnected) {
+        // Call logout API only if online
+        await remoteDataSource.logout();
+      } else {
+        // Offline: skip API call, just log
+        debugPrint(
+          '🌐 Offline: Skipping logout API call, clearing local data only',
+        );
+      }
+
+      // Always clear local data
       await localDataSource.clearCachedUser();
       await localDataSource.clearAuthState();
       return const Right(null);
@@ -154,9 +180,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, List<Session>>> getActiveSessions() async {
     try {
       final sessions = await remoteDataSource.getActiveSessions();
-      return Right(
-        sessions.map((model) => model.toEntity()).toList(),
-      );
+      return Right(sessions.map((model) => model.toEntity()).toList());
     } on AppException catch (e) {
       return _mapExceptionToFailure(e);
     }

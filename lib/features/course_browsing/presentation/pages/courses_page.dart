@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import '../../domain/entities/course_filter.dart';
 import '../bloc/course_bloc.dart';
 import '../bloc/course_event.dart';
@@ -22,13 +23,24 @@ class _CoursesPageState extends State<CoursesPage> {
   final ScrollController _scrollController = ScrollController();
   CourseFilter? _currentFilter;
   bool _showFilters = false;
+  bool _isOffline = false;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _checkConnection();
     // Load initial courses
     context.read<CourseBloc>().add(const LoadCoursesEvent());
+  }
+
+  Future<void> _checkConnection() async {
+    final isConnected = await InternetConnectionChecker().hasConnection;
+    if (mounted) {
+      setState(() {
+        _isOffline = !isConnected;
+      });
+    }
   }
 
   @override
@@ -170,6 +182,8 @@ class _CoursesPageState extends State<CoursesPage> {
 
     return RefreshIndicator(
       onRefresh: () async {
+        await _checkConnection();
+        if (!mounted) return;
         context.read<CourseBloc>().add(
           LoadCoursesEvent(filter: _currentFilter),
         );
@@ -204,24 +218,39 @@ class _CoursesPageState extends State<CoursesPage> {
   }
 
   Widget _buildErrorView(String message) {
+    final isNetworkError = message.toLowerCase().contains('network') ||
+                          message.toLowerCase().contains('internet') ||
+                          message.toLowerCase().contains('connection');
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+            Icon(
+              isNetworkError ? Icons.cloud_off : Icons.error_outline,
+              size: 64,
+              color: isNetworkError ? Colors.orange : Colors.red[300],
+            ),
             const SizedBox(height: 16),
-            Text('Oops!', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              isNetworkError ? 'No Internet Connection' : 'Oops!',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 8),
             Text(
-              message,
+              isNetworkError
+                  ? 'You\'re offline. Please check your internet connection and try again.'
+                  : message,
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () {
+              onPressed: () async {
+                await _checkConnection();
+                if (!mounted) return;
                 context.read<CourseBloc>().add(
                   LoadCoursesEvent(filter: _currentFilter),
                 );

@@ -23,6 +23,7 @@ import '../../../course_browsing/presentation/bloc/course_bloc.dart';
 import '../../../course_browsing/presentation/bloc/course_state.dart';
 import '../bloc/home_shell_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 
 /// Home Dashboard Page - Modern, visually rich dashboard for authenticated students.
 ///
@@ -38,10 +39,22 @@ class HomeDashboardPage extends StatefulWidget {
 }
 
 class _HomeDashboardPageState extends State<HomeDashboardPage> {
+  bool _isOffline = false;
+
   @override
   void initState() {
     super.initState();
+    _checkConnection();
     _loadDataSequentially();
+  }
+
+  Future<void> _checkConnection() async {
+    final isConnected = await InternetConnectionChecker().hasConnection;
+    if (mounted) {
+      setState(() {
+        _isOffline = !isConnected;
+      });
+    }
   }
 
   /// Loads data for the dashboard.
@@ -71,10 +84,32 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
         BlocListener<DashboardBloc, DashboardState>(
           listener: (context, state) {
             if (state is DashboardError) {
+              final hasCachedData = state.existingStats != null;
+
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: AppColors.error,
+                  content: Text(
+                    hasCachedData
+                        ? 'Offline - Showing cached data'
+                        : state.message,
+                  ),
+                  backgroundColor: hasCachedData
+                      ? AppColors.secondary
+                      : AppColors.error,
+                  duration: Duration(seconds: hasCachedData ? 2 : 4),
+                ),
+              );
+            }
+          },
+        ),
+        BlocListener<EnrollmentBloc, EnrollmentState>(
+          listener: (context, state) {
+            if (state is EnrollmentError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Offline - Some features may be limited'),
+                  backgroundColor: AppColors.secondary,
+                  duration: const Duration(seconds: 2),
                 ),
               );
             }
@@ -915,7 +950,18 @@ class _HomeDashboardPageState extends State<HomeDashboardPage> {
                 ),
                 itemCount: state.courses.take(4).length,
                 itemBuilder: (context, index) {
-                  final course = state.courses[index] as MyCourseModel;
+                  final courseData = state.courses[index];
+
+                  // Handle both MyCourseModel instances and Map data from cache
+                  MyCourseModel course;
+                  if (courseData is MyCourseModel) {
+                    course = courseData;
+                  } else if (courseData is Map<String, dynamic>) {
+                    course = MyCourseModel.fromJson(courseData);
+                  } else {
+                    return const SizedBox();
+                  }
+
                   return _buildCourseGridCard(context, course);
                 },
               ),

@@ -1,5 +1,7 @@
 // File: lib/features/course_browsing/presentation/bloc/course_bloc.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:mizansir/features/course_browsing/data/models/course_list_response.dart';
 import '../../../../core/usecases/no_params.dart';
 import '../../domain/usecases/get_courses_usecase.dart';
 import '../../domain/usecases/get_featured_courses_usecase.dart';
@@ -10,8 +12,8 @@ import '../../domain/usecases/get_preview_lessons_usecase.dart';
 import 'course_event.dart';
 import 'course_state.dart';
 
-/// Course BLoC
-class CourseBloc extends Bloc<CourseEvent, CourseState> {
+/// Course BLoC with persistence
+class CourseBloc extends HydratedBloc<CourseEvent, CourseState> {
   final GetCoursesUseCase getCoursesUseCase;
   final GetFeaturedCoursesUseCase getFeaturedCoursesUseCase;
   final GetCourseDetailsUseCase getCourseDetailsUseCase;
@@ -196,5 +198,84 @@ class CourseBloc extends Bloc<CourseEvent, CourseState> {
       default:
         return 'An unexpected error occurred. Please try again.';
     }
+  }
+
+  @override
+  CourseState? fromJson(Map<String, dynamic> json) {
+    try {
+      final stateType = json['stateType'] as String?;
+
+      switch (stateType) {
+        case 'CoursesLoaded':
+          final coursesJson = json['courses'] as Map<String, dynamic>?;
+          if (coursesJson != null) {
+            return CoursesLoaded(
+              courses: CourseListResponse.fromJson(coursesJson),
+              hasMore: json['hasMore'] as bool? ?? true,
+            );
+          }
+          break;
+        case 'FeaturedCoursesLoaded':
+          final coursesJson = json['courses'] as Map<String, dynamic>?;
+          if (coursesJson != null) {
+            return FeaturedCoursesLoaded(
+              courses: CourseListResponse.fromJson(coursesJson),
+            );
+          }
+          break;
+        case 'SearchResultsLoaded':
+          final coursesJson = json['courses'] as Map<String, dynamic>?;
+          if (coursesJson != null) {
+            return SearchResultsLoaded(
+              courses: CourseListResponse.fromJson(coursesJson),
+              query: json['query'] as String? ?? '',
+            );
+          }
+          break;
+        case 'CategoriesLoaded':
+          final categories = json['categories'] as List<dynamic>?;
+          if (categories != null) {
+            return CategoriesLoaded(categories: categories);
+          }
+          break;
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(CourseState state) {
+    if (state is CoursesLoaded) {
+      return {
+        'stateType': 'CoursesLoaded',
+        'courses': state.courses.toJson(),
+        'hasMore': state.hasMore,
+      };
+    }
+
+    if (state is FeaturedCoursesLoaded) {
+      return {
+        'stateType': 'FeaturedCoursesLoaded',
+        'courses': state.courses.toJson(),
+      };
+    }
+
+    if (state is SearchResultsLoaded) {
+      return {
+        'stateType': 'SearchResultsLoaded',
+        'courses': state.courses.toJson(),
+        'query': state.query,
+      };
+    }
+
+    if (state is CategoriesLoaded) {
+      return {
+        'stateType': 'CategoriesLoaded',
+        'categories': state.categories,
+      };
+    }
+
+    return null;
   }
 }

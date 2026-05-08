@@ -1,4 +1,4 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:mizansir/features/profile/data/models/dashboard_stats_model.dart' show DashboardStatsModel;
 import '../../../../core/usecases/no_params.dart';
 import '../../domain/usecases/get_dashboard_usecase.dart';
@@ -6,10 +6,10 @@ import '../../domain/usecases/get_dashboard_usecase.dart';
 import 'dashboard_event.dart';
 import 'dashboard_state.dart';
 
-/// Dashboard BLoC.
+/// Dashboard BLoC with persistence.
 ///
 /// Manages dashboard-related state and operations.
-class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
+class DashboardBloc extends HydratedBloc<DashboardEvent, DashboardState> {
   final GetDashboardUseCase getDashboardUseCase;
 
   DashboardBloc({
@@ -66,5 +66,37 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     }
   }
 
- 
+  @override
+  DashboardState? fromJson(Map<String, dynamic> json) {
+    try {
+      final stateType = json['stateType'] as String?;
+
+      if (stateType == 'DashboardLoaded') {
+        final statsJson = json['stats'] as Map<String, dynamic>?;
+        if (statsJson != null) {
+          return DashboardLoaded(
+            stats: DashboardStatsModel.fromJson(statsJson),
+            isOffline: json['isOffline'] as bool? ?? true,
+            message: json['message'] as String?,
+          );
+        }
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(DashboardState state) {
+    if (state is DashboardLoaded) {
+      return {
+        'stateType': 'DashboardLoaded',
+        'stats': state.stats.toJson(),
+        'isOffline': state.isOffline,
+        if (state.message != null) 'message': state.message,
+      };
+    }
+
+    return null;
+  }
 }

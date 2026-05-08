@@ -1,7 +1,8 @@
 // File: lib/features/enrollment/presentation/bloc/enrollment_bloc.dart
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:mizansir/features/enrollment/data/models/course_lesson_details_model.dart'
     show CourseLessonDetailsModel;
+import 'package:mizansir/features/enrollment/data/models/course_lession_model.dart';
 import '../../domain/usecases/get_my_courses_usecase.dart';
 import '../../domain/usecases/get_course_lessons_usecase.dart';
 import '../../domain/usecases/get_course_progress_usecase.dart';
@@ -11,8 +12,8 @@ import '../../domain/usecases/create_enrollment_usecase.dart';
 import 'enrollment_event.dart';
 import 'enrollment_state.dart';
 
-/// Enrollment BLoC
-class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
+/// Enrollment BLoC with persistence
+class EnrollmentBloc extends HydratedBloc<EnrollmentEvent, EnrollmentState> {
   final GetMyCoursesUseCase getMyCoursesUseCase;
 
   final GetCourseLessonsUseCase getCourseLessonsUseCase;
@@ -204,5 +205,52 @@ class EnrollmentBloc extends Bloc<EnrollmentEvent, EnrollmentState> {
       (enrollmentData) =>
           emit(EnrollmentCreated(enrollmentData: enrollmentData)),
     );
+  }
+
+  @override
+  EnrollmentState? fromJson(Map<String, dynamic> json) {
+    try {
+      final stateType = json['stateType'] as String?;
+
+      switch (stateType) {
+        case 'MyCoursesLoaded':
+          final courses = json['courses'] as List<dynamic>?;
+          if (courses != null) {
+            return MyCoursesLoaded(courses: courses);
+          }
+          break;
+        case 'CourseLessonsLoaded':
+          final courseLessonsJson = json['courseLessons'] as Map<String, dynamic>?;
+          if (courseLessonsJson != null) {
+            return CourseLessonsLoaded(
+              courseLessons: CourseLessonModel.fromJson(courseLessonsJson),
+              courseId: json['courseId'] as String? ?? '',
+            );
+          }
+          break;
+      }
+    } catch (_) {}
+
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(EnrollmentState state) {
+    if (state is MyCoursesLoaded) {
+      return {
+        'stateType': 'MyCoursesLoaded',
+        'courses': state.courses,
+      };
+    }
+
+    if (state is CourseLessonsLoaded) {
+      return {
+        'stateType': 'CourseLessonsLoaded',
+        'courseLessons': state.courseLessons.toJson(),
+        'courseId': state.courseId,
+      };
+    }
+
+    return null;
   }
 }
