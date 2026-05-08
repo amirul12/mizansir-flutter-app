@@ -71,10 +71,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         showResult: true,
       );
 
-      
+      if (mapResponse == null) {
+        throw Exception('No data received');
+      }
 
       // Check if response is wrapped in success/data or direct
-      final data = mapResponse!.containsKey('data') ? mapResponse['data'] : mapResponse;
+      final data = mapResponse.containsKey('data') ? mapResponse['data'] : mapResponse;
 
       // Save token
       if (data['token'] is String) {
